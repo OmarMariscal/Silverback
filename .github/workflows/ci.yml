@@ -1,6 +1,5 @@
 name: CI Pipeline (Monorepo)
 
-# Se ejecuta automáticamente cuando alguien abre o actualiza un Pull Request hacia la rama develop
 on:
   pull_request:
     branches: [ "main", "develop" ]
@@ -18,9 +17,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24' 
-          cache: 'npm'     
-      - name: Instalar dependencias del Monorepo
-        run: npm install
+          cache: 'npm' 
+          
+      - name: Instalar dependencias del Monorepo (Clean Install)
+        run: npm ci
 
       - name: Build del Backend (NestJS)
         run: npm run build --workspace=backend

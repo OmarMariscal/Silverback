@@ -40,6 +40,16 @@ El sistema implementa una arquitectura de aislamiento de datos por contexto (*Da
 
 El sistema utiliza `npm` para gestionar dependencias de forma aislada sin necesidad de entornos virtuales manuales.
 
+### 📂 Estructura del Proyecto
+
+```text
+📦 Silverback
+ ┣ 📂 backend           # API central y contratos de datos (NestJS)
+ ┣ 📂 frontend          # Aplicación web interactiva (NextJS)
+ ┣ 📜 package.json      # Orquestación de workspaces y scripts globales
+ ┗ 📜 package-lock.json # Congelación exacta de versiones para todo el equipo
+```
+
 ### Prerrequisitos
 * Node.js (v18 o superior)
 * PostgreSQL (v14 o superior) local o en Docker.
@@ -51,11 +61,11 @@ Gracias a la arquitectura de **npm workspaces**, la instalación de dependencias
 
 ```bash
 git clone https://github.com/OmarMariscal/Silverback
-cd contraloria-monorepo
+cd Silverback
 
 
 # Instala las dependencias del backend, frontend y la raíz simultáneamente
-npm install
+npm ci
 ```
 ---
 
@@ -88,7 +98,7 @@ npx prisma db seed
 
 ### 4. Ejecución del Sistema
 
-Los scripts de arranque están unificados en el `package.json` de la raíz del monorepositorio. Para comenzar a programar, abre dos terminales en la **raíz del proyecto** (`/contraloria-monorepo`) y ejecuta:
+Los scripts de arranque están unificados en el `package.json` de la raíz del monorepositorio. Para comenzar a programar, abre dos terminales en la **raíz del proyecto** (`/Silverback`) y ejecuta:
 
 **Terminal 1 (Backend - NestJS):**
 
@@ -134,7 +144,7 @@ Para asegurar la máxima calidad del código, mitigar conflictos (Merge Hell) y 
 **Ejemplos de Conventional Commits**
 
 ```text
-feat/backend: agrega servicio de filtrado de catálogos
-fix/frontend: ajusta estado de carga en botón de login
-docs/api: documenta código 400 en endpoint de auditores
+feat(backend): agrega servicio de filtrado de catálogos
+fix(frontend): ajusta estado de carga en botón de login
+docs(api): documenta código 400 en endpoint de auditores
 ```
