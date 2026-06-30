@@ -1,0 +1,4 @@
+# (Reglas generadas por NestJS)
+/dist
+/build
+/tmp
