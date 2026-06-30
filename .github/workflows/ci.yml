@@ -3,7 +3,7 @@ name: CI Pipeline (Monorepo)
 # Se ejecuta automáticamente cuando alguien abre o actualiza un Pull Request hacia la rama develop
 on:
   pull_request:
-    branches: [ "develop" ]
+    branches: [ "develop" ] 
 
 jobs:
   build-and-check:
