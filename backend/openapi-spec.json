@@ -14,6 +14,49 @@
           "App"
         ]
       }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "description": "Obtener el JWT para las cookies del dispositivo",
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthLoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Inicio de Sesión Exitoso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthLoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciales Inválidas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Iniciar Sesión",
+        "tags": [
+          "Autenticación"
+        ]
+      }
     }
   },
   "info": {
@@ -32,6 +75,92 @@
         "type": "http"
       }
     },
-    "schemas": {}
+    "schemas": {
+      "AuthLoginRequest": {
+        "type": "object",
+        "properties": {
+          "correo": {
+            "type": "string",
+            "example": "monkeycodeinc@gmail.com",
+            "description": "Correo electrónico previamente registrado"
+          },
+          "password": {
+            "type": "string",
+            "example": "Admin123!",
+            "description": "Contraseña de acceso"
+          }
+        },
+        "required": [
+          "correo",
+          "password"
+        ]
+      },
+      "AuthLoginUserData": {
+        "type": "object",
+        "properties": {
+          "rol": {
+            "type": "string",
+            "example": "CONTRALOR",
+            "description": "Rol del usuario loggeado"
+          },
+          "centro_id": {
+            "type": "string",
+            "example": "uuid-cucei",
+            "description": "UID del centro universitario"
+          }
+        },
+        "required": [
+          "rol",
+          "centro_id"
+        ]
+      },
+      "AuthLoginResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC...",
+            "description": "JWT para el envío en los headders"
+          },
+          "usuario": {
+            "description": "Información básica del usuario autenticado.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthLoginUserData"
+              }
+            ]
+          }
+        },
+        "required": [
+          "access_token",
+          "usuario"
+        ]
+      },
+      "HttpErrorDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "description": "Código de estado HTTP",
+            "example": 401
+          },
+          "message": {
+            "type": "object",
+            "description": "Mensaje descriptivo del error",
+            "example": "Credenciales inválidas"
+          },
+          "error": {
+            "type": "string",
+            "description": "Tipo de error HTTP",
+            "example": "Unauthorized"
+          }
+        },
+        "required": [
+          "statusCode",
+          "message",
+          "error"
+        ]
+      }
+    }
   }
 }
