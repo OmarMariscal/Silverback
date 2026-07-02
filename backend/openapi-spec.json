@@ -57,6 +57,106 @@
           "Autenticación"
         ]
       }
+    },
+    "/api/v1/actividades/{act}-uuid/ficha-tecnica": {
+      "get": {
+        "description": "Obtener los detalles técnicos de una actividad principal",
+        "operationId": "ActividadesController_getFichaTecnica",
+        "parameters": [
+          {
+            "name": "act-uuid",
+            "required": true,
+            "in": "path",
+            "description": "El identificador único (UUID) de la actividad principal",
+            "schema": {
+              "format": "uuid",
+              "example": "act-01-uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ficha técnica recuperada con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FichaTecnicaResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "UUID no identificado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Detalles técnicos",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
+    "/api/v1/actividades/{actividadId}/sub-actividades/bulk": {
+      "post": {
+        "description": "Sincronización de las subactividades seleccionadas",
+        "operationId": "ActividadesController_postSubActividadesBulk",
+        "parameters": [
+          {
+            "name": "actividadId",
+            "required": true,
+            "in": "path",
+            "description": "El identificador único (UUID) de la actividad a la que van dirigidas las sub-actividades",
+            "schema": {
+              "format": "uuid",
+              "example": "act-01-uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Actividades agregadas exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubActividadesBulkResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Rol no autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Selección de subactividades",
+        "tags": [
+          "Actividades"
+        ]
+      }
     }
   },
   "info": {
@@ -159,6 +259,77 @@
           "statusCode",
           "message",
           "error"
+        ]
+      },
+      "FichaTecnicaResponse": {
+        "type": "object",
+        "properties": {
+          "justificacion": {
+            "type": "string",
+            "example": "Concluir y cerrar la revisión de la auditoría no. 055/2025...",
+            "description": "Justificación técnica de la actividad principal"
+          },
+          "objetivo_general": {
+            "type": "string",
+            "example": "Verificar el adecuado cumplimiento en la integración...",
+            "description": "Objetivo general de la actividad principal"
+          },
+          "objetivos_particulares": {
+            "type": "string",
+            "example": "Conclusión de la verificación de los procesos",
+            "description": "Objetivos particulares de la actividad principal"
+          }
+        },
+        "required": [
+          "justificacion",
+          "objetivo_general",
+          "objetivos_particulares"
+        ]
+      },
+      "SubActividadesResumen": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "sub-op-uuid-1",
+            "description": "Identificador único (UUID) de la subactividad registrada"
+          },
+          "numero_orden": {
+            "type": "string",
+            "example": "1.1",
+            "description": "Número de orden individual de la subactividad"
+          },
+          "semanas_totales": {
+            "type": "number",
+            "example": 8,
+            "description": "Cálculo de las semanas totales que toma la subactividad"
+          }
+        },
+        "required": [
+          "id",
+          "numero_orden",
+          "semanas_totales"
+        ]
+      },
+      "SubActividadesBulkResponse": {
+        "type": "object",
+        "properties": {
+          "mensaje": {
+            "type": "string",
+            "example": "Se agregaron 2 sub-actividades exitosamente",
+            "description": "Información relevante al resultado del proceso de bulk"
+          },
+          "data": {
+            "description": "Array con el resumen de las sub-actividades agregadas",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubActividadesResumen"
+            }
+          }
+        },
+        "required": [
+          "mensaje",
+          "data"
         ]
       }
     }
