@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Param, HttpStatus, Body } from '@nestjs/common';
 import { ActividadesService } from './actividades.service';
 import {
   ApiParam,
@@ -7,9 +7,10 @@ import {
   ApiBearerAuth,
   ApiTags,
 } from '@nestjs/swagger';
-import { FichaTecnicaResponse } from './dto/response/actividades-ficha-tecnica-response.dto';
+import { FichaTecnicaResponse } from './dto/response/actividades-ficha-tecnica.response.dto';
 import { HttpErrorDto } from 'src/core/common/dto/response/http-error.dto';
-import { SubActividadesBulkResponse } from './dto/response/sub-actividades-bulk-response.dto';
+import { SubActividadesBulkResponse } from './dto/response/sub-actividades-bulk.response.dto';
+import { SubActividadesBulkRequest } from './dto/request/sub-actividadedes-bulk.request.dto';
 
 @ApiTags('Actividades')
 @ApiBearerAuth()
@@ -38,9 +39,9 @@ export class ActividadesController {
     description: 'UUID no identificado',
     type: HttpErrorDto,
   })
-  @Get(':act-uuid/ficha-tecnica')
+  @Get(':actividadId/ficha-tecnica')
   getFichaTecnica(
-    @Param('act-uuid') actUuid: string,
+    @Param('actividadId') actUuid: string,
   ): Promise<FichaTecnicaResponse> | FichaTecnicaResponse {
     return this.actividadesService.getFichaTecnica(actUuid);
   }
@@ -70,7 +71,8 @@ export class ActividadesController {
   @Post(':actividadId/sub-actividades/bulk')
   postSubActividadesBulk(
     @Param('actividadId') actUuid: string,
+    @Body() bulkRequest: SubActividadesBulkRequest,
   ): Promise<SubActividadesBulkResponse> | SubActividadesBulkResponse {
-    return this.actividadesService.postSubActividadesBulk(actUuid);
+    return this.actividadesService.postSubActividadesBulk(actUuid, bulkRequest);
   }
 }

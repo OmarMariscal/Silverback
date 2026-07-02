@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsDateString, IsNotEmpty, IsEnum } from 'class-validator';
-import { TipoSubActividad } from 'src/domain/actividad/tipos-de-actividades.dto';
+import { TipoSubActividad } from 'src/domain/actividad/tipos-de-actividades.enum';
 
 export class SubActividadDetalles {
   @ApiProperty({

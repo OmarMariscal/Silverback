@@ -58,11 +58,19 @@
         ]
       }
     },
-    "/api/v1/actividades/{act}-uuid/ficha-tecnica": {
+    "/api/v1/actividades/{actividadId}/ficha-tecnica": {
       "get": {
         "description": "Obtener los detalles técnicos de una actividad principal",
         "operationId": "ActividadesController_getFichaTecnica",
         "parameters": [
+          {
+            "name": "actividadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "act-uuid",
             "required": true,
@@ -70,8 +78,7 @@
             "description": "El identificador único (UUID) de la actividad principal",
             "schema": {
               "format": "uuid",
-              "example": "act-01-uuid",
-              "type": "string"
+              "example": "act-01-uuid"
             }
           }
         ],
@@ -125,6 +132,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubActividadesBulkRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "Actividades agregadas exitosamente",
@@ -284,6 +301,64 @@
           "justificacion",
           "objetivo_general",
           "objetivos_particulares"
+        ]
+      },
+      "TipoSubActividad": {
+        "type": "string",
+        "enum": [
+          "AUDITORIA",
+          "REVISION"
+        ],
+        "description": "Tipo declarado de la subactividad"
+      },
+      "SubActividadDetalles": {
+        "type": "object",
+        "properties": {
+          "descripcion_tarea": {
+            "type": "string",
+            "example": "Elaborar acta circunscrita...",
+            "description": "Descripción específica de la subactividad"
+          },
+          "fecha_inicio": {
+            "type": "string",
+            "example": "2026-01-01",
+            "description": "Fecha de inicio de la subactividad"
+          },
+          "fecha_termino": {
+            "type": "string",
+            "example": "2026-02-26",
+            "description": "Fecha de término de la subactividad"
+          },
+          "tipo": {
+            "description": "Tipo declarado de la subactividad",
+            "example": "AUDITORIA",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TipoSubActividad"
+              }
+            ]
+          }
+        },
+        "required": [
+          "descripcion_tarea",
+          "fecha_inicio",
+          "fecha_termino",
+          "tipo"
+        ]
+      },
+      "SubActividadesBulkRequest": {
+        "type": "object",
+        "properties": {
+          "sub_actividades": {
+            "description": "Array de subactividades y sus características",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubActividadDetalles"
+            }
+          }
+        },
+        "required": [
+          "sub_actividades"
         ]
       },
       "SubActividadesResumen": {
