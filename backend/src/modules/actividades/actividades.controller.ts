@@ -15,6 +15,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiTags,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { ActividadesResumenResponse } from './dto/response/actividades-resumen.response.dto';
 import { HttpErrorDto } from 'src/core/common/dto/response/http-error.dto';
