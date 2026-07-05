@@ -58,7 +58,7 @@
         ]
       }
     },
-    "/api/v1/actividades/actividades": {
+    "/api/v1/actividades": {
       "get": {
         "description": "Obtener un array con el data de las sub-actividades con la posibilidad para ciertos roles para filtrar por auditorID",
         "operationId": "ActividadesController_getActividades",
@@ -76,7 +76,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "Operación realizada correctamente",
             "content": {
               "application/json": {
                 "schema": {
@@ -86,7 +86,7 @@
             }
           },
           "403": {
-            "description": "",
+            "description": "Rol no autorizado",
             "content": {
               "application/json": {
                 "schema": {
@@ -201,7 +201,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "Operación realizada con éxito",
             "content": {
               "application/json": {
                 "schema": {
@@ -211,7 +211,7 @@
             }
           },
           "403": {
-            "description": "",
+            "description": "Rol no autorizado",
             "content": {
               "application/json": {
                 "schema": {
@@ -328,12 +328,12 @@
             "required": false,
             "in": "query",
             "schema": {
-              "default": "fecha_termino",
+              "default": "FECHA_TERMINO",
               "type": "string",
               "enum": [
-                "identificador",
-                "fecha_termino",
-                "estado_flujo"
+                "IDENTIFICADOR",
+                "FECHA_TERMINO",
+                "ESTADO_FLUJO"
               ]
             }
           },
@@ -392,7 +392,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "Operación realizada con éxito",
             "content": {
               "application/json": {
                 "schema": {
@@ -402,7 +402,7 @@
             }
           },
           "403": {
-            "description": "",
+            "description": "Rol no autorizado",
             "content": {
               "application/json": {
                 "schema": {
@@ -572,7 +572,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "Operación realizada con éxito",
             "content": {
               "application/json": {
                 "schema": {
@@ -582,7 +582,7 @@
             }
           },
           "404": {
-            "description": "",
+            "description": "Actividad no encontrada",
             "content": {
               "application/json": {
                 "schema": {
@@ -630,7 +630,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "Operación realizada con éxito",
             "content": {
               "application/json": {
                 "schema": {
@@ -640,7 +640,7 @@
             }
           },
           "400": {
-            "description": "",
+            "description": "Mal cuerpo  en su request",
             "content": {
               "application/json": {
                 "schema": {
@@ -650,7 +650,7 @@
             }
           },
           "404": {
-            "description": "",
+            "description": "Actividad no encontrada",
             "content": {
               "application/json": {
                 "schema": {
@@ -957,6 +957,50 @@
           "total_páginas"
         ]
       },
+      "ActividadesSupervisionResolucionJefa": {
+        "type": "object",
+        "properties": {
+          "estado": {
+            "type": "string",
+            "example": "DEVUELTA",
+            "description": "Estado actual de la sub-actividad"
+          },
+          "mensaje": {
+            "type": "string",
+            "example": "Devuelto con 3 observaciones",
+            "description": "Mensaje relevante al por qué de la devolución"
+          },
+          "semaforo": {
+            "type": "string",
+            "example": "CRITICO",
+            "description": "Estado actual del semáforo de la sub-actividad"
+          }
+        },
+        "required": [
+          "estado",
+          "mensaje",
+          "semaforo"
+        ]
+      },
+      "ActividadesSupervicionVencimientoPoa": {
+        "type": "object",
+        "properties": {
+          "fecha_texto": {
+            "type": "string",
+            "example": "2026-01-29",
+            "description": "Fecha de finalización estipulada en la POA"
+          },
+          "etiqueta": {
+            "type": "string",
+            "example": "Faltan 2 días",
+            "description": "Etiqueta relevante a la fecha de finalización en contraste con la fecha actual"
+          }
+        },
+        "required": [
+          "fecha_texto",
+          "etiqueta"
+        ]
+      },
       "ActividadesSupervisionSubActividadInfo": {
         "type": "object",
         "properties": {
@@ -974,12 +1018,30 @@
             "type": "string",
             "example": "Enviada hace 2 días",
             "description": "Etiqueta sobre el estado de la sub-actividad devuelta"
+          },
+          "resolucion_jefa": {
+            "description": "Información sobre la resolución de la jefa",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActividadesSupervisionResolucionJefa"
+              }
+            ]
+          },
+          "vencimiento_poa": {
+            "example": "Fecha y etiqueta relevante a la información de la POA",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActividadesSupervicionVencimientoPoa"
+              }
+            ]
           }
         },
         "required": [
           "id",
           "titulo",
-          "enviada_hace"
+          "enviada_hace",
+          "resolucion_jefa",
+          "vencimiento_poa"
         ]
       },
       "ActividadesSupervicionGetResponse": {
@@ -1063,44 +1125,6 @@
         ],
         "description": "Tipo definido de la sub-actividad"
       },
-      "Roles Permitidos": {
-        "type": "string",
-        "enum": [
-          "JEFA",
-          "CONTRALOR",
-          "AUDITOR"
-        ],
-        "description": "Rol del cual viene el get"
-      },
-      "ActividadesDirectorioAsignacion": {
-        "type": "object",
-        "properties": {
-          "tipo_vista": {
-            "example": "JEFA",
-            "description": "Rol del cual viene el get",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Roles Permitidos"
-              }
-            ]
-          },
-          "centro_clave": {
-            "type": "string",
-            "example": "CUCEI",
-            "description": "Clave del centro universitario en caso de usarse como query"
-          },
-          "contralor": {
-            "type": "string",
-            "example": "Mtro. Braulio Vicente",
-            "description": "Nombre del Contralor principal"
-          }
-        },
-        "required": [
-          "tipo_vista",
-          "centro_clave",
-          "contralor"
-        ]
-      },
       "Estado de la Actividad": {
         "type": "string",
         "enum": [
@@ -1177,12 +1201,21 @@
             "description": "Fecha en formato reducido para visualización"
           },
           "asignacion": {
-            "description": "Información sobre el tipo de la asignación relevante al centro y contralor",
-            "allOf": [
+            "oneOf": [
               {
-                "$ref": "#/components/schemas/ActividadesDirectorioAsignacion"
+                "$ref": "#/components/schemas/ActividadesDirectorioAsignacionJefa"
+              },
+              {
+                "$ref": "#/components/schemas/ActividadesDirectorioAsignacionContralor"
               }
-            ]
+            ],
+            "discriminator": {
+              "propertyName": "tipo_vista",
+              "mapping": {
+                "JEFA": "#/components/schemas/ActividadesDirectorioAsignacionJefa",
+                "CONTRALOR": "#/components/schemas/ActividadesDirectorioAsignacionContralor"
+              }
+            }
           },
           "estado_operativo": {
             "description": "Información del estado actual de la actividad",
@@ -1396,6 +1429,31 @@
           "sub_actividades"
         ]
       },
+      "SubActividadesSyncResume": {
+        "type": "object",
+        "properties": {
+          "creadas": {
+            "type": "number",
+            "example": 1,
+            "description": "Número de sub-actividades creadas en la base de datos"
+          },
+          "actualizadas": {
+            "type": "number",
+            "example": 1,
+            "description": "Número de sub-actividades editadas en la base de datos"
+          },
+          "eliminadas": {
+            "type": "number",
+            "example": 1,
+            "description": "Número de sub-actividades eliminadas en la base de datos"
+          }
+        },
+        "required": [
+          "creadas",
+          "actualizadas",
+          "eliminadas"
+        ]
+      },
       "SubActividadesSyncResponse": {
         "type": "object",
         "properties": {
@@ -1408,7 +1466,7 @@
             "description": "Arreglo con la información de las modificaciones hechas en la base de datos",
             "allOf": [
               {
-                "$ref": "#/components/schemas/SubActividadDetallesSync"
+                "$ref": "#/components/schemas/SubActividadesSyncResume"
               }
             ]
           }
@@ -1539,6 +1597,61 @@
             }
           }
         }
+      },
+      "ActividadesDirectorioAsignacionJefa": {
+        "type": "object",
+        "properties": {
+          "tipo_vista": {
+            "type": "string",
+            "enum": [
+              "JEFA",
+              "CONTRALOR",
+              "AUDITOR"
+            ],
+            "example": "JEFA"
+          },
+          "centro_clave": {
+            "type": "string",
+            "example": "CUCEI"
+          },
+          "contralor": {
+            "type": "string",
+            "example": "Mtro. Braulio Vicente"
+          }
+        },
+        "required": [
+          "tipo_vista",
+          "centro_clave",
+          "contralor"
+        ]
+      },
+      "ActividadesDirectorioAsignacionContralor": {
+        "type": "object",
+        "properties": {
+          "tipo_vista": {
+            "type": "string",
+            "enum": [
+              "JEFA",
+              "CONTRALOR",
+              "AUDITOR"
+            ],
+            "example": "CONTRALOR"
+          },
+          "participacion_porcentaje": {
+            "type": "number",
+            "example": 100
+          },
+          "auditor_apoyo": {
+            "type": "object",
+            "example": null,
+            "nullable": true
+          }
+        },
+        "required": [
+          "tipo_vista",
+          "participacion_porcentaje",
+          "auditor_apoyo"
+        ]
       }
     }
   }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { SubActividadDetallesSync } from '../request/sub-actividades-detalles-sync.dto';
+import { SubActividadesSyncResume } from './sub-actividades-sync-resume.dto';
 
 export class SubActividadesSyncResponse {
   @ApiProperty({
@@ -11,7 +11,7 @@ export class SubActividadesSyncResponse {
   @ApiProperty({
     description:
       'Arreglo con la información de las modificaciones hechas en la base de datos',
-    type: SubActividadDetallesSync,
+    type: SubActividadesSyncResume,
   })
-  resumen!: SubActividadDetallesSync;
+  resumen!: SubActividadesSyncResume;
 }

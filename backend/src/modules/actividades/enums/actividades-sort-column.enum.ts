@@ -1,5 +1,5 @@
 export enum ActividadesSortColumn {
-  IDENTIFICADOR = 'identificador',
-  FECHA_TERMINO = 'fecha_termino',
-  ESTADO_FLUJO = 'estado_flujo',
+  IDENTIFICADOR = 'IDENTIFICADOR',
+  FECHA_TERMINO = 'FECHA_TERMINO',
+  ESTADO_FLUJO = 'ESTADO_FLUJO',
 }

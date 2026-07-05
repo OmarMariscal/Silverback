@@ -4,6 +4,10 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as fs from 'fs';
 import * as path from 'path';
+import {
+  ActividadesDirectorioAsignacionContralor,
+  ActividadesDirectorioAsignacionJefa,
+} from './modules/actividades/dto/response/actividades-directorio-asignacion-jefa.dto';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -30,7 +34,12 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, config, {
+    extraModels: [
+      ActividadesDirectorioAsignacionJefa,
+      ActividadesDirectorioAsignacionContralor,
+    ],
+  });
 
   //Habilitación de la interfaz interactiva en http://localhost:3000/api/docs
   SwaggerModule.setup('api/docs', app, document);

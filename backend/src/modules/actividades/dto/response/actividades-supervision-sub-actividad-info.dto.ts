@@ -1,4 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ActividadesSupervisionResolucionJefa } from './actividades-supervision-resolucion-jefa.dto';
+import { ActividadesSupervicionVencimientoPoa } from './actividades-supervision-vencimiento-poa.dto';
 
 export class ActividadesSupervisionSubActividadInfo {
   @ApiProperty({
@@ -18,4 +20,16 @@ export class ActividadesSupervisionSubActividadInfo {
     description: 'Etiqueta sobre el estado de la sub-actividad devuelta',
   })
   enviada_hace!: string;
+
+  @ApiProperty({
+    description: 'Información sobre la resolución de la jefa',
+    type: ActividadesSupervisionResolucionJefa,
+  })
+  resolucion_jefa!: ActividadesSupervisionResolucionJefa;
+
+  @ApiProperty({
+    example: 'Fecha y etiqueta relevante a la información de la POA',
+    type: ActividadesSupervicionVencimientoPoa,
+  })
+  vencimiento_poa!: ActividadesSupervicionVencimientoPoa;
 }

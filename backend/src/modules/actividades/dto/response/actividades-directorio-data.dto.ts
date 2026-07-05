@@ -1,6 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, getSchemaPath } from '@nestjs/swagger';
 import { TipoSubActividad } from 'src/domain/actividad/tipos-de-actividades.enum';
-import { ActividadesDirectorioAsignacion } from './actividades-directorio-asignacion.dto';
+import { ActividadesDirectorioAsignacionJefa } from './actividades-directorio-asignacion-jefa.dto';
+import { ActividadesDirectorioAsignacionContralor } from './actividades-directorio-asignacion-jefa.dto';
 import { ActividadesDirectorioEstadoOperativo } from './actividades-directorio-estado-operativo.dto';
 import { EstadosSemaforo } from 'src/domain/semaforo/estados-semaforo-enum';
 
@@ -39,11 +40,21 @@ export class ActividadesDirectorioData {
   fecha_termino!: string;
 
   @ApiProperty({
-    description:
-      'Información sobre el tipo de la asignación relevante al centro y contralor',
-    type: ActividadesDirectorioAsignacion,
+    oneOf: [
+      { $ref: getSchemaPath(ActividadesDirectorioAsignacionJefa) },
+      { $ref: getSchemaPath(ActividadesDirectorioAsignacionContralor) },
+    ],
+    discriminator: {
+      propertyName: 'tipo_vista',
+      mapping: {
+        JEFA: getSchemaPath(ActividadesDirectorioAsignacionJefa),
+        CONTRALOR: getSchemaPath(ActividadesDirectorioAsignacionContralor),
+      },
+    },
   })
-  asignacion!: ActividadesDirectorioAsignacion;
+  asignacion!:
+    | ActividadesDirectorioAsignacionJefa
+    | ActividadesDirectorioAsignacionContralor;
 
   @ApiProperty({
     description: 'Información del estado actual de la actividad',

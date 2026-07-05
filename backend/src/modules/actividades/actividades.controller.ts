@@ -49,12 +49,14 @@ export class ActividadesController {
   @ApiResponse({
     status: HttpStatus.OK,
     type: ActividadesGetResponse,
+    description: 'Operación realizada correctamente',
   })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
     type: HttpErrorDto,
+    description: 'Rol no autorizado',
   })
-  @Get('actividades')
+  @Get()
   getActividades(
     @Query() queryActividades: ActividadesGetQuery,
   ): ActividadesGetResponse {
@@ -93,10 +95,12 @@ export class ActividadesController {
   @ApiResponse({
     status: HttpStatus.OK,
     type: ActividadesSupervicionGetResponse,
+    description: 'Operación realizada con éxito',
   })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
     type: HttpErrorDto,
+    description: 'Rol no autorizado',
   })
   @Get('supervision')
   getActividadesSupervision(
@@ -143,10 +147,12 @@ export class ActividadesController {
   @ApiResponse({
     status: HttpStatus.OK,
     type: ActividadesDirectorioResponse,
+    description: 'Operación realizada con éxito',
   })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
     type: HttpErrorDto,
+    description: 'Rol no autorizado',
   })
   @Get('directorio')
   getActividadesDirectorio(
@@ -238,10 +244,12 @@ export class ActividadesController {
   @ApiResponse({
     status: HttpStatus.OK,
     type: ActividadesFichaTecnicaResponse,
+    description: 'Operación realizada con éxito',
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
     type: HttpErrorDto,
+    description: 'Actividad no encontrada',
   })
   @Get(':actividadId/ficha-tecnica')
   getFichaTecnica(
@@ -265,14 +273,17 @@ export class ActividadesController {
   @ApiResponse({
     status: HttpStatus.OK,
     type: ActividadesFichaTecnicaResponse,
+    description: 'Operación realizada con éxito',
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
     type: HttpErrorDto,
+    description: 'Actividad no encontrada',
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
     type: HttpErrorDto,
+    description: 'Mal cuerpo  en su request',
   })
   @Patch(':actividadId/ficha-tecnica')
   patchFichaTecnica(
