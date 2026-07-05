@@ -17,7 +17,7 @@ export class ActividadesSupervisionResolucionJefa {
 
   @ApiProperty({
     example: EstadosSemaforo.CRITICO,
-    description: 'Estado actual del semáforo de la sub-actividad',
+    description: 'Estado actual del semaforo de la sub-actividad',
   })
   semaforo!: EstadosSemaforo;
 }

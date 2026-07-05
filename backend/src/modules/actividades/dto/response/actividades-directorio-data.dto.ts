@@ -1,7 +1,7 @@
 import { ApiProperty, getSchemaPath } from '@nestjs/swagger';
 import { TipoSubActividad } from 'src/domain/actividad/tipos-de-actividades.enum';
 import { ActividadesDirectorioAsignacionJefa } from './actividades-directorio-asignacion-jefa.dto';
-import { ActividadesDirectorioAsignacionContralor } from './actividades-directorio-asignacion-jefa.dto';
+import { ActividadesDirectorioAsignacionContralor } from './actividades-directorio-asignacion-contralor.dto';
 import { ActividadesDirectorioEstadoOperativo } from './actividades-directorio-estado-operativo.dto';
 import { EstadosSemaforo } from 'src/domain/semaforo/estados-semaforo-enum';
 
@@ -14,13 +14,15 @@ export class ActividadesDirectorioData {
 
   @ApiProperty({
     example: 'No. 055',
+    type: 'string',
     description: 'Identificador único proveniente del acta.',
+    nullable: true,
   })
   identificador!: string | null;
 
   @ApiProperty({
     enum: TipoSubActividad,
-    enumName: 'Tipo de la sub-actividad',
+    enumName: 'TipoActividad',
     example: TipoSubActividad.AUDITORIA,
     description: 'Tipo definido de la sub-actividad',
   })
@@ -64,9 +66,9 @@ export class ActividadesDirectorioData {
 
   @ApiProperty({
     enum: EstadosSemaforo,
-    enumName: 'Semáforo',
+    enumName: 'EstadoSemaforo',
     example: EstadosSemaforo.CRITICO,
-    description: 'Estado del semáforo de la sub-actividad',
+    description: 'Estado del semaforo de la sub-actividad',
   })
   semaforo!: EstadosSemaforo;
 }

@@ -4,10 +4,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as fs from 'fs';
 import * as path from 'path';
-import {
-  ActividadesDirectorioAsignacionContralor,
-  ActividadesDirectorioAsignacionJefa,
-} from './modules/actividades/dto/response/actividades-directorio-asignacion-jefa.dto';
+import { ActividadesDirectorioAsignacionJefa } from './modules/actividades/dto/response/actividades-directorio-asignacion-jefa.dto';
+import { ActividadesDirectorioAsignacionContralor } from './modules/actividades/dto/response/actividades-directorio-asignacion-contralor.dto';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

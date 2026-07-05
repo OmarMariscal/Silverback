@@ -232,56 +232,6 @@
         ]
       }
     },
-    "/api/v1/actividades/{actividadId}/resumen": {
-      "get": {
-        "description": "Obtener los detalles técnicos de una actividad principal",
-        "operationId": "ActividadesController_getResumen",
-        "parameters": [
-          {
-            "name": "actividadId",
-            "required": true,
-            "in": "path",
-            "description": "El identificador único (UUID) de la actividad principal",
-            "schema": {
-              "format": "uuid",
-              "example": "act-uuid-1",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Ficha técnica recuperada con éxito",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ActividadesResumenResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "UUID no identificado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HttpErrorDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Detalles técnicos",
-        "tags": [
-          "Actividades"
-        ]
-      }
-    },
     "/api/v1/actividades/directorio": {
       "get": {
         "description": "Listado de las actividades para la construcción de los dashboards",
@@ -418,6 +368,56 @@
           }
         ],
         "summary": "Directorio de Actividades",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
+    "/api/v1/actividades/{actividadId}/resumen": {
+      "get": {
+        "description": "Obtener los detalles técnicos de una actividad principal",
+        "operationId": "ActividadesController_getResumen",
+        "parameters": [
+          {
+            "name": "actividadId",
+            "required": true,
+            "in": "path",
+            "description": "El identificador único (UUID) de la actividad principal",
+            "schema": {
+              "format": "uuid",
+              "example": "act-uuid-1",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ficha técnica recuperada con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActividadesResumenResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "UUID no identificado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Detalles técnicos",
         "tags": [
           "Actividades"
         ]
@@ -758,7 +758,7 @@
             "example": 401
           },
           "message": {
-            "type": "object",
+            "type": "string",
             "description": "Mensaje descriptivo del error",
             "example": "Credenciales inválidas"
           },
@@ -901,7 +901,7 @@
           "estado_semaforo": {
             "type": "string",
             "example": "A_TIEMPO",
-            "description": "Estado del semáforo en la que se encuentra la sub-actividad"
+            "description": "Estado del semaforo en la que se encuentra la sub-actividad"
           },
           "etiqueta_tiempo": {
             "type": "string",
@@ -973,7 +973,7 @@
           "semaforo": {
             "type": "string",
             "example": "CRITICO",
-            "description": "Estado actual del semáforo de la sub-actividad"
+            "description": "Estado actual del semaforo de la sub-actividad"
           }
         },
         "required": [
@@ -1068,6 +1068,161 @@
           "data"
         ]
       },
+      "TipoActividad": {
+        "type": "string",
+        "enum": [
+          "AUDITORIA",
+          "REVISION"
+        ],
+        "description": "Tipo definido de la sub-actividad"
+      },
+      "EstadoActividad": {
+        "type": "string",
+        "enum": [
+          "SIN_EMPEZAR",
+          "SOLICITADO",
+          "EN_PROGRESO",
+          "EN_REVISION",
+          "DEVUELTA",
+          "CONCLUIDA"
+        ]
+      },
+      "ActividadesDirectorioEstadoOperativo": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "example": "DEVUELTA",
+            "default": "Estado actual de la sub-actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EstadoActividad"
+              }
+            ]
+          },
+          "etiqueta": {
+            "type": "string",
+            "example": "Devuleta (3 Obs)",
+            "description": "Etiqueta relevente al estado de la actividad. Puede estar vacío cuando el estado lo amerite",
+            "nullable": true
+          }
+        },
+        "required": [
+          "codigo",
+          "etiqueta"
+        ]
+      },
+      "EstadoSemaforo": {
+        "type": "string",
+        "enum": [
+          "A_TIEMPO",
+          "CRITICO",
+          "PRECAUCION"
+        ],
+        "description": "Estado del semaforo de la sub-actividad"
+      },
+      "ActividadesDirectorioData": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "act-uuid-1",
+            "description": "Identificador único (UUID) de la sub-actividad"
+          },
+          "identificador": {
+            "type": "string",
+            "example": "No. 055",
+            "description": "Identificador único proveniente del acta.",
+            "nullable": true
+          },
+          "tipo": {
+            "example": "AUDITORIA",
+            "description": "Tipo definido de la sub-actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TipoActividad"
+              }
+            ]
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Abatir el rezago en solventación de observaciones (Adquisiciones)",
+            "description": "Título de la actividad en cuestión"
+          },
+          "fecha_termino": {
+            "type": "string",
+            "example": "2026-05-23",
+            "description": "Fecha en formato reducido para visualización"
+          },
+          "asignacion": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ActividadesDirectorioAsignacionJefa"
+              },
+              {
+                "$ref": "#/components/schemas/ActividadesDirectorioAsignacionContralor"
+              }
+            ],
+            "discriminator": {
+              "propertyName": "tipo_vista",
+              "mapping": {
+                "JEFA": "#/components/schemas/ActividadesDirectorioAsignacionJefa",
+                "CONTRALOR": "#/components/schemas/ActividadesDirectorioAsignacionContralor"
+              }
+            }
+          },
+          "estado_operativo": {
+            "description": "Información del estado actual de la actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActividadesDirectorioEstadoOperativo"
+              }
+            ]
+          },
+          "semaforo": {
+            "example": "CRITICO",
+            "description": "Estado del semaforo de la sub-actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EstadoSemaforo"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "identificador",
+          "tipo",
+          "titulo",
+          "fecha_termino",
+          "asignacion",
+          "estado_operativo",
+          "semaforo"
+        ]
+      },
+      "ActividadesDirectorioResponse": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "description": "Registro de metadatos de la paginación",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginacionMetadata"
+              }
+            ]
+          },
+          "data": {
+            "description": "Array con las actividades recuperadas",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActividadesDirectorioData"
+            }
+          }
+        },
+        "required": [
+          "meta",
+          "data"
+        ]
+      },
       "ActividadesResumenResponse": {
         "type": "object",
         "properties": {
@@ -1115,159 +1270,6 @@
           "objetivos_particulares",
           "meta_del_proyecto",
           "indicadores"
-        ]
-      },
-      "Tipo de la sub-actividad": {
-        "type": "string",
-        "enum": [
-          "AUDITORIA",
-          "REVISION"
-        ],
-        "description": "Tipo definido de la sub-actividad"
-      },
-      "Estado de la Actividad": {
-        "type": "string",
-        "enum": [
-          "SIN_EMPEZAR",
-          "SOLICITADO",
-          "EN_PROGRESO",
-          "EN_REVISION",
-          "DEVUELTA",
-          "CONCLUIDA"
-        ]
-      },
-      "ActividadesDirectorioEstadoOperativo": {
-        "type": "object",
-        "properties": {
-          "codigo": {
-            "example": "DEVUELTA",
-            "default": "Estado actual de la sub-actividad",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Estado de la Actividad"
-              }
-            ]
-          },
-          "etiqueta": {
-            "type": "object",
-            "example": "Devuleta (3 Obs)",
-            "description": "Etiqueta relevente al estado de la actividad. Puede estar vacío cuando el estado lo amerite"
-          }
-        },
-        "required": [
-          "codigo",
-          "etiqueta"
-        ]
-      },
-      "Semáforo": {
-        "type": "string",
-        "enum": [
-          "A_TIEMPO",
-          "CRITICO",
-          "PRECAUCION"
-        ],
-        "description": "Estado del semáforo de la sub-actividad"
-      },
-      "ActividadesDirectorioData": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "act-uuid-1",
-            "description": "Identificador único (UUID) de la sub-actividad"
-          },
-          "identificador": {
-            "type": "object",
-            "example": "No. 055",
-            "description": "Identificador único proveniente del acta."
-          },
-          "tipo": {
-            "example": "AUDITORIA",
-            "description": "Tipo definido de la sub-actividad",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Tipo de la sub-actividad"
-              }
-            ]
-          },
-          "titulo": {
-            "type": "string",
-            "example": "Abatir el rezago en solventación de observaciones (Adquisiciones)",
-            "description": "Título de la actividad en cuestión"
-          },
-          "fecha_termino": {
-            "type": "string",
-            "example": "2026-05-23",
-            "description": "Fecha en formato reducido para visualización"
-          },
-          "asignacion": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/ActividadesDirectorioAsignacionJefa"
-              },
-              {
-                "$ref": "#/components/schemas/ActividadesDirectorioAsignacionContralor"
-              }
-            ],
-            "discriminator": {
-              "propertyName": "tipo_vista",
-              "mapping": {
-                "JEFA": "#/components/schemas/ActividadesDirectorioAsignacionJefa",
-                "CONTRALOR": "#/components/schemas/ActividadesDirectorioAsignacionContralor"
-              }
-            }
-          },
-          "estado_operativo": {
-            "description": "Información del estado actual de la actividad",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ActividadesDirectorioEstadoOperativo"
-              }
-            ]
-          },
-          "semaforo": {
-            "example": "CRITICO",
-            "description": "Estado del semáforo de la sub-actividad",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Semáforo"
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "identificador",
-          "tipo",
-          "titulo",
-          "fecha_termino",
-          "asignacion",
-          "estado_operativo",
-          "semaforo"
-        ]
-      },
-      "ActividadesDirectorioResponse": {
-        "type": "object",
-        "properties": {
-          "meta": {
-            "description": "Registro de metadatos de la paginación",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PaginacionMetadata"
-              }
-            ]
-          },
-          "data": {
-            "description": "Array con las actividades recuperadas",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ActividadesDirectorioData"
-            }
-          }
-        },
-        "required": [
-          "meta",
-          "data"
         ]
       },
       "TipoSubActividad": {
@@ -1625,26 +1627,37 @@
           "contralor"
         ]
       },
+      "Rol": {
+        "type": "string",
+        "enum": [
+          "JEFA",
+          "CONTRALOR",
+          "AUDITOR"
+        ],
+        "description": "Rol del usuario"
+      },
       "ActividadesDirectorioAsignacionContralor": {
         "type": "object",
         "properties": {
           "tipo_vista": {
-            "type": "string",
-            "enum": [
-              "JEFA",
-              "CONTRALOR",
-              "AUDITOR"
-            ],
-            "example": "CONTRALOR"
+            "example": "CONTRALOR",
+            "description": "Rol del usuario",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Rol"
+              }
+            ]
           },
           "participacion_porcentaje": {
             "type": "number",
-            "example": 100
+            "example": 100,
+            "description": "Porcentaje de participación asignado"
           },
           "auditor_apoyo": {
-            "type": "object",
+            "type": "string",
             "example": null,
-            "nullable": true
+            "nullable": true,
+            "description": "Auditor de apoyo"
           }
         },
         "required": [

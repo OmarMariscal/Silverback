@@ -20,6 +20,7 @@ export class ActividadesDirectorioAsignacionContralor {
     example: null,
     nullable: true,
     description: 'Auditor de apoyo',
+    type: 'string',
   })
   auditor_apoyo!: string | null;
 }

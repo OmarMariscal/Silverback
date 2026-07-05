@@ -112,6 +112,28 @@ export class ActividadesController {
   }
 
   @ApiOperation({
+    summary: 'Directorio de Actividades',
+    description:
+      'Listado de las actividades para la construcción de los dashboards',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ActividadesDirectorioResponse,
+    description: 'Operación realizada con éxito',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    type: HttpErrorDto,
+    description: 'Rol no autorizado',
+  })
+  @Get('directorio')
+  getActividadesDirectorio(
+    @Query() queryParam: ActividadesDirectorioQuery,
+  ): Promise<ActividadesDirectorioResponse> | ActividadesDirectorioResponse {
+    return this.actividadesService.getActividadesDirectorio(queryParam);
+  }
+
+  @ApiOperation({
     summary: 'Detalles técnicos',
     description: 'Obtener los detalles técnicos de una actividad principal',
   })
@@ -137,28 +159,6 @@ export class ActividadesController {
     @Param('actividadId') actUuid: string,
   ): Promise<ActividadesResumenResponse> | ActividadesResumenResponse {
     return this.actividadesService.getResumen(actUuid);
-  }
-
-  @ApiOperation({
-    summary: 'Directorio de Actividades',
-    description:
-      'Listado de las actividades para la construcción de los dashboards',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    type: ActividadesDirectorioResponse,
-    description: 'Operación realizada con éxito',
-  })
-  @ApiResponse({
-    status: HttpStatus.FORBIDDEN,
-    type: HttpErrorDto,
-    description: 'Rol no autorizado',
-  })
-  @Get('directorio')
-  getActividadesDirectorio(
-    @Query() queryParam: ActividadesDirectorioQuery,
-  ): Promise<ActividadesDirectorioResponse> | ActividadesDirectorioResponse {
-    return this.actividadesService.getActividadesDirectorio(queryParam);
   }
 
   @ApiOperation({

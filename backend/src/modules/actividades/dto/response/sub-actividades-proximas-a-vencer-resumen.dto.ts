@@ -22,7 +22,7 @@ export class SubActividadesProximasAVencerResumen {
 
   @ApiProperty({
     example: EstadosSemaforo.A_TIEMPO,
-    description: 'Estado del semáforo en la que se encuentra la sub-actividad',
+    description: 'Estado del semaforo en la que se encuentra la sub-actividad',
   })
   estado_semaforo!: EstadosSemaforo;
 
