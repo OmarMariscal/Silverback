@@ -11,6 +11,8 @@ import { PaginacionQueryDto } from 'src/core/common/dto/request/paginacion.query
 import { ActividadesSupervicionGetResponse } from './dto/response/actividades-supervision-get.response.dto';
 import { ActividadesDirectorioQuery } from './dto/request/actividades-directorio.query.dto';
 import { ActividadesDirectorioResponse } from './dto/response/actividades-directorio.response.dto';
+import { ActividadesGetQuery } from './dto/request/actividades-get.query.dto';
+import { ActividadesGetResponse } from './dto/response/actividades-get.response.dto';
 
 @Injectable()
 export class ActividadesService {
@@ -57,5 +59,9 @@ export class ActividadesService {
     queryParams: ActividadesDirectorioQuery,
   ): ActividadesDirectorioResponse {
     return new ActividadesDirectorioResponse();
+  }
+
+  getActividades(queryActividades: ActividadesGetQuery): ActividadesGetResponse {
+    return new ActividadesGetResponse();
   }
 }

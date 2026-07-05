@@ -31,6 +31,8 @@ import { PaginacionQueryDto } from 'src/core/common/dto/request/paginacion.query
 import { ActividadesSupervicionGetResponse } from './dto/response/actividades-supervision-get.response.dto';
 import { ActividadesDirectorioResponse } from './dto/response/actividades-directorio.response.dto';
 import { ActividadesDirectorioQuery } from './dto/request/actividades-directorio.query.dto';
+import { ActividadesGetResponse } from './dto/response/actividades-get.response.dto';
+import { ActividadesGetQuery } from './dto/request/actividades-get.query.dto';
 
 @ApiTags('Actividades')
 @ApiBearerAuth()
@@ -39,6 +41,26 @@ export class ActividadesController {
   constructor(private readonly actividadesService: ActividadesService) {}
 
   //Get Estáticos
+  @ApiOperation({
+    summary: 'Obtener actividades',
+    description:
+      'Obtener un array con el data de las sub-actividades con la posibilidad para ciertos roles para filtrar por auditorID',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ActividadesGetResponse,
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    type: HttpErrorDto,
+  })
+  @Get('actividades')
+  getActividades(
+    @Query() queryActividades: ActividadesGetQuery,
+  ): ActividadesGetResponse {
+    return this.actividadesService.getActividades(queryActividades);
+  }
+
   @ApiOperation({
     summary: 'Actividades próximas a vencer',
     description:

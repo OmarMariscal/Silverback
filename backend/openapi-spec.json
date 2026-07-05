@@ -58,6 +58,55 @@
         ]
       }
     },
+    "/api/v1/actividades/actividades": {
+      "get": {
+        "description": "Obtener un array con el data de las sub-actividades con la posibilidad para ciertos roles para filtrar por auditorID",
+        "operationId": "ActividadesController_getActividades",
+        "parameters": [
+          {
+            "name": "auditor_id",
+            "required": false,
+            "in": "query",
+            "description": "Identificador único (UUID) del auditor buscado",
+            "schema": {
+              "example": "auditor-uuid-1",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActividadesGetResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtener actividades",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
     "/api/v1/actividades/proximas-vencer": {
       "get": {
         "description": "Retorna un listado de las actividades cuya fecha de término está más cerca",
@@ -725,6 +774,112 @@
           "error"
         ]
       },
+      "ActividadesGetRangoFechas": {
+        "type": "object",
+        "properties": {
+          "inicio": {
+            "type": "string",
+            "example": "2026-03-30",
+            "description": "Fecha de inicio de la sub-actividad"
+          },
+          "fin": {
+            "type": "string",
+            "example": "2026-05-23",
+            "description": "Fecha de término de la sub-actividad"
+          }
+        },
+        "required": [
+          "inicio",
+          "fin"
+        ]
+      },
+      "Estado": {
+        "type": "string",
+        "enum": [
+          "SIN_EMPEZAR",
+          "SOLICITADO",
+          "EN_PROGRESO",
+          "EN_REVISION",
+          "DEVUELTA",
+          "CONCLUIDA"
+        ],
+        "description": "Estado actual de la subactividad"
+      },
+      "ActividadesGetEstadoEjecucion": {
+        "type": "object",
+        "properties": {
+          "estado": {
+            "example": "CONCLUIDA",
+            "description": "Estado actual de la subactividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Estado"
+              }
+            ]
+          },
+          "etiqueta": {
+            "type": "string",
+            "example": "Fin: `2026-03-19`",
+            "description": "Etiqueta relevante al estado de la sub-actividad"
+          }
+        },
+        "required": [
+          "estado",
+          "etiqueta"
+        ]
+      },
+      "ActividadesGetData": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "act-uuid-1",
+            "description": "Identificador único (UUID) de la sub-actividad"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Auditorias pendientes de concluir de ejercicios anteriores",
+            "description": "Título de la sub-actividad"
+          },
+          "rango_fechas": {
+            "default": "Rango de fechas en registro de la sub-actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActividadesGetRangoFechas"
+              }
+            ]
+          },
+          "estado_ejecucion": {
+            "description": "Información relevante al estado actual de la sub-actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActividadesGetEstadoEjecucion"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "titulo",
+          "rango_fechas",
+          "estado_ejecucion"
+        ]
+      },
+      "ActividadesGetResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Array con la información de las sub-actividades",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActividadesGetData"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
       "SubActividadesProximasAVencerResumen": {
         "type": "object",
         "properties": {
@@ -1018,7 +1173,7 @@
           },
           "fecha_termino": {
             "type": "string",
-            "example": "Mar 2026",
+            "example": "2026-05-23",
             "description": "Fecha en formato reducido para visualización"
           },
           "asignacion": {

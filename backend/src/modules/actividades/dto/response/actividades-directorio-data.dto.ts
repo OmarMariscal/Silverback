@@ -33,7 +33,7 @@ export class ActividadesDirectorioData {
   titulo!: string;
 
   @ApiProperty({
-    example: 'Mar 2026',
+    example: '2026-05-23',
     description: 'Fecha en formato reducido para visualización',
   })
   fecha_termino!: string;
