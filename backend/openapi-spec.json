@@ -58,6 +58,131 @@
         ]
       }
     },
+    "/api/v1/actividades/proximas-vencer": {
+      "get": {
+        "description": "Retorna un listado de las actividades cuya fecha de término está más cerca",
+        "operationId": "ActividadesController_getSubActividadesProximasAVencer",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Cantidad máxima de actividades a retornar para la interfaz",
+            "schema": {
+              "default": 4,
+              "example": 4,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista recuperada exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubActividadesProximasVencerResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Rol no autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Actividades próximas a vencer",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
+    "/api/v1/actividades/supervision": {
+      "get": {
+        "description": "Datos de las sub-actividades recientemente devueltas para la construcción de la tabla inferior del dashboard del contralor",
+        "operationId": "ActividadesController_getActividadesSupervision",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Página actual",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Cantidad de registros por página",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActividadesSupervicionGetResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtener actividades devueltas para el dashboard",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
     "/api/v1/actividades/{actividadId}/resumen": {
       "get": {
         "description": "Obtener los detalles técnicos de una actividad principal",
@@ -103,6 +228,147 @@
           }
         ],
         "summary": "Detalles técnicos",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
+    "/api/v1/actividades/directorio": {
+      "get": {
+        "description": "Listado de las actividades para la construcción de los dashboards",
+        "operationId": "ActividadesController_getActividadesDirectorio",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Página actual",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Cantidad de registros por página",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "sort_by",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "fecha_termino",
+              "type": "string",
+              "enum": [
+                "identificador",
+                "fecha_termino",
+                "estado_flujo"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Búsqueda libre por texto o identificador",
+            "schema": {
+              "example": "Auditoria 055",
+              "type": "string"
+            }
+          },
+          {
+            "name": "centro_uuid",
+            "required": false,
+            "in": "query",
+            "description": "Identificador único (UUID) del centro universitario",
+            "schema": {
+              "example": "centro-uuid-1",
+              "type": "string"
+            }
+          },
+          {
+            "name": "tipo_actividad",
+            "required": false,
+            "in": "query",
+            "description": "Tipo de actividad asingado",
+            "schema": {
+              "example": "AUDITORIA",
+              "type": "string",
+              "enum": [
+                "AUDITORIA",
+                "REVISION"
+              ]
+            }
+          },
+          {
+            "name": "estado_flujo",
+            "required": false,
+            "in": "query",
+            "description": "Estado de la sub-actividad",
+            "schema": {
+              "example": "EN_PROGRESO",
+              "type": "string",
+              "enum": [
+                "SIN_EMPEZAR",
+                "SOLICITADO",
+                "EN_PROGRESO",
+                "EN_REVISION",
+                "DEVUELTA",
+                "CONCLUIDA"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActividadesDirectorioResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Directorio de Actividades",
         "tags": [
           "Actividades"
         ]
@@ -459,6 +725,132 @@
           "error"
         ]
       },
+      "SubActividadesProximasAVencerResumen": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "sub-act-uuid-1",
+            "description": "Identificador único (UUID) de la actividad"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Auditoría de Ingresos Autogenerados",
+            "description": "Título de la sub-actividad próxima a vencer"
+          },
+          "fecha_vencimiento": {
+            "type": "string",
+            "example": "2026-06-19",
+            "description": "Date-string con la fecha en la que se vence la sub-actividad"
+          },
+          "estado_semaforo": {
+            "type": "string",
+            "example": "A_TIEMPO",
+            "description": "Estado del semáforo en la que se encuentra la sub-actividad"
+          },
+          "etiqueta_tiempo": {
+            "type": "string",
+            "example": "Faltan 2 días",
+            "description": "Descripción relevante sobre la cuota de tiempo"
+          }
+        },
+        "required": [
+          "id",
+          "titulo",
+          "fecha_vencimiento",
+          "estado_semaforo",
+          "etiqueta_tiempo"
+        ]
+      },
+      "SubActividadesProximasVencerResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Array con las actividades listadas con una fecha más próxima a vencer",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubActividadesProximasAVencerResumen"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "PaginacionMetadata": {
+        "type": "object",
+        "properties": {
+          "total_registros": {
+            "type": "number",
+            "example": 45,
+            "description": "Total de registros encontrados en la base de datos"
+          },
+          "pagina_actual": {
+            "type": "number",
+            "example": 1,
+            "description": "Página enviada en el get actual"
+          },
+          "total_páginas": {
+            "type": "number",
+            "example": 9,
+            "description": "Total de páginas en las que se dividió la respuesta"
+          }
+        },
+        "required": [
+          "total_registros",
+          "pagina_actual",
+          "total_páginas"
+        ]
+      },
+      "ActividadesSupervisionSubActividadInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "sub-act-1",
+            "description": "Identificador único (UUID) de la sub-actividad"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Auditoría no. 055/2025 de Adquisiciones de Bienes",
+            "description": "Título de la sub-actividad"
+          },
+          "enviada_hace": {
+            "type": "string",
+            "example": "Enviada hace 2 días",
+            "description": "Etiqueta sobre el estado de la sub-actividad devuelta"
+          }
+        },
+        "required": [
+          "id",
+          "titulo",
+          "enviada_hace"
+        ]
+      },
+      "ActividadesSupervicionGetResponse": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "description": "Metadatos de la paginación",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginacionMetadata"
+              }
+            ]
+          },
+          "data": {
+            "description": "Array con el listado de la información relevante de las sub-actividades",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActividadesSupervisionSubActividadInfo"
+            }
+          }
+        },
+        "required": [
+          "meta",
+          "data"
+        ]
+      },
       "ActividadesResumenResponse": {
         "type": "object",
         "properties": {
@@ -506,6 +898,188 @@
           "objetivos_particulares",
           "meta_del_proyecto",
           "indicadores"
+        ]
+      },
+      "Tipo de la sub-actividad": {
+        "type": "string",
+        "enum": [
+          "AUDITORIA",
+          "REVISION"
+        ],
+        "description": "Tipo definido de la sub-actividad"
+      },
+      "Roles Permitidos": {
+        "type": "string",
+        "enum": [
+          "JEFA",
+          "CONTRALOR",
+          "AUDITOR"
+        ],
+        "description": "Rol del cual viene el get"
+      },
+      "ActividadesDirectorioAsignacion": {
+        "type": "object",
+        "properties": {
+          "tipo_vista": {
+            "example": "JEFA",
+            "description": "Rol del cual viene el get",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Roles Permitidos"
+              }
+            ]
+          },
+          "centro_clave": {
+            "type": "string",
+            "example": "CUCEI",
+            "description": "Clave del centro universitario en caso de usarse como query"
+          },
+          "contralor": {
+            "type": "string",
+            "example": "Mtro. Braulio Vicente",
+            "description": "Nombre del Contralor principal"
+          }
+        },
+        "required": [
+          "tipo_vista",
+          "centro_clave",
+          "contralor"
+        ]
+      },
+      "Estado de la Actividad": {
+        "type": "string",
+        "enum": [
+          "SIN_EMPEZAR",
+          "SOLICITADO",
+          "EN_PROGRESO",
+          "EN_REVISION",
+          "DEVUELTA",
+          "CONCLUIDA"
+        ]
+      },
+      "ActividadesDirectorioEstadoOperativo": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "example": "DEVUELTA",
+            "default": "Estado actual de la sub-actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Estado de la Actividad"
+              }
+            ]
+          },
+          "etiqueta": {
+            "type": "object",
+            "example": "Devuleta (3 Obs)",
+            "description": "Etiqueta relevente al estado de la actividad. Puede estar vacío cuando el estado lo amerite"
+          }
+        },
+        "required": [
+          "codigo",
+          "etiqueta"
+        ]
+      },
+      "Semáforo": {
+        "type": "string",
+        "enum": [
+          "A_TIEMPO",
+          "CRITICO",
+          "PRECAUCION"
+        ],
+        "description": "Estado del semáforo de la sub-actividad"
+      },
+      "ActividadesDirectorioData": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "act-uuid-1",
+            "description": "Identificador único (UUID) de la sub-actividad"
+          },
+          "identificador": {
+            "type": "object",
+            "example": "No. 055",
+            "description": "Identificador único proveniente del acta."
+          },
+          "tipo": {
+            "example": "AUDITORIA",
+            "description": "Tipo definido de la sub-actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Tipo de la sub-actividad"
+              }
+            ]
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Abatir el rezago en solventación de observaciones (Adquisiciones)",
+            "description": "Título de la actividad en cuestión"
+          },
+          "fecha_termino": {
+            "type": "string",
+            "example": "Mar 2026",
+            "description": "Fecha en formato reducido para visualización"
+          },
+          "asignacion": {
+            "description": "Información sobre el tipo de la asignación relevante al centro y contralor",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActividadesDirectorioAsignacion"
+              }
+            ]
+          },
+          "estado_operativo": {
+            "description": "Información del estado actual de la actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActividadesDirectorioEstadoOperativo"
+              }
+            ]
+          },
+          "semaforo": {
+            "example": "CRITICO",
+            "description": "Estado del semáforo de la sub-actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Semáforo"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "identificador",
+          "tipo",
+          "titulo",
+          "fecha_termino",
+          "asignacion",
+          "estado_operativo",
+          "semaforo"
+        ]
+      },
+      "ActividadesDirectorioResponse": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "description": "Registro de metadatos de la paginación",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginacionMetadata"
+              }
+            ]
+          },
+          "data": {
+            "description": "Array con las actividades recuperadas",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActividadesDirectorioData"
+            }
+          }
+        },
+        "required": [
+          "meta",
+          "data"
         ]
       },
       "TipoSubActividad": {
@@ -571,7 +1145,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "example": "sub-op-uuid-1",
+            "example": "sub-act-uuid-1",
             "description": "Identificador único (UUID) de la subactividad registrada"
           },
           "numero_orden": {

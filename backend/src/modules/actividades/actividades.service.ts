@@ -5,6 +5,12 @@ import { SubActividadesBulkRequest } from './dto/request/sub-actividadedes-bulk.
 import { SubActividadesSyncResponse } from './dto/response/sub-actividades-sync.response.dto';
 import { ActividadesFichaTecnicaResponse } from './dto/response/actividades-ficha-tecnica.response.dto';
 import { ActividadesPatchFichaTecnicaRequest } from './dto/request/actividades-path-ficha-tecnica.request.dto';
+import { SubActividadesProximasVencerResponse } from './dto/response/sub-actividades-proximas-a-vencer-get.response.dto';
+import { SubActividadesProximasAVencerQuery } from './dto/request/sub-actividades-proximas-a-vencer.query.dto';
+import { PaginacionQueryDto } from 'src/core/common/dto/request/paginacion.query.dto';
+import { ActividadesSupervicionGetResponse } from './dto/response/actividades-supervision-get.response.dto';
+import { ActividadesDirectorioQuery } from './dto/request/actividades-directorio.query.dto';
+import { ActividadesDirectorioResponse } from './dto/response/actividades-directorio.response.dto';
 
 @Injectable()
 export class ActividadesService {
@@ -34,5 +40,22 @@ export class ActividadesService {
     fichaTecnica: ActividadesPatchFichaTecnicaRequest,
   ): ActividadesFichaTecnicaResponse {
     return new ActividadesFichaTecnicaResponse();
+  }
+
+  getSubActividadesProximasAVencer(
+    limit: SubActividadesProximasAVencerQuery,
+  ): SubActividadesProximasVencerResponse {
+    return new SubActividadesProximasVencerResponse();
+  }
+
+  getActividadesSupervicion(
+    queryPaginacion: PaginacionQueryDto,
+  ): ActividadesSupervicionGetResponse {
+    return new ActividadesSupervicionGetResponse();
+  }
+  getActividadesDirectorio(
+    queryParams: ActividadesDirectorioQuery,
+  ): ActividadesDirectorioResponse {
+    return new ActividadesDirectorioResponse();
   }
 }

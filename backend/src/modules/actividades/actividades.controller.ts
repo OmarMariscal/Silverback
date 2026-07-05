@@ -7,6 +7,7 @@ import {
   Body,
   Patch,
   Put,
+  Query,
 } from '@nestjs/common';
 import { ActividadesService } from './actividades.service';
 import {
@@ -15,7 +16,6 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiTags,
-  ApiQuery,
 } from '@nestjs/swagger';
 import { ActividadesResumenResponse } from './dto/response/actividades-resumen.response.dto';
 import { HttpErrorDto } from 'src/core/common/dto/response/http-error.dto';
@@ -25,12 +25,65 @@ import { SubActividadesSyncRequest } from './dto/request/sub-actividades-sync.re
 import { SubActividadesSyncResponse } from './dto/response/sub-actividades-sync.response.dto';
 import { ActividadesFichaTecnicaResponse } from './dto/response/actividades-ficha-tecnica.response.dto';
 import { ActividadesPatchFichaTecnicaRequest } from './dto/request/actividades-path-ficha-tecnica.request.dto';
+import { SubActividadesProximasVencerResponse } from './dto/response/sub-actividades-proximas-a-vencer-get.response.dto';
+import { SubActividadesProximasAVencerQuery } from './dto/request/sub-actividades-proximas-a-vencer.query.dto';
+import { PaginacionQueryDto } from 'src/core/common/dto/request/paginacion.query.dto';
+import { ActividadesSupervicionGetResponse } from './dto/response/actividades-supervision-get.response.dto';
+import { ActividadesDirectorioResponse } from './dto/response/actividades-directorio.response.dto';
+import { ActividadesDirectorioQuery } from './dto/request/actividades-directorio.query.dto';
 
 @ApiTags('Actividades')
 @ApiBearerAuth()
 @Controller('actividades')
 export class ActividadesController {
   constructor(private readonly actividadesService: ActividadesService) {}
+
+  //Get Estáticos
+  @ApiOperation({
+    summary: 'Actividades próximas a vencer',
+    description:
+      'Retorna un listado de las actividades cuya fecha de término está más cerca',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista recuperada exitosamente',
+    type: SubActividadesProximasVencerResponse,
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Rol no autorizado',
+    type: HttpErrorDto,
+  })
+  @Get('proximas-vencer')
+  getSubActividadesProximasAVencer(
+    @Query() query: SubActividadesProximasAVencerQuery,
+  ):
+    | Promise<SubActividadesProximasVencerResponse>
+    | SubActividadesProximasVencerResponse {
+    return this.actividadesService.getSubActividadesProximasAVencer(query);
+  }
+
+  @ApiOperation({
+    summary: 'Obtener actividades devueltas para el dashboard',
+    description:
+      'Datos de las sub-actividades recientemente devueltas para la construcción de la tabla inferior del dashboard del contralor',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ActividadesSupervicionGetResponse,
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    type: HttpErrorDto,
+  })
+  @Get('supervision')
+  getActividadesSupervision(
+    @Query() queryPaginacion: PaginacionQueryDto,
+  ):
+    | Promise<ActividadesSupervicionGetResponse>
+    | ActividadesSupervicionGetResponse {
+    return this.actividadesService.getActividadesSupervicion(queryPaginacion);
+  }
 
   @ApiOperation({
     summary: 'Detalles técnicos',
@@ -58,6 +111,26 @@ export class ActividadesController {
     @Param('actividadId') actUuid: string,
   ): Promise<ActividadesResumenResponse> | ActividadesResumenResponse {
     return this.actividadesService.getResumen(actUuid);
+  }
+
+  @ApiOperation({
+    summary: 'Directorio de Actividades',
+    description:
+      'Listado de las actividades para la construcción de los dashboards',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ActividadesDirectorioResponse,
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    type: HttpErrorDto,
+  })
+  @Get('directorio')
+  getActividadesDirectorio(
+    @Query() queryParam: ActividadesDirectorioQuery,
+  ): Promise<ActividadesDirectorioResponse> | ActividadesDirectorioResponse {
+    return this.actividadesService.getActividadesDirectorio(queryParam);
   }
 
   @ApiOperation({

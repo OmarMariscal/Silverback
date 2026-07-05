@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class SubActividadesResumen {
   @ApiProperty({
-    example: 'sub-op-uuid-1',
+    example: 'sub-act-uuid-1',
     description: 'Identificador único (UUID) de la subactividad registrada',
   })
   id!: string;
