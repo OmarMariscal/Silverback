@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "strictPropertyInitialization": false,
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "resolvePackageJsonExports": true,
@@ -13,7 +14,11 @@
     "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
+    "paths": {
+  // add ./src from baseUrl
+  "@app/*": ["./src/app/*"],
+  "@lib/*": ["./src/lib/*"]
+},
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,

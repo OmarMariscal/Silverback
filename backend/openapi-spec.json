@@ -14,6 +14,333 @@
           "App"
         ]
       }
+    },
+    "/api/v1/poas/mi-poa-actual": {
+      "get": {
+        "operationId": "PoasController_getPoaActual",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoaActualDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "POAs"
+        ]
+      }
+    },
+    "/api/v1/poas/{poaid}/actividades": {
+      "post": {
+        "operationId": "PoasController_agregarActividades",
+        "parameters": [
+          {
+            "name": "poaid",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearActividadesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Actividad agregada exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrearActividadesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "POAs"
+        ]
+      }
+    },
+    "/api/v1/poas/{poaid}/presentar": {
+      "post": {
+        "operationId": "PoasController_presentarPoa",
+        "parameters": [
+          {
+            "name": "poaid",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresentarPoasDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "422": {
+            "description": "Error al presentar la POA",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresentarPoasResponseErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "POAs"
+        ]
+      }
+    },
+    "/api/v1/poas": {
+      "post": {
+        "operationId": "PoasController_cancelarEnvio",
+        "parameters": [
+          {
+            "name": "poaid",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelarPoaDataDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "POAs"
+        ]
+      }
+    },
+    "/api/v1/catalogos/banco-actividades": {
+      "get": {
+        "operationId": "CatalogoController_getBancoActividades",
+        "parameters": [
+          {
+            "name": "Busqueda",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Obtiene el catálogo de actividades del banco de actividades",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BancoActividadesDataDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Catalogos"
+        ]
+      }
+    },
+    "/api/v1/catalogos/banco-actividades/{id}": {
+      "get": {
+        "operationId": "CatalogoController_getBancoActividadesById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Obtiene la actividad con el ID especificado dentro del banco",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BancoIdDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Catalogos"
+        ]
+      }
+    },
+    "/api/v1/catalogos/banco-actividades/{id}/sub-actividades-sugeridas": {
+      "get": {
+        "operationId": "CatalogoController_getSubActividadesSugeridas",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Obtiene las sub-actividades sugeridas para una actividad específica",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActividadSugeridaDataDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Catalogos"
+        ]
+      }
+    },
+    "/api/v1/catalogos/centros": {
+      "get": {
+        "operationId": "CatalogoController_getCentros",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Obtiene el catálogo de centros de trabajo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CentroDataDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Catalogos"
+        ]
+      }
+    },
+    "/api/v1/auditores": {
+      "get": {
+        "operationId": "AuditoresController_getAuditores",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Obtiene la lista de auditores",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditoresDataDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auditores"
+        ]
+      }
+    },
+    "/api/v1/dashboard/contralor/kpis": {
+      "get": {
+        "operationId": "DashboardController_getDashboardContralor",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Obtiene los KPIs del dashboard para el contralor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/api/v1/dashboard/jefatura/kpis": {
+      "get": {
+        "operationId": "DashboardController_getDashboardJefa",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Obtiene los kpis del dashboard de la jefa",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardJefaDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/api/v1/dashboard/jefatura/rezago-centros": {
+      "get": {
+        "operationId": "DashboardController_getRezagoCentros",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Obtiene una lista de centros con tareas rezagadas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RezagoDataDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      }
     }
   },
   "info": {
@@ -32,6 +359,990 @@
         "type": "http"
       }
     },
-    "schemas": {}
+    "schemas": {
+      "ActividadesResumenDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID unico de la actividad",
+            "example": "act-01-uuid"
+          },
+          "folio": {
+            "type": "string",
+            "description": "Numero de folio de la actividad",
+            "example": "01"
+          },
+          "titulo": {
+            "type": "string",
+            "description": "Titulo de la actividad",
+            "example": "Abatir el rezago en la solventación..."
+          },
+          "participacion_global": {
+            "type": "number",
+            "description": "Porcentaje de participacion en la actividad",
+            "example": 50
+          },
+          "auditores_nombres": {
+            "description": "Lista con nombres de los auditores",
+            "example": [
+              "Lic. Auditor Auxiliar",
+              "Mtro. Titular"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "folio",
+          "titulo",
+          "participacion_global",
+          "auditores_nombres"
+        ]
+      },
+      "PoaActualDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID unico de la POA actual",
+            "example": "poa-2026-uuid"
+          },
+          "anio_fiscal": {
+            "type": "number",
+            "description": "Anio fiscal en la que se encuentra la POA",
+            "example": 2026
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "SIN ENVIAR",
+              "EN REVISION",
+              "DEVUELTA",
+              "ACEPTADA",
+              "BORRADOR"
+            ],
+            "description": "Estado de la actividad(enum)",
+            "example": "BORRADOR"
+          },
+          "actividades_resumen": {
+            "description": "Lista de acrividades de manera resumida",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActividadesResumenDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "anio_fiscal",
+          "estado",
+          "actividades_resumen"
+        ]
+      },
+      "EquipoAuditorDto": {
+        "type": "object",
+        "properties": {
+          "total_participantes": {
+            "type": "number",
+            "description": "Numero de participantes en la actividad",
+            "example": 2
+          },
+          "auditores_ids": {
+            "description": "Lista con los IDs de los auditores que participaran en la actividad",
+            "example": [
+              "uuid-auditor-1",
+              "uuid-auditor-2"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "total_participantes",
+          "auditores_ids"
+        ]
+      },
+      "CrearActividadesDto": {
+        "type": "object",
+        "properties": {
+          "banco_actividad_id": {
+            "type": "string",
+            "description": "ID de la actividad dentro del banco de actividades",
+            "example": "banco-uuid-1"
+          },
+          "titulo": {
+            "type": "string",
+            "description": "Titulo de la actividad",
+            "example": "Revisión al rubro de Obra Pública"
+          },
+          "justificacion": {
+            "type": "string",
+            "description": "Justificacion del porque de la Actividad",
+            "example": "Verificar el adecuado cumplimiento en mi Centro Universitario..."
+          },
+          "objetivo_general": {
+            "type": "string",
+            "description": "Objetivo de la actividad",
+            "example": 2026
+          },
+          "equipo_auditor": {
+            "description": "Informacion sobre el equipo de participantes en esta actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EquipoAuditorDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "banco_actividad_id",
+          "titulo",
+          "justificacion",
+          "objetivo_general",
+          "equipo_auditor"
+        ]
+      },
+      "CrearActividadesResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID de la nueva actividad agregada",
+            "example": "act-nueva-uuid-999"
+          },
+          "folio": {
+            "type": "string",
+            "description": "Folio de la nueva actividad agregada",
+            "example": "03"
+          },
+          "mensaje": {
+            "type": "string",
+            "description": "Mensaje API de que la accion fue completada con exito",
+            "example": "Actividad guardada exitosamente."
+          }
+        },
+        "required": [
+          "id",
+          "folio",
+          "mensaje"
+        ]
+      },
+      "PresentarPoasDataDto": {
+        "type": "object",
+        "properties": {
+          "poa_id": {
+            "type": "string",
+            "description": "ID de la POA a presentar",
+            "example": "uuid-poa-1234"
+          },
+          "estado_anterior": {
+            "type": "string",
+            "description": "Estado anterior de la POA",
+            "example": "BORRADOR"
+          },
+          "estado_nuevo": {
+            "type": "string",
+            "description": "Estado nuevo de la POA",
+            "example": "EN_REVISION"
+          },
+          "fecha_envio": {
+            "type": "string",
+            "description": "Fecha y hora en la que se envio la POA",
+            "example": "2026-06-28T19:30:00Z"
+          },
+          "mensaje": {
+            "type": "string",
+            "description": "ID de la POA a presentar",
+            "example": "uuid-poa-1234"
+          }
+        },
+        "required": [
+          "poa_id",
+          "estado_anterior",
+          "estado_nuevo",
+          "fecha_envio",
+          "mensaje"
+        ]
+      },
+      "PresentarPoasDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PresentarPoasDataDto"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "PresentarPoasResponseErrorDto": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Titulo del error",
+            "example": "Validación de Integridad Fallida"
+          },
+          "message": {
+            "type": "string",
+            "description": "Descripcion del error",
+            "example": "No es posible enviar un POA vacío."
+          },
+          "detalles": {
+            "description": "Detalles a solucionar para resolver el error",
+            "example": [
+              "El POA debe contener al menos 1 actividad registrada.",
+              "Existen sub-actividades sin un auditor responsable asignado."
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "error",
+          "message",
+          "detalles"
+        ]
+      },
+      "CancelarPoaDto": {
+        "type": "object",
+        "properties": {
+          "poa_id": {
+            "type": "string",
+            "description": "ID de la POA a cancelar",
+            "example": "uuid-poa-1234"
+          },
+          "estado_anterior": {
+            "type": "string",
+            "description": "Estado anterior de la POA",
+            "example": "EN_REVISION"
+          },
+          "estado_nuevo": {
+            "type": "string",
+            "description": "Estado nuevo de la POA",
+            "example": "BORRADOR"
+          },
+          "fecha_cancelacion": {
+            "type": "string",
+            "description": "Fecha de cancelación de la POA",
+            "example": "2026-06-28T19:45:00Z"
+          },
+          "mensaje": {
+            "type": "string",
+            "description": "Mensaje de cancelación de la POA",
+            "example": "El envío ha sido cancelado. El POA vuelve a estar disponible para su edición."
+          }
+        },
+        "required": [
+          "poa_id",
+          "estado_anterior",
+          "estado_nuevo",
+          "fecha_cancelacion",
+          "mensaje"
+        ]
+      },
+      "CancelarPoaDataDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CancelarPoaDto"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "BancoActividadesDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "ID de la actividad",
+            "example": "banco-uuid-1"
+          },
+          "tipo": {
+            "type": "string",
+            "description": "Tipo de actividad",
+            "example": "AUDITORIA"
+          },
+          "titulo": {
+            "type": "string",
+            "description": "Titulo de la actividad",
+            "example": "Revision al rubro de Obra Publica"
+          },
+          "descripcion_corta": {
+            "type": "string",
+            "description": "Explicacion breve de la actividad",
+            "example": "Verificar el adecuado cumplimiento de los procedimientos relativos a la..."
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "titulo",
+          "descripcion_corta"
+        ]
+      },
+      "BancoActividadesDataDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Lista de actividades",
+            "example": [
+              {
+                "id": 1,
+                "tipo": "AUDITORIA",
+                "titulo": "Revision al rubro de Obra Publica",
+                "descripcion_corta": "Verificar el adecuado cumplimiento de los procedimientos relativos a la..."
+              }
+            ],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BancoActividadesDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "BancoIdDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID del banco de actividades",
+            "example": "banco-uuid-1"
+          },
+          "titulo": {
+            "type": "string",
+            "description": "Titulo de la actividad",
+            "example": "Revisión al rubro de Obra Pública"
+          },
+          "justificacion_plantilla": {
+            "type": "string",
+            "description": "Justificación de la actividad",
+            "example": "Verificar el adecuado cumplimiento a los procedimientos relativos a la planeación, programación..."
+          },
+          "objetivo_gen_plantilla": {
+            "type": "string",
+            "description": "Objetivo general de la actividad",
+            "example": "Asegurar la correcta aplicación de los recursos destinados a la obra pública..."
+          }
+        },
+        "required": [
+          "id",
+          "titulo",
+          "justificacion_plantilla",
+          "objetivo_gen_plantilla"
+        ]
+      },
+      "ActividadSugeridaDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID de la actividad sugerida",
+            "example": "actividad-uuid-1"
+          },
+          "descripcion": {
+            "type": "string",
+            "description": "Descripcion de la actividad sugerida",
+            "example": "Elaborar acta circunstanciada para desincorporar del Patrimonio..."
+          },
+          "tipo_sugerido": {
+            "type": "string",
+            "description": "Que tipo de actividad es la sugerida",
+            "example": "AUDITORIA"
+          }
+        },
+        "required": [
+          "id",
+          "descripcion",
+          "tipo_sugerido"
+        ]
+      },
+      "ActividadSugeridaDataDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Lista de actividades sugeridas",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActividadSugeridaDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "CentroDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID del centro de trabajo",
+            "example": "centro-uuid-1"
+          },
+          "clave": {
+            "type": "string",
+            "description": "Clave del centro universitario",
+            "example": "CUCEI"
+          },
+          "nombre": {
+            "type": "string",
+            "description": "Nombre del centro universitario",
+            "example": "Centro Universitario de Ciencias Exactas e Ingenierías"
+          },
+          "subtitulo_interfaz": {
+            "type": "string",
+            "description": "Subtítulo para la interfaz",
+            "example": "Ciencias Exactas"
+          }
+        },
+        "required": [
+          "id",
+          "clave",
+          "nombre",
+          "subtitulo_interfaz"
+        ]
+      },
+      "CentroDataDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Lista de centros de trabajo",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CentroDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "AuditoresDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador unico del auditor",
+            "example": "uuid-auditor-1"
+          },
+          "nombre_completo": {
+            "type": "string",
+            "description": "Nombre completo del auditor",
+            "example": "Braulio Vicente Ruiz"
+          },
+          "cargo_etiqueta": {
+            "type": "string",
+            "description": "Cargo del auditor",
+            "example": "Mtro. Titular"
+          }
+        },
+        "required": [
+          "id",
+          "nombre_completo",
+          "cargo_etiqueta"
+        ]
+      },
+      "AuditoresDataDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Lista de auditores",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditoresDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "CentroUniversitarioDto": {
+        "type": "object",
+        "properties": {
+          "clave": {
+            "type": "string",
+            "description": "Clave del centro universitario",
+            "example": "CU VALLES"
+          },
+          "nombre": {
+            "type": "string",
+            "description": "Nombre del centro universitario",
+            "example": "Centro Universitario de los Valles"
+          }
+        },
+        "required": [
+          "clave",
+          "nombre"
+        ]
+      },
+      "BandejaEntradaDto": {
+        "type": "object",
+        "properties": {
+          "devueltas": {
+            "type": "number",
+            "description": "Número de actividades devueltas para corrección",
+            "example": 3
+          },
+          "listas_empezar": {
+            "type": "number",
+            "description": "Número de actividades listas para empezar",
+            "example": 4
+          }
+        },
+        "required": [
+          "devueltas",
+          "listas_empezar"
+        ]
+      },
+      "TarjetasDto": {
+        "type": "object",
+        "properties": {
+          "bandeja_entrada": {
+            "description": "Información de la bandeja de entrada",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BandejaEntradaDto"
+              }
+            ]
+          },
+          "riesgo_critico": {
+            "type": "number",
+            "description": "Número de actividades con riesgo crítico",
+            "example": 2
+          },
+          "precaucion": {
+            "type": "number",
+            "description": "Número de actividades con precaución",
+            "example": 5
+          },
+          "tasa_solventacion": {
+            "type": "number",
+            "description": "Tasa de solventación de actividades",
+            "example": 82
+          }
+        },
+        "required": [
+          "bandeja_entrada",
+          "riesgo_critico",
+          "precaucion",
+          "tasa_solventacion"
+        ]
+      },
+      "SemaforosDto": {
+        "type": "object",
+        "properties": {
+          "a_tiempo": {
+            "type": "number",
+            "description": "Numero de actividades en verde",
+            "example": 17
+          },
+          "alerta": {
+            "type": "number",
+            "description": "Número de actividades en amarillo",
+            "example": 5
+          },
+          "critico": {
+            "type": "number",
+            "description": "Número de actividades en rojo",
+            "example": 2
+          },
+          "total": {
+            "type": "number",
+            "description": "Número de actividades totales",
+            "example": 14
+          }
+        },
+        "required": [
+          "a_tiempo",
+          "alerta",
+          "critico",
+          "total"
+        ]
+      },
+      "FlujoDto": {
+        "type": "object",
+        "properties": {
+          "sin_empezar": {
+            "type": "number",
+            "description": "Número de actividades sin empezar",
+            "example": 4
+          },
+          "en_proceso": {
+            "type": "number",
+            "description": "Número de actividades en proceso",
+            "example": 12
+          },
+          "por_revisar": {
+            "type": "number",
+            "description": "Número de actividades por revisar",
+            "example": 2
+          },
+          "concluidas": {
+            "type": "number",
+            "description": "Número de actividades concluidas",
+            "example": 6
+          },
+          "total": {
+            "type": "number",
+            "description": "Número de actividades totales",
+            "example": 24
+          }
+        },
+        "required": [
+          "sin_empezar",
+          "en_proceso",
+          "por_revisar",
+          "concluidas",
+          "total"
+        ]
+      },
+      "GraficasDto": {
+        "type": "object",
+        "properties": {
+          "semaforos": {
+            "description": "Distribucion general del semaforo del contralor",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SemaforosDto"
+              }
+            ]
+          },
+          "flujo": {
+            "description": "Flujo de trabajo del contralor",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FlujoDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "semaforos",
+          "flujo"
+        ]
+      },
+      "DashboardDto": {
+        "type": "object",
+        "properties": {
+          "centro_universitario": {
+            "description": "Apartado de centros universitarios",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CentroUniversitarioDto"
+              }
+            ]
+          },
+          "tarjetas": {
+            "description": "Apartado de tarjetas de información",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TarjetasDto"
+              }
+            ]
+          },
+          "graficas": {
+            "description": "Apartado de gráficas",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GraficasDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "centro_universitario",
+          "tarjetas",
+          "graficas"
+        ]
+      },
+      "PendientesDto": {
+        "type": "object",
+        "properties": {
+          "actividades_por_revisar": {
+            "type": "number",
+            "description": "Numero de actividades por revisar",
+            "example": 14
+          },
+          "actividades_solicitades": {
+            "type": "number",
+            "description": "Numero de actividades solicitadas",
+            "example": 5
+          }
+        },
+        "required": [
+          "actividades_por_revisar",
+          "actividades_solicitades"
+        ]
+      },
+      "RiesgoCriticoDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "Numero de actividades en riesgo critico",
+            "example": 8
+          },
+          "descripcion": {
+            "type": "string",
+            "description": "Descripcion del estado de las actividades que caen en esta categoria",
+            "example": "Vencidas o por vencer"
+          }
+        },
+        "required": [
+          "total",
+          "descripcion"
+        ]
+      },
+      "PrecaucionDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "Numero de actividades en precaucion",
+            "example": 23
+          },
+          "descripcion": {
+            "type": "string",
+            "description": "Descripcion del estado de las actividades que caen en esta categoria",
+            "example": "A menos de 15 días"
+          }
+        },
+        "required": [
+          "total",
+          "descripcion"
+        ]
+      },
+      "TasaSolventacionDto": {
+        "type": "object",
+        "properties": {
+          "porentaje": {
+            "type": "number",
+            "description": "Porcentaje de actividades solventadas",
+            "example": 68
+          },
+          "tendencia_mes": {
+            "type": "string",
+            "description": "Tendencia mensual de solventacion",
+            "example": "+5%"
+          }
+        },
+        "required": [
+          "porentaje",
+          "tendencia_mes"
+        ]
+      },
+      "TarjetasSuperioresDto": {
+        "type": "object",
+        "properties": {
+          "pendientes": {
+            "description": "Tarjeta de las tareas pendientes",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PendientesDto"
+              }
+            ]
+          },
+          "riesgo_critico": {
+            "description": "Tarjeta de las tareas con riesgo critico",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RiesgoCriticoDto"
+              }
+            ]
+          },
+          "precaucion": {
+            "description": "Tarjeta de las tareas en estado de precaucion",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PrecaucionDto"
+              }
+            ]
+          },
+          "tasa_solventacion": {
+            "description": "Tarjeta de la tasa de solventacion",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TasaSolventacionDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "pendientes",
+          "riesgo_critico",
+          "precaucion",
+          "tasa_solventacion"
+        ]
+      },
+      "GraficaSemaforoDto": {
+        "type": "object",
+        "properties": {
+          "a_tiempo": {
+            "type": "number",
+            "description": "Cantidad de tareas en estado de \"a tiempo\"",
+            "example": 85
+          },
+          "alerta": {
+            "type": "number",
+            "description": "Cantidad de tareas en estado de \"alerta\"",
+            "example": 35
+          },
+          "critico": {
+            "type": "number",
+            "description": "Cantidad de tareas en estado de \"critico\"",
+            "example": 22
+          },
+          "total_actividades_red": {
+            "type": "number",
+            "description": "Total de tareas",
+            "example": 142
+          }
+        },
+        "required": [
+          "a_tiempo",
+          "alerta",
+          "critico",
+          "total_actividades_red"
+        ]
+      },
+      "GraficaDistribucionDto": {
+        "type": "object",
+        "properties": {
+          "sin_empezar": {
+            "type": "number",
+            "description": "Numero de actividades sin empezar",
+            "example": 28
+          },
+          "en_proceso": {
+            "type": "number",
+            "description": "Numero de actividades en proceso",
+            "example": 64
+          },
+          "por_revisar": {
+            "type": "number",
+            "description": "Numero de actividades por revisar",
+            "example": 14
+          },
+          "concluidas": {
+            "type": "number",
+            "description": "Numero de actividades concluidas",
+            "example": 36
+          },
+          "total_actividades_red": {
+            "type": "number",
+            "description": "Total de actividades",
+            "example": 142
+          }
+        },
+        "required": [
+          "sin_empezar",
+          "en_proceso",
+          "por_revisar",
+          "concluidas",
+          "total_actividades_red"
+        ]
+      },
+      "DashboardJefaDto": {
+        "type": "object",
+        "properties": {
+          "tarjetas_superiores": {
+            "description": "Apartado de tarjetas en el dashboard",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TarjetasSuperioresDto"
+              }
+            ]
+          },
+          "grafica_semaforos": {
+            "description": "Grafica de semaforo",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GraficaSemaforoDto"
+              }
+            ]
+          },
+          "grafica_distribucion_estado": {
+            "description": "Grafica de estados",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GraficaDistribucionDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "tarjetas_superiores",
+          "grafica_semaforos",
+          "grafica_distribucion_estado"
+        ]
+      },
+      "RezagoDto": {
+        "type": "object",
+        "properties": {
+          "centro_id": {
+            "type": "string",
+            "description": "ID unico del centro universitario",
+            "example": "uuid-cucs-999"
+          },
+          "centro_clave": {
+            "type": "string",
+            "description": "Clave del centro universitario",
+            "example": "CUCS"
+          },
+          "centro_nombre": {
+            "type": "string",
+            "description": "Nombre del centro universitario",
+            "example": "Centro Universitario de Ciencias de la Salud"
+          },
+          "actividades_criticas": {
+            "type": "number",
+            "description": "Numero de actividades criticas",
+            "example": 8
+          },
+          "porcentaje_del_rezago_global": {
+            "type": "number",
+            "description": "Que tanto del total de actividades son criticas",
+            "example": 36.3
+          }
+        },
+        "required": [
+          "centro_id",
+          "centro_clave",
+          "centro_nombre",
+          "actividades_criticas",
+          "porcentaje_del_rezago_global"
+        ]
+      },
+      "RezagoDataDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Lista de los centros rezagados",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RezagoDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    }
   }
 }
