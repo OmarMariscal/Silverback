@@ -15,12 +15,11 @@
     "sourceMap": true,
     "outDir": "./dist",
     "paths": {
-  // add ./src from baseUrl
-  "@domain/*": ["./src/domain/*"],
-  "@prisma/*": ["./src/prisma/*"],
-  "@core/*": ["./src/core/*"],
-  "@modules/*": ["./src/modules/*"]
-},
+        "@domain/*": ["./src/domain/*"],
+        "@prisma/*": ["./src/prisma/*"],
+        "@core/*": ["./src/core/*"],
+        "@modules/*": ["./src/modules/*"]
+    },
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
