@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Roles } from 'src/domain/roles/roles.enum';
+import { Roles } from '@domain/roles/roles.enum';
 
 export class ActividadesDirectorioAsignacionContralor {
   @ApiProperty({

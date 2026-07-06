@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EstadosSemaforo } from 'src/domain/semaforo/estados-semaforo-enum';
+import { EstadosSemaforo } from '@domain/semaforo/estados-semaforo-enum';
 
 export class SubActividadesProximasAVencerResumen {
   @ApiProperty({

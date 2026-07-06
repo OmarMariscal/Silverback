@@ -7,7 +7,7 @@ import { ActividadesFichaTecnicaResponse } from './dto/response/actividades-fich
 import { ActividadesPatchFichaTecnicaRequest } from './dto/request/actividades-path-ficha-tecnica.request.dto';
 import { SubActividadesProximasVencerResponse } from './dto/response/sub-actividades-proximas-a-vencer-get.response.dto';
 import { SubActividadesProximasAVencerQuery } from './dto/request/sub-actividades-proximas-a-vencer.query.dto';
-import { PaginacionQueryDto } from 'src/core/common/dto/request/paginacion.query.dto';
+import { PaginacionQueryDto } from '@core/common/dto/request/paginacion.query.dto';
 import { ActividadesSupervicionGetResponse } from './dto/response/actividades-supervision-get.response.dto';
 import { ActividadesDirectorioQuery } from './dto/request/actividades-directorio.query.dto';
 import { ActividadesDirectorioResponse } from './dto/response/actividades-directorio.response.dto';
