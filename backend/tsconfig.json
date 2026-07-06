@@ -16,8 +16,10 @@
     "outDir": "./dist",
     "paths": {
   // add ./src from baseUrl
-  "@app/*": ["./src/app/*"],
-  "@lib/*": ["./src/lib/*"]
+  "@domain/*": ["./src/domain/*"],
+  "@prisma/*": ["./src/prisma/*"],
+  "@core/*": ["./src/core/*"],
+  "@modules/*": ["./src/modules/*"]
 },
     "incremental": true,
     "skipLibCheck": true,
