@@ -1,8 +1,8 @@
 import { Controller, HttpStatus, HttpCode, Post, Body } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiResponse, ApiTags, ApiOperation } from '@nestjs/swagger';
-import { AuthLoginResponse } from './dto/response/auth-login-response.dto';
-import { AuthLoginRequest } from './dto/request/auth-login-request.dto';
+import { AuthLoginResponse } from './dto/response/auth-login.response.dto';
+import { AuthLoginRequest } from './dto/request/auth-login.request.dto';
 import { HttpErrorDto } from '../common/dto/response/http-error.dto';
 
 @ApiTags('Autenticación')

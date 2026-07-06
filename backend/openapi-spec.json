@@ -57,6 +57,619 @@
           "Autenticación"
         ]
       }
+    },
+    "/api/v1/actividades": {
+      "get": {
+        "description": "Obtener un array con el data de las sub-actividades con la posibilidad para ciertos roles para filtrar por auditorID",
+        "operationId": "ActividadesController_getActividades",
+        "parameters": [
+          {
+            "name": "auditor_id",
+            "required": false,
+            "in": "query",
+            "description": "Identificador único (UUID) del auditor buscado",
+            "schema": {
+              "example": "auditor-uuid-1",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación realizada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActividadesGetResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Rol no autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtener actividades",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
+    "/api/v1/actividades/proximas-vencer": {
+      "get": {
+        "description": "Retorna un listado de las actividades cuya fecha de término está más cerca",
+        "operationId": "ActividadesController_getSubActividadesProximasAVencer",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Cantidad máxima de actividades a retornar para la interfaz",
+            "schema": {
+              "default": 4,
+              "example": 4,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista recuperada exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubActividadesProximasVencerResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Rol no autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Actividades próximas a vencer",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
+    "/api/v1/actividades/supervision": {
+      "get": {
+        "description": "Datos de las sub-actividades recientemente devueltas para la construcción de la tabla inferior del dashboard del contralor",
+        "operationId": "ActividadesController_getActividadesSupervision",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Página actual",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Cantidad de registros por página",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación realizada con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActividadesSupervicionGetResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Rol no autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtener actividades devueltas para el dashboard",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
+    "/api/v1/actividades/directorio": {
+      "get": {
+        "description": "Listado de las actividades para la construcción de los dashboards",
+        "operationId": "ActividadesController_getActividadesDirectorio",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Página actual",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Cantidad de registros por página",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "sort_by",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "FECHA_TERMINO",
+              "type": "string",
+              "enum": [
+                "IDENTIFICADOR",
+                "FECHA_TERMINO",
+                "ESTADO_FLUJO"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Búsqueda libre por texto o identificador",
+            "schema": {
+              "example": "Auditoria 055",
+              "type": "string"
+            }
+          },
+          {
+            "name": "centro_uuid",
+            "required": false,
+            "in": "query",
+            "description": "Identificador único (UUID) del centro universitario",
+            "schema": {
+              "example": "centro-uuid-1",
+              "type": "string"
+            }
+          },
+          {
+            "name": "tipo_actividad",
+            "required": false,
+            "in": "query",
+            "description": "Tipo de actividad asingado",
+            "schema": {
+              "example": "AUDITORIA",
+              "type": "string",
+              "enum": [
+                "AUDITORIA",
+                "REVISION"
+              ]
+            }
+          },
+          {
+            "name": "estado_flujo",
+            "required": false,
+            "in": "query",
+            "description": "Estado de la sub-actividad",
+            "schema": {
+              "example": "EN_PROGRESO",
+              "type": "string",
+              "enum": [
+                "SIN_EMPEZAR",
+                "SOLICITADO",
+                "EN_PROGRESO",
+                "EN_REVISION",
+                "DEVUELTA",
+                "CONCLUIDA"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación realizada con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActividadesDirectorioResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Rol no autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Directorio de Actividades",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
+    "/api/v1/actividades/{actividadId}/resumen": {
+      "get": {
+        "description": "Obtener los detalles técnicos de una actividad principal",
+        "operationId": "ActividadesController_getResumen",
+        "parameters": [
+          {
+            "name": "actividadId",
+            "required": true,
+            "in": "path",
+            "description": "El identificador único (UUID) de la actividad principal",
+            "schema": {
+              "format": "uuid",
+              "example": "act-uuid-1",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ficha técnica recuperada con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActividadesResumenResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "UUID no identificado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Detalles técnicos",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
+    "/api/v1/actividades/{actividadId}/sub-actividades/bulk": {
+      "post": {
+        "description": "Sincronización de las subactividades seleccionadas",
+        "operationId": "ActividadesController_postSubActividadesBulk",
+        "parameters": [
+          {
+            "name": "actividadId",
+            "required": true,
+            "in": "path",
+            "description": "El identificador único (UUID) de la actividad a la que van dirigidas las sub-actividades",
+            "schema": {
+              "format": "uuid",
+              "example": "act-01-uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubActividadesBulkRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Actividades agregadas exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubActividadesBulkResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Rol no autorizado para esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Selección de subactividades",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
+    "/api/v1/actividades/{actividadId}/sub-actividades/sync": {
+      "put": {
+        "description": "Endpoint único para sincronizar varios cambios de una actividad principal objetivo",
+        "operationId": "ActividadesController_putSubActividadesSync",
+        "parameters": [
+          {
+            "name": "actividadId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la actividad principal",
+            "schema": {
+              "format": "uuid",
+              "example": "sub-uuid-1",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubActividadesSyncRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sincronización realizada con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubActividadesSyncResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación de la estructura JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "UUID no coincide con una sub-actividad",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edición de múltiples sub-actividades",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
+    "/api/v1/actividades/{actividadId}/ficha-tecnica": {
+      "get": {
+        "description": "Retorna la ficha técnica de una actividad principal registrada anteriormente.",
+        "operationId": "ActividadesController_getFichaTecnica",
+        "parameters": [
+          {
+            "name": "actividadId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la actividad principal",
+            "schema": {
+              "format": "uuid",
+              "example": "act-uuid-1",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación realizada con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActividadesFichaTecnicaResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Actividad no encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtener la ficha técnica",
+        "tags": [
+          "Actividades"
+        ]
+      },
+      "patch": {
+        "description": "Todos campos opcionales para poder editar uno o varios en el mismo endpoint",
+        "operationId": "ActividadesController_patchFichaTecnica",
+        "parameters": [
+          {
+            "name": "actividadId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la actividad principal",
+            "schema": {
+              "format": "uuid",
+              "example": "act-uuid-1",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActividadesPatchFichaTecnicaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación realizada con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActividadesFichaTecnicaResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Mal cuerpo  en su request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Actividad no encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edición de la ficha técnica",
+        "tags": [
+          "Actividades"
+        ]
+      }
     }
   },
   "info": {
@@ -145,7 +758,7 @@
             "example": 401
           },
           "message": {
-            "type": "object",
+            "type": "string",
             "description": "Mensaje descriptivo del error",
             "example": "Credenciales inválidas"
           },
@@ -159,6 +772,898 @@
           "statusCode",
           "message",
           "error"
+        ]
+      },
+      "ActividadesGetRangoFechas": {
+        "type": "object",
+        "properties": {
+          "inicio": {
+            "type": "string",
+            "example": "2026-03-30",
+            "description": "Fecha de inicio de la sub-actividad"
+          },
+          "fin": {
+            "type": "string",
+            "example": "2026-05-23",
+            "description": "Fecha de término de la sub-actividad"
+          }
+        },
+        "required": [
+          "inicio",
+          "fin"
+        ]
+      },
+      "Estado": {
+        "type": "string",
+        "enum": [
+          "SIN_EMPEZAR",
+          "SOLICITADO",
+          "EN_PROGRESO",
+          "EN_REVISION",
+          "DEVUELTA",
+          "CONCLUIDA"
+        ],
+        "description": "Estado actual de la subactividad"
+      },
+      "ActividadesGetEstadoEjecucion": {
+        "type": "object",
+        "properties": {
+          "estado": {
+            "example": "CONCLUIDA",
+            "description": "Estado actual de la subactividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Estado"
+              }
+            ]
+          },
+          "etiqueta": {
+            "type": "string",
+            "example": "Fin: `2026-03-19`",
+            "description": "Etiqueta relevante al estado de la sub-actividad"
+          }
+        },
+        "required": [
+          "estado",
+          "etiqueta"
+        ]
+      },
+      "ActividadesGetData": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "act-uuid-1",
+            "description": "Identificador único (UUID) de la sub-actividad"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Auditorias pendientes de concluir de ejercicios anteriores",
+            "description": "Título de la sub-actividad"
+          },
+          "rango_fechas": {
+            "default": "Rango de fechas en registro de la sub-actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActividadesGetRangoFechas"
+              }
+            ]
+          },
+          "estado_ejecucion": {
+            "description": "Información relevante al estado actual de la sub-actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActividadesGetEstadoEjecucion"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "titulo",
+          "rango_fechas",
+          "estado_ejecucion"
+        ]
+      },
+      "ActividadesGetResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Array con la información de las sub-actividades",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActividadesGetData"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "SubActividadesProximasAVencerResumen": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "sub-act-uuid-1",
+            "description": "Identificador único (UUID) de la actividad"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Auditoría de Ingresos Autogenerados",
+            "description": "Título de la sub-actividad próxima a vencer"
+          },
+          "fecha_vencimiento": {
+            "type": "string",
+            "example": "2026-06-19",
+            "description": "Date-string con la fecha en la que se vence la sub-actividad"
+          },
+          "estado_semaforo": {
+            "type": "string",
+            "example": "A_TIEMPO",
+            "description": "Estado del semaforo en la que se encuentra la sub-actividad"
+          },
+          "etiqueta_tiempo": {
+            "type": "string",
+            "example": "Faltan 2 días",
+            "description": "Descripción relevante sobre la cuota de tiempo"
+          }
+        },
+        "required": [
+          "id",
+          "titulo",
+          "fecha_vencimiento",
+          "estado_semaforo",
+          "etiqueta_tiempo"
+        ]
+      },
+      "SubActividadesProximasVencerResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Array con las actividades listadas con una fecha más próxima a vencer",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubActividadesProximasAVencerResumen"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "PaginacionMetadata": {
+        "type": "object",
+        "properties": {
+          "total_registros": {
+            "type": "number",
+            "example": 45,
+            "description": "Total de registros encontrados en la base de datos"
+          },
+          "pagina_actual": {
+            "type": "number",
+            "example": 1,
+            "description": "Página enviada en el get actual"
+          },
+          "total_páginas": {
+            "type": "number",
+            "example": 9,
+            "description": "Total de páginas en las que se dividió la respuesta"
+          }
+        },
+        "required": [
+          "total_registros",
+          "pagina_actual",
+          "total_páginas"
+        ]
+      },
+      "ActividadesSupervisionResolucionJefa": {
+        "type": "object",
+        "properties": {
+          "estado": {
+            "type": "string",
+            "example": "DEVUELTA",
+            "description": "Estado actual de la sub-actividad"
+          },
+          "mensaje": {
+            "type": "string",
+            "example": "Devuelto con 3 observaciones",
+            "description": "Mensaje relevante al por qué de la devolución"
+          },
+          "semaforo": {
+            "type": "string",
+            "example": "CRITICO",
+            "description": "Estado actual del semaforo de la sub-actividad"
+          }
+        },
+        "required": [
+          "estado",
+          "mensaje",
+          "semaforo"
+        ]
+      },
+      "ActividadesSupervicionVencimientoPoa": {
+        "type": "object",
+        "properties": {
+          "fecha_texto": {
+            "type": "string",
+            "example": "2026-01-29",
+            "description": "Fecha de finalización estipulada en la POA"
+          },
+          "etiqueta": {
+            "type": "string",
+            "example": "Faltan 2 días",
+            "description": "Etiqueta relevante a la fecha de finalización en contraste con la fecha actual"
+          }
+        },
+        "required": [
+          "fecha_texto",
+          "etiqueta"
+        ]
+      },
+      "ActividadesSupervisionSubActividadInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "sub-act-1",
+            "description": "Identificador único (UUID) de la sub-actividad"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Auditoría no. 055/2025 de Adquisiciones de Bienes",
+            "description": "Título de la sub-actividad"
+          },
+          "enviada_hace": {
+            "type": "string",
+            "example": "Enviada hace 2 días",
+            "description": "Etiqueta sobre el estado de la sub-actividad devuelta"
+          },
+          "resolucion_jefa": {
+            "description": "Información sobre la resolución de la jefa",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActividadesSupervisionResolucionJefa"
+              }
+            ]
+          },
+          "vencimiento_poa": {
+            "example": "Fecha y etiqueta relevante a la información de la POA",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActividadesSupervicionVencimientoPoa"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "titulo",
+          "enviada_hace",
+          "resolucion_jefa",
+          "vencimiento_poa"
+        ]
+      },
+      "ActividadesSupervicionGetResponse": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "description": "Metadatos de la paginación",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginacionMetadata"
+              }
+            ]
+          },
+          "data": {
+            "description": "Array con el listado de la información relevante de las sub-actividades",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActividadesSupervisionSubActividadInfo"
+            }
+          }
+        },
+        "required": [
+          "meta",
+          "data"
+        ]
+      },
+      "TipoActividad": {
+        "type": "string",
+        "enum": [
+          "AUDITORIA",
+          "REVISION"
+        ],
+        "description": "Tipo definido de la sub-actividad"
+      },
+      "EstadoActividad": {
+        "type": "string",
+        "enum": [
+          "SIN_EMPEZAR",
+          "SOLICITADO",
+          "EN_PROGRESO",
+          "EN_REVISION",
+          "DEVUELTA",
+          "CONCLUIDA"
+        ]
+      },
+      "ActividadesDirectorioEstadoOperativo": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "example": "DEVUELTA",
+            "default": "Estado actual de la sub-actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EstadoActividad"
+              }
+            ]
+          },
+          "etiqueta": {
+            "type": "string",
+            "example": "Devuleta (3 Obs)",
+            "description": "Etiqueta relevente al estado de la actividad. Puede estar vacío cuando el estado lo amerite",
+            "nullable": true
+          }
+        },
+        "required": [
+          "codigo",
+          "etiqueta"
+        ]
+      },
+      "EstadoSemaforo": {
+        "type": "string",
+        "enum": [
+          "A_TIEMPO",
+          "CRITICO",
+          "PRECAUCION"
+        ],
+        "description": "Estado del semaforo de la sub-actividad"
+      },
+      "ActividadesDirectorioData": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "act-uuid-1",
+            "description": "Identificador único (UUID) de la sub-actividad"
+          },
+          "identificador": {
+            "type": "string",
+            "example": "No. 055",
+            "description": "Identificador único proveniente del acta.",
+            "nullable": true
+          },
+          "tipo": {
+            "example": "AUDITORIA",
+            "description": "Tipo definido de la sub-actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TipoActividad"
+              }
+            ]
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Abatir el rezago en solventación de observaciones (Adquisiciones)",
+            "description": "Título de la actividad en cuestión"
+          },
+          "fecha_termino": {
+            "type": "string",
+            "example": "2026-05-23",
+            "description": "Fecha en formato reducido para visualización"
+          },
+          "asignacion": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ActividadesDirectorioAsignacionJefa"
+              },
+              {
+                "$ref": "#/components/schemas/ActividadesDirectorioAsignacionContralor"
+              }
+            ],
+            "discriminator": {
+              "propertyName": "tipo_vista",
+              "mapping": {
+                "JEFA": "#/components/schemas/ActividadesDirectorioAsignacionJefa",
+                "CONTRALOR": "#/components/schemas/ActividadesDirectorioAsignacionContralor"
+              }
+            }
+          },
+          "estado_operativo": {
+            "description": "Información del estado actual de la actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActividadesDirectorioEstadoOperativo"
+              }
+            ]
+          },
+          "semaforo": {
+            "example": "CRITICO",
+            "description": "Estado del semaforo de la sub-actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EstadoSemaforo"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "identificador",
+          "tipo",
+          "titulo",
+          "fecha_termino",
+          "asignacion",
+          "estado_operativo",
+          "semaforo"
+        ]
+      },
+      "ActividadesDirectorioResponse": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "description": "Registro de metadatos de la paginación",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginacionMetadata"
+              }
+            ]
+          },
+          "data": {
+            "description": "Array con las actividades recuperadas",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActividadesDirectorioData"
+            }
+          }
+        },
+        "required": [
+          "meta",
+          "data"
+        ]
+      },
+      "ActividadesResumenResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "act-uuid-1",
+            "description": "Identificador único (UUID) de la actividad principal"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Revisión al rubro de obra pública",
+            "description": "Título de la actividad general"
+          },
+          "justificacion": {
+            "type": "string",
+            "example": "Concluir y cerrar la revisión de la auditoría no. 055/2025...",
+            "description": "Justificación técnica de la actividad principal"
+          },
+          "objetivo_general": {
+            "type": "string",
+            "example": "Verificar el adecuado cumplimiento en la integración...",
+            "description": "Objetivo general de la actividad principal"
+          },
+          "objetivos_particulares": {
+            "type": "string",
+            "example": "1. Revisión de bitácoras de obra y estimaciones pagadas. 2. Comprobación física de los avances de obra contra lo reportado en los informes financieros. 3. Validación de contratos y licitaciones.",
+            "description": "Objetivos particulares de la actividad principal"
+          },
+          "meta_del_proyecto": {
+            "type": "string",
+            "example": "Emisión de Cédula de Observaciones y Recomendaciones del rubro de obra pública.",
+            "description": "Meta registrada en la actividad principal"
+          },
+          "indicadores": {
+            "type": "string",
+            "example": "Número de obras revisadas física y documentalmente / Número de obras ejecutadas en el periodo",
+            "description": "Indicadores descritos en la actividad principal"
+          }
+        },
+        "required": [
+          "id",
+          "titulo",
+          "justificacion",
+          "objetivo_general",
+          "objetivos_particulares",
+          "meta_del_proyecto",
+          "indicadores"
+        ]
+      },
+      "TipoSubActividad": {
+        "type": "string",
+        "enum": [
+          "AUDITORIA",
+          "REVISION"
+        ],
+        "description": "Tipo declarado de la subactividad"
+      },
+      "SubActividadDetalles": {
+        "type": "object",
+        "properties": {
+          "descripcion_tarea": {
+            "type": "string",
+            "example": "Elaborar acta circunscrita...",
+            "description": "Descripción específica de la subactividad"
+          },
+          "fecha_inicio": {
+            "type": "string",
+            "example": "2026-01-01",
+            "description": "Fecha de inicio de la subactividad"
+          },
+          "fecha_termino": {
+            "type": "string",
+            "example": "2026-02-26",
+            "description": "Fecha de término de la subactividad"
+          },
+          "tipo": {
+            "description": "Tipo declarado de la subactividad",
+            "example": "AUDITORIA",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TipoSubActividad"
+              }
+            ]
+          }
+        },
+        "required": [
+          "descripcion_tarea",
+          "fecha_inicio",
+          "fecha_termino",
+          "tipo"
+        ]
+      },
+      "SubActividadesBulkRequest": {
+        "type": "object",
+        "properties": {
+          "sub_actividades": {
+            "description": "Array de subactividades y sus características",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubActividadDetalles"
+            }
+          }
+        },
+        "required": [
+          "sub_actividades"
+        ]
+      },
+      "SubActividadesResumen": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "sub-act-uuid-1",
+            "description": "Identificador único (UUID) de la subactividad registrada"
+          },
+          "numero_orden": {
+            "type": "string",
+            "example": "1.1",
+            "description": "Número de orden individual de la subactividad"
+          },
+          "semanas_totales": {
+            "type": "number",
+            "example": 8,
+            "description": "Cálculo de las semanas totales que toma la subactividad"
+          }
+        },
+        "required": [
+          "id",
+          "numero_orden",
+          "semanas_totales"
+        ]
+      },
+      "SubActividadesBulkResponse": {
+        "type": "object",
+        "properties": {
+          "mensaje": {
+            "type": "string",
+            "example": "Se agregaron 2 sub-actividades exitosamente",
+            "description": "Información relevante al resultado del proceso de bulk"
+          },
+          "data": {
+            "description": "Array con el resumen de las sub-actividades agregadas",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubActividadesResumen"
+            }
+          }
+        },
+        "required": [
+          "mensaje",
+          "data"
+        ]
+      },
+      "SubActividadDetallesSync": {
+        "type": "object",
+        "properties": {
+          "descripcion_tarea": {
+            "type": "string",
+            "example": "Elaborar acta circunscrita...",
+            "description": "Descripción específica de la subactividad"
+          },
+          "fecha_inicio": {
+            "type": "string",
+            "example": "2026-01-01",
+            "description": "Fecha de inicio de la subactividad"
+          },
+          "fecha_termino": {
+            "type": "string",
+            "example": "2026-02-26",
+            "description": "Fecha de término de la subactividad"
+          },
+          "tipo": {
+            "description": "Tipo declarado de la subactividad",
+            "example": "AUDITORIA",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TipoSubActividad"
+              }
+            ]
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID de la sub-actividad: \nSi se incluye, el sistema la actualizará. \nSi se omite, el sistema creará una nueva.",
+            "example": "sub-uuid-1"
+          }
+        },
+        "required": [
+          "descripcion_tarea",
+          "fecha_inicio",
+          "fecha_termino",
+          "tipo"
+        ]
+      },
+      "SubActividadesSyncRequest": {
+        "type": "object",
+        "properties": {
+          "sub_actividades": {
+            "description": "Arreglo de sub-actividades para crear y editar simultáneamente",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubActividadDetallesSync"
+            }
+          }
+        },
+        "required": [
+          "sub_actividades"
+        ]
+      },
+      "SubActividadesSyncResume": {
+        "type": "object",
+        "properties": {
+          "creadas": {
+            "type": "number",
+            "example": 1,
+            "description": "Número de sub-actividades creadas en la base de datos"
+          },
+          "actualizadas": {
+            "type": "number",
+            "example": 1,
+            "description": "Número de sub-actividades editadas en la base de datos"
+          },
+          "eliminadas": {
+            "type": "number",
+            "example": 1,
+            "description": "Número de sub-actividades eliminadas en la base de datos"
+          }
+        },
+        "required": [
+          "creadas",
+          "actualizadas",
+          "eliminadas"
+        ]
+      },
+      "SubActividadesSyncResponse": {
+        "type": "object",
+        "properties": {
+          "mensaje": {
+            "type": "string",
+            "example": "Sub-actividades sincronizadas exitosamente",
+            "description": "Descripción del estado de la operación"
+          },
+          "resumen": {
+            "description": "Arreglo con la información de las modificaciones hechas en la base de datos",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SubActividadesSyncResume"
+              }
+            ]
+          }
+        },
+        "required": [
+          "mensaje",
+          "resumen"
+        ]
+      },
+      "ActividadesAuditoresResumen": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "auditor-uuid-1",
+            "description": "Identificador único (UUID) del auditor"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "José Madero Vizcaíno",
+            "description": "Nombre del auditor auxiliar"
+          }
+        },
+        "required": [
+          "id",
+          "nombre"
+        ]
+      },
+      "ActividadesFichaTecnicaResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "act-uuid-1",
+            "description": "Identificador único (UUID) de la actividad principal"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Revisión al rubro de obra pública",
+            "description": "Título de la actividad general"
+          },
+          "justificacion": {
+            "type": "string",
+            "example": "Concluir y cerrar la revisión de la auditoría no. 055/2025...",
+            "description": "Justificación técnica de la actividad principal"
+          },
+          "objetivo_general": {
+            "type": "string",
+            "example": "Verificar el adecuado cumplimiento en la integración...",
+            "description": "Objetivo general de la actividad principal"
+          },
+          "objetivos_particulares": {
+            "type": "string",
+            "example": "1. Revisión de bitácoras de obra y estimaciones pagadas. 2. Comprobación física de los avances de obra contra lo reportado en los informes financieros. 3. Validación de contratos y licitaciones.",
+            "description": "Objetivos particulares de la actividad principal"
+          },
+          "meta_del_proyecto": {
+            "type": "string",
+            "example": "Emisión de Cédula de Observaciones y Recomendaciones del rubro de obra pública.",
+            "description": "Meta registrada en la actividad principal"
+          },
+          "indicadores": {
+            "type": "string",
+            "example": "Número de obras revisadas física y documentalmente / Número de obras ejecutadas en el periodo",
+            "description": "Indicadores descritos en la actividad principal"
+          },
+          "equipo_auditor": {
+            "description": "Array de los identificadores únicos (UUIDs) y nombres de los auditores registrados",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActividadesAuditoresResumen"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "titulo",
+          "justificacion",
+          "objetivo_general",
+          "objetivos_particulares",
+          "meta_del_proyecto",
+          "indicadores",
+          "equipo_auditor"
+        ]
+      },
+      "ActividadesPatchFichaTecnicaRequest": {
+        "type": "object",
+        "properties": {
+          "titulo": {
+            "type": "string",
+            "example": "Revisión al rubro de obra pública",
+            "description": "Titulo central de la actividad"
+          },
+          "justificacion": {
+            "type": "string",
+            "example": "Concluir y cerrar la revisión de la auditoria No. 055",
+            "description": "Justificación general adjunto a la ficha técnica"
+          },
+          "objetivo_general": {
+            "type": "string",
+            "example": "Verificar el adecuado comportamiento de ...",
+            "description": "Objetivo general de la actividad principal"
+          },
+          "objetivos_particulares": {
+            "type": "string",
+            "example": "1. Revisión de bitácoras. 2. Comprobación física de medidas",
+            "description": "Objetivos particulares de la actividad principal"
+          },
+          "meta_del_proyecto": {
+            "type": "string",
+            "example": "Cumplimiento del estatuto 23 del acuerdo con Hacienda",
+            "description": "Meta general de la actividad principal"
+          },
+          "indicadores": {
+            "type": "string",
+            "example": "1. Reducción del 23% de costos de medición. 2. Cumplimiento de los estándares de Hacienda",
+            "description": "Indicadores de la actividad principal"
+          },
+          "auditores_ids": {
+            "description": "Array con los intificadores únicos (UUID) de los auditores asociados",
+            "example": [
+              "auditor-uuid-1",
+              "auditor-uuid-2"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ActividadesDirectorioAsignacionJefa": {
+        "type": "object",
+        "properties": {
+          "tipo_vista": {
+            "type": "string",
+            "enum": [
+              "JEFA",
+              "CONTRALOR",
+              "AUDITOR"
+            ],
+            "example": "JEFA"
+          },
+          "centro_clave": {
+            "type": "string",
+            "example": "CUCEI"
+          },
+          "contralor": {
+            "type": "string",
+            "example": "Mtro. Braulio Vicente"
+          }
+        },
+        "required": [
+          "tipo_vista",
+          "centro_clave",
+          "contralor"
+        ]
+      },
+      "Rol": {
+        "type": "string",
+        "enum": [
+          "JEFA",
+          "CONTRALOR",
+          "AUDITOR"
+        ],
+        "description": "Rol del usuario"
+      },
+      "ActividadesDirectorioAsignacionContralor": {
+        "type": "object",
+        "properties": {
+          "tipo_vista": {
+            "example": "CONTRALOR",
+            "description": "Rol del usuario",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Rol"
+              }
+            ]
+          },
+          "participacion_porcentaje": {
+            "type": "number",
+            "example": 100,
+            "description": "Porcentaje de participación asignado"
+          },
+          "auditor_apoyo": {
+            "type": "string",
+            "example": null,
+            "nullable": true,
+            "description": "Auditor de apoyo"
+          }
+        },
+        "required": [
+          "tipo_vista",
+          "participacion_porcentaje",
+          "auditor_apoyo"
         ]
       }
     }

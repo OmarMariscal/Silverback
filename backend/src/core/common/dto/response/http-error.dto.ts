@@ -7,8 +7,9 @@ export class HttpErrorDto {
   @ApiProperty({
     description: 'Mensaje descriptivo del error',
     example: 'Credenciales inválidas',
+    type: 'string',
   })
-  message!: string | string[];
+  message!: string;
 
   @ApiProperty({ description: 'Tipo de error HTTP', example: 'Unauthorized' })
   error!: string;
