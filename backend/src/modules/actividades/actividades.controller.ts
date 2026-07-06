@@ -18,7 +18,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ActividadesResumenResponse } from './dto/response/actividades-resumen.response.dto';
-import { HttpErrorDto } from 'src/core/common/dto/response/http-error.dto';
+import { HttpErrorDto } from '@core/common/dto/response/http-error.dto';
 import { SubActividadesBulkResponse } from './dto/response/sub-actividades-bulk.response.dto';
 import { SubActividadesBulkRequest } from './dto/request/sub-actividadedes-bulk.request.dto';
 import { SubActividadesSyncRequest } from './dto/request/sub-actividades-sync.request.dto';
@@ -27,7 +27,7 @@ import { ActividadesFichaTecnicaResponse } from './dto/response/actividades-fich
 import { ActividadesPatchFichaTecnicaRequest } from './dto/request/actividades-path-ficha-tecnica.request.dto';
 import { SubActividadesProximasVencerResponse } from './dto/response/sub-actividades-proximas-a-vencer-get.response.dto';
 import { SubActividadesProximasAVencerQuery } from './dto/request/sub-actividades-proximas-a-vencer.query.dto';
-import { PaginacionQueryDto } from 'src/core/common/dto/request/paginacion.query.dto';
+import { PaginacionQueryDto } from '@core/common/dto/request/paginacion.query.dto';
 import { ActividadesSupervicionGetResponse } from './dto/response/actividades-supervision-get.response.dto';
 import { ActividadesDirectorioResponse } from './dto/response/actividades-directorio.response.dto';
 import { ActividadesDirectorioQuery } from './dto/request/actividades-directorio.query.dto';

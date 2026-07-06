@@ -1,9 +1,9 @@
 import { ApiProperty, getSchemaPath } from '@nestjs/swagger';
-import { TipoSubActividad } from 'src/domain/actividad/tipos-de-actividades.enum';
+import { TipoSubActividad } from '@domain/actividad/tipos-de-actividades.enum';
 import { ActividadesDirectorioAsignacionJefa } from './actividades-directorio-asignacion-jefa.dto';
 import { ActividadesDirectorioAsignacionContralor } from './actividades-directorio-asignacion-contralor.dto';
 import { ActividadesDirectorioEstadoOperativo } from './actividades-directorio-estado-operativo.dto';
-import { EstadosSemaforo } from 'src/domain/semaforo/estados-semaforo-enum';
+import { EstadosSemaforo } from '@domain/semaforo/estados-semaforo-enum';
 
 export class ActividadesDirectorioData {
   @ApiProperty({

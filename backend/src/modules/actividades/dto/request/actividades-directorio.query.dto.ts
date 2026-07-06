@@ -1,9 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { PaginacionQueryDto } from 'src/core/common/dto/request/paginacion.query.dto';
+import { PaginacionQueryDto } from '@core/common/dto/request/paginacion.query.dto';
 import { ActividadesSortColumn } from '../../enums/actividades-sort-column.enum';
 import { IsOptional, IsEnum, IsString, IsUUID } from 'class-validator';
-import { TipoSubActividad } from 'src/domain/actividad/tipos-de-actividades.enum';
-import { EstadosActividades } from 'src/domain/actividad/estados-actividades.enum';
+import { TipoSubActividad } from '@domain/actividad/tipos-de-actividades.enum';
+import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
 
 export class ActividadesDirectorioQuery extends PaginacionQueryDto {
   @ApiPropertyOptional({

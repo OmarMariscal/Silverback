@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EstadosActividades } from 'src/domain/actividad/estados-actividades.enum';
-import { EstadosSemaforo } from 'src/domain/semaforo/estados-semaforo-enum';
+import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
+import { EstadosSemaforo } from '@domain/semaforo/estados-semaforo-enum';
 
 export class ActividadesSupervisionResolucionJefa {
   @ApiProperty({

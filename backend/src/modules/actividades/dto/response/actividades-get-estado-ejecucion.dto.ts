@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EstadosActividades } from 'src/domain/actividad/estados-actividades.enum';
+import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
 
 export class ActividadesGetEstadoEjecucion {
   @ApiProperty({
