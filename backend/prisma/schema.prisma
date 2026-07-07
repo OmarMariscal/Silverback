@@ -84,20 +84,30 @@ enum TipoActividad {
 }
 
 model BancoActividad {
-  id                     String        @id @default(uuid())
-  tipo                   TipoActividad
-  titulo                 String
-  justificacion_plantilla String?      @db.Text
-  objetivo_gen_plantilla  String?      @db.Text
-  objetivos_part_plantilla String?     @db.Text
-  metas_plantilla        String?       @db.Text
+  id                       String              @id @default(uuid())
+  titulo                   String
+  justificacion_plantilla  String?             @db.Text
+  objetivo_gen_plantilla   String?             @db.Text
+  objetivos_part_plantilla String?             @db.Text
+  metas_plantilla          String?             @db.Text
+  indicadores              String?             @db.Text
+  
+  sub_actividades_sugeridas BancoSubActividad[]
+}
+
+model BancoSubActividad {
+  id                 String         @id @default(uuid())
+  descripcion        String         @db.Text
+  tipo_sugerido      TipoActividad 
+  
+  banco_actividad_id String
+  banco_actividad    BancoActividad @relation(fields: [banco_actividad_id], references: [id], onDelete: Cascade)
 }
 
 // ==========================================
 // BLOQUE 3: OPERACIÓN (POAS Y ACTIVIDADES)
 // ==========================================
 
-// Modificación exacta en el bloque 3 de tu schema.prisma
 
 enum EstadoPoa {
   BORRADOR
@@ -126,10 +136,14 @@ model Actividad {
   justificacion       String?       @db.Text
   objetivo_general    String?       @db.Text
   objetivos_part      String?       @db.Text
+  meta_proyecto       String?       @db.Text
+  indicadores         String?       @db.Text
   fecha_inicio        DateTime?
   fecha_termino       DateTime?
-  estado_operativo    String        @default("SIN_EMPEZAR") // Controlado por el Domain (Machine State)
-  porcentaje_global   Float?        // Ej. 50.0 (Calculado por Backend)
+
+  // En lugar de un string de estado fijo, usamos el float que propones.
+  // El backend lo recalcula cada vez que una sub-actividad cambia de estado.
+  porcentaje_global   Float?        @default(0.0)
   es_rezago           Boolean       @default(false)
   
   poa_id              String
@@ -151,9 +165,13 @@ model ActividadAuditor {
 }
 
 model SubActividad {
-  id                String        @id @default(uuid())
-  numero_orden      String        // Ej. "1.1"
-  descripcion_tarea String        @db.Text
+  id                     String        @id @default(uuid())
+  numero_orden           String        // Ej. "1.1"
+  descripcion_tarea      String        @db.Text
+  // La sub-actividad ahora es la dueña absoluta del flujo operativo
+  estado_operativo       String        @default("SIN_EMPEZAR")
+  mensaje_observacion    String?       @db.Text
+  
   fecha_inicio      DateTime
   fecha_termino     DateTime
   semanas_totales   Int           // Calculado por Backend

@@ -57,14 +57,24 @@ CREATE TABLE "Auditor" (
 -- CreateTable
 CREATE TABLE "BancoActividad" (
     "id" TEXT NOT NULL,
-    "tipo" "TipoActividad" NOT NULL,
     "titulo" TEXT NOT NULL,
     "justificacion_plantilla" TEXT,
     "objetivo_gen_plantilla" TEXT,
     "objetivos_part_plantilla" TEXT,
     "metas_plantilla" TEXT,
+    "indicadores" TEXT,
 
     CONSTRAINT "BancoActividad_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "BancoSubActividad" (
+    "id" TEXT NOT NULL,
+    "descripcion" TEXT NOT NULL,
+    "tipo_sugerido" "TipoActividad" NOT NULL,
+    "banco_actividad_id" TEXT NOT NULL,
+
+    CONSTRAINT "BancoSubActividad_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -85,10 +95,11 @@ CREATE TABLE "Actividad" (
     "justificacion" TEXT,
     "objetivo_general" TEXT,
     "objetivos_part" TEXT,
+    "meta_proyecto" TEXT,
+    "indicadores" TEXT,
     "fecha_inicio" TIMESTAMP(3),
     "fecha_termino" TIMESTAMP(3),
-    "estado_operativo" TEXT NOT NULL DEFAULT 'SIN_EMPEZAR',
-    "porcentaje_global" DOUBLE PRECISION,
+    "porcentaje_global" DOUBLE PRECISION DEFAULT 0.0,
     "es_rezago" BOOLEAN NOT NULL DEFAULT false,
     "poa_id" TEXT NOT NULL,
 
@@ -108,6 +119,8 @@ CREATE TABLE "SubActividad" (
     "id" TEXT NOT NULL,
     "numero_orden" TEXT NOT NULL,
     "descripcion_tarea" TEXT NOT NULL,
+    "estado_operativo" TEXT NOT NULL DEFAULT 'SIN_EMPEZAR',
+    "mensaje_observacion" TEXT,
     "fecha_inicio" TIMESTAMP(3) NOT NULL,
     "fecha_termino" TIMESTAMP(3) NOT NULL,
     "semanas_totales" INTEGER NOT NULL,
@@ -155,6 +168,9 @@ ALTER TABLE "Auditor" ADD CONSTRAINT "Auditor_usuario_id_fkey" FOREIGN KEY ("usu
 
 -- AddForeignKey
 ALTER TABLE "Auditor" ADD CONSTRAINT "Auditor_contralor_id_fkey" FOREIGN KEY ("contralor_id") REFERENCES "Contralor"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BancoSubActividad" ADD CONSTRAINT "BancoSubActividad_banco_actividad_id_fkey" FOREIGN KEY ("banco_actividad_id") REFERENCES "BancoActividad"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Poa" ADD CONSTRAINT "Poa_contralor_id_fkey" FOREIGN KEY ("contralor_id") REFERENCES "Contralor"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
