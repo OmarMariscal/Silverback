@@ -168,12 +168,13 @@ model SubActividad {
   id                     String        @id @default(uuid())
   numero_orden           String        // Ej. "1.1"
   descripcion_tarea      String        @db.Text
-  // La sub-actividad ahora es la dueña absoluta del flujo operativo
+  // La sub-actividad es la dueña del flujo operativo
   estado_operativo       String        @default("SIN_EMPEZAR")
   mensaje_observacion    String?       @db.Text
   
   fecha_inicio      DateTime
   fecha_termino     DateTime
+  fecha_envio       DateTime?
   semanas_totales   Int           // Calculado por Backend
   tipo              TipoActividad
   
