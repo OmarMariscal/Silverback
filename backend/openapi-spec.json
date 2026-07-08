@@ -1216,23 +1216,55 @@
           "password"
         ]
       },
+      "Rol": {
+        "type": "string",
+        "enum": [
+          "JEFA",
+          "CONTRALOR",
+          "AUDITOR"
+        ],
+        "description": "Rol de la sesión inciada"
+      },
       "AuthLoginUserData": {
         "type": "object",
         "properties": {
-          "rol": {
+          "id": {
             "type": "string",
+            "example": "uuid-usuario-123",
+            "description": "ID general del usuario"
+          },
+          "nombre_completo": {
+            "type": "string",
+            "example": "Mtro. Braulio Vicente",
+            "description": "Nombre para mostrar en la UI"
+          },
+          "rol": {
             "example": "CONTRALOR",
-            "description": "Rol del usuario loggeado"
+            "description": "Rol de la sesión inciada",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Rol"
+              }
+            ]
           },
           "centro_id": {
-            "type": "string",
+            "type": "object",
             "example": "uuid-cucei",
-            "description": "UID del centro universitario"
+            "description": "UID del centro universitario",
+            "nullable": true
+          },
+          "perfil_id": {
+            "type": "string",
+            "example": "uuid-perfil-456",
+            "description": "El ID de su perfil específico"
           }
         },
         "required": [
+          "id",
+          "nombre_completo",
           "rol",
-          "centro_id"
+          "centro_id",
+          "perfil_id"
         ]
       },
       "AuthLoginResponse": {
@@ -3316,15 +3348,6 @@
           "centro_clave",
           "contralor"
         ]
-      },
-      "Rol": {
-        "type": "string",
-        "enum": [
-          "JEFA",
-          "CONTRALOR",
-          "AUDITOR"
-        ],
-        "description": "Rol del usuario"
       },
       "ActividadesDirectorioAsignacionContralor": {
         "type": "object",

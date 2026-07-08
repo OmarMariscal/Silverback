@@ -8,6 +8,7 @@ import {
   Patch,
   Put,
   Query,
+  UseGuards,
   Delete,
 } from '@nestjs/common';
 import { ActividadesService } from './actividades.service';
@@ -37,9 +38,13 @@ import { ActividadesGetQuery } from './dto/request/actividades-get.query.dto';
 import { SubActividadesPoaResponse } from './dto/response/sub-actividades-poa.response.dto';
 import { SubActividadesSelectResponse } from './dto/response/sub-actividades-select.response.dto';
 import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
+import { JwtAuthGuard } from '@core/guards/jwt.guard';
+import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
+import { JwtPayloadDto } from '@core/auth/dto/jwt-payload.dto';
 
 @ApiTags('Actividades')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('actividades')
 export class ActividadesController {
   constructor(private readonly actividadesService: ActividadesService) {}
@@ -316,8 +321,9 @@ export class ActividadesController {
   @Get(':actividadId/ficha-tecnica')
   getFichaTecnica(
     @Param('actividadId') actUuid: string,
+    @UsuarioActual() usuarioActual: JwtPayloadDto,
   ): ActividadesFichaTecnicaResponse {
-    return this.actividadesService.getFichaTecnica(actUuid);
+    return this.actividadesService.getFichaTecnica(usuarioActual, actUuid);
   }
 
   @ApiOperation({

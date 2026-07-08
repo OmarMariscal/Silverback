@@ -16,6 +16,7 @@ import { ActividadesGetResponse } from './dto/response/actividades-get.response.
 import { SubActividadesPoaResponse } from './dto/response/sub-actividades-poa.response.dto';
 import { SubActividadesSelectResponse } from './dto/response/sub-actividades-select.response.dto';
 import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
+import { JwtPayloadDto } from '@core/auth/dto/jwt-payload.dto';
 
 @Injectable()
 export class ActividadesService {
@@ -45,9 +46,14 @@ export class ActividadesService {
     return new SubActividadesSyncResponse();
   }
 
-  getFichaTecnica(actUuid: string): ActividadesFichaTecnicaResponse {
+  getFichaTecnica(
+    usuarioActual: JwtPayloadDto,
+    actUuid: string,
+  ): ActividadesFichaTecnicaResponse {
+    console.log(usuarioActual.rol);
     return new ActividadesFichaTecnicaResponse();
   }
+
   patchFichaTecnica(
     actUuid: string,
     fichaTecnica: ActividadesPatchFichaTecnicaRequest,

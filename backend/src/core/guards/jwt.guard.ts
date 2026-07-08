@@ -1,10 +1,66 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+// src/core/guards/jwt.guard.ts
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Roles } from '@domain/roles/roles.enum';
+import { JwtPayloadDto } from '../auth/dto/jwt-payload.dto';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
-    // TODO: Implementar validación real con Passport/JWT cuando la BD esté lista.
-    // MOCK: Por ahora, permitimos que Swagger y el Frontend pasen sin problemas.
+    const request = context.switchToHttp().getRequest();
+
+    // ==========================================
+    // ESTRATEGIA MOCK (Solo activa en Desarrollo)
+    // ==========================================
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    const mockRole = request.headers['x-mock-role'];
+
+    if (isDevelopment && mockRole) {
+      const rolStr = mockRole.toString().toUpperCase() as Roles;
+      const mockCentro =
+        request.headers['x-mock-centro'] || 'uuid-centro-cucei';
+
+      // Creamos el Payload Falso simulando lo que tendría un JWT
+      const mockPayload: JwtPayloadDto = {
+        usuario_id: `mock-user-${rolStr.toLowerCase()}`, // Ej. mock-user-contralor
+        rol: rolStr,
+        centro_id: rolStr === 'JEFA' ? null : mockCentro,
+        perfil_id: `mock-perfil-${rolStr.toLowerCase()}`, // Vital para las relaciones de Prisma
+      };
+
+      // Inyectamos el usuario en la Request de Express
+      request.user = mockPayload;
+      return true; // Acceso concedido
+    }
+
+    // ==========================================
+    // ESTRATEGIA REAL (Para la siguiente iteración)
+    // ==========================================
+    /*
+      const authHeader = request.headers.authorization;
+      if (!authHeader) throw new UnauthorizedException('Token no proporcionado');
+      
+      try {
+        const payload = this.jwtService.verify(authHeader.split(' ')[1]);
+        request.user = payload;
+        return true;
+      } catch (e) {
+        throw new UnauthorizedException('Token inválido o expirado');
+      }
+    */
+
+    // Por ahora, si no mandan header mock, cargamos un default para que no truene:
+    request.user = {
+      usuario_id: 'default-user-uuid',
+      rol: Roles.CONTRALOR,
+      centro_id: 'uuid-centro-cucei',
+      perfil_id: 'default-perfil-uuid',
+    };
+
     return true;
   }
 }
