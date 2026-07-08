@@ -1,0 +1,183 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/prisma/generated/client"
+}
+
+// ==========================================
+// BLOQUE 1: IDENTIDAD Y ESTRUCTURA
+// ==========================================
+
+enum RolUsuario {
+  ADMIN
+  JEFA
+  CONTRALOR
+  AUDITOR
+}
+
+model CentroUniversitario {
+  id          String      @id @default(uuid())
+  nombre      String      @unique
+  clave       String      @unique // Ej. "CUVALLES"
+  contralores Contralor[]
+}
+
+model Usuario {
+  id                 String      @id @default(uuid())
+  nombre_completo    String
+  correo             String      @unique
+  password_encriptada String
+  rol                RolUsuario
+  
+  // Relaciones
+  jefa      Jefa?
+  contralor Contralor?
+  auditor   Auditor?
+}
+
+model Jefa {
+  id         String      @id @default(uuid())
+  usuario_id String      @unique
+  usuario    Usuario     @relation(fields: [usuario_id], references: [id])
+  
+  contralores Contralor[]
+}
+
+model Contralor {
+  id           String              @id @default(uuid())
+  usuario_id   String              @unique
+  usuario      Usuario             @relation(fields: [usuario_id], references: [id])
+  
+  centro_id    String
+  centro       CentroUniversitario @relation(fields: [centro_id], references: [id])
+  
+  jefa_id      String
+  jefa         Jefa                @relation(fields: [jefa_id], references: [id])
+
+  auditores    Auditor[]
+  poas         Poa[]
+}
+
+model Auditor {
+  id           String      @id @default(uuid())
+  usuario_id   String      @unique
+  usuario      Usuario     @relation(fields: [usuario_id], references: [id])
+  
+  contralor_id String
+  contralor    Contralor   @relation(fields: [contralor_id], references: [id])
+
+  actividades  ActividadAuditor[]
+}
+
+// ==========================================
+// BLOQUE 2: PLANTILLAS (BANCO)
+// ==========================================
+
+enum TipoActividad {
+  AUDITORIA
+  REVISION
+}
+
+model BancoActividad {
+  id                       String              @id @default(uuid())
+  titulo                   String
+  justificacion_plantilla  String?             @db.Text
+  objetivo_gen_plantilla   String?             @db.Text
+  objetivos_part_plantilla String?             @db.Text
+  metas_plantilla          String?             @db.Text
+  indicadores              String?             @db.Text
+  
+  sub_actividades_sugeridas BancoSubActividad[]
+}
+
+model BancoSubActividad {
+  id                 String         @id @default(uuid())
+  descripcion        String         @db.Text
+  tipo_sugerido      TipoActividad 
+  
+  banco_actividad_id String
+  banco_actividad    BancoActividad @relation(fields: [banco_actividad_id], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// BLOQUE 3: OPERACIÓN (POAS Y ACTIVIDADES)
+// ==========================================
+
+
+enum EstadoPoa {
+  BORRADOR
+  EN_REVISION
+  DEVUELTA     
+  AUTORIZADO
+}
+
+model Poa {
+  id           String      @id @default(uuid())
+  anio_fiscal  Int         
+  estado       EstadoPoa   @default(BORRADOR)
+  
+  contralor_id String
+  contralor    Contralor   @relation(fields: [contralor_id], references: [id])
+
+  actividades  Actividad[]
+
+  @@unique([contralor_id, anio_fiscal]) 
+}
+
+model Actividad {
+  id                  String        @id @default(uuid())
+  folio               String        // Ej. "055"
+  titulo              String
+  justificacion       String?       @db.Text
+  objetivo_general    String?       @db.Text
+  objetivos_part      String?       @db.Text
+  meta_proyecto       String?       @db.Text
+  indicadores         String?       @db.Text
+  fecha_inicio        DateTime?
+  fecha_termino       DateTime?
+
+  // En lugar de un string de estado fijo, usamos el float que propones.
+  // El backend lo recalcula cada vez que una sub-actividad cambia de estado.
+  porcentaje_global   Float?        @default(0.0)
+  es_rezago           Boolean       @default(false)
+  
+  poa_id              String
+  poa                 Poa           @relation(fields: [poa_id], references: [id])
+
+  sub_actividades     SubActividad[]
+  auditores           ActividadAuditor[]
+}
+
+// Tabla Puente (N:M) entre Actividades y Auditores
+model ActividadAuditor {
+  actividad_id String
+  actividad    Actividad @relation(fields: [actividad_id], references: [id], onDelete: Cascade)
+  
+  auditor_id   String
+  auditor      Auditor   @relation(fields: [auditor_id], references: [id], onDelete: Cascade)
+
+  @@id([actividad_id, auditor_id]) // Llave primaria compuesta
+}
+
+model SubActividad {
+  id                     String        @id @default(uuid())
+  numero_orden           String        // Ej. "1.1"
+  descripcion_tarea      String        @db.Text
+  // La sub-actividad es la dueña del flujo operativo
+  estado_operativo       String        @default("SIN_EMPEZAR")
+  mensaje_observacion    String?       @db.Text
+  
+  fecha_inicio      DateTime
+  fecha_termino     DateTime
+  fecha_envio       DateTime?
+  semanas_totales   Int           // Calculado por Backend
+  tipo              TipoActividad
+  
+  actividad_id      String
+  actividad         Actividad     @relation(fields: [actividad_id], references: [id], onDelete: Cascade)
+}

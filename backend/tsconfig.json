@@ -18,7 +18,7 @@
         "@domain/*": ["./src/domain/*"],
         "@prisma/*": ["./src/prisma/*"],
         "@core/*": ["./src/core/*"],
-        "@modules/*": ["./src/modules/*"]
+        "@modules/*": ["./src/modules/*"],
     },
     "incremental": true,
     "skipLibCheck": true,
