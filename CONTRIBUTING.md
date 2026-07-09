@@ -1,4 +1,4 @@
-```markdown
+
 # 🏛️ Guía de Contribución para Silverback
 
 ¡Bienvenido al repositorio oficial de Silverback! Este documento establece los lineamientos técnicos, la estructura del proyecto y el flujo de trabajo en Git que el equipo **MonkeyCode** debe seguir rigurosamente para asegurar un desarrollo limpio, colaborativo y profesional.
@@ -21,7 +21,6 @@ Para empezar a trabajar en tu computadora, debes instalar las dependencias de ca
    cd backend
    npm install
 
-```
 
 2. **Instalar dependencias del Frontend:**
 ```bash
