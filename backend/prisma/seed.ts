@@ -11,11 +11,13 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool) as any;
 const prisma = new PrismaClient({ adapter });
 
-// Funciones de utilidad
+// Funciones de utilidad globales
 const getRandomElement = <T>(array: T[]): T =>
   array[Math.floor(Math.random() * array.length)];
+
 const getRandomDate = (start: Date, end: Date) =>
   new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+
 const diffWeeks = (d1: Date, d2: Date) =>
   Math.max(
     1,
@@ -25,7 +27,9 @@ const diffWeeks = (d1: Date, d2: Date) =>
 async function main() {
   console.log('🚀 Iniciando la Súper Siembra de Datos (Seeding masivo)...');
 
-  console.log('🧹 Purificando la base de datos...');
+  console.log(
+    '🧹 Purificando la base de datos (Orden de dependencias seguro)...',
+  );
   await prisma.subActividad.deleteMany();
   await prisma.actividadAuditor.deleteMany();
   await prisma.actividad.deleteMany();
@@ -107,10 +111,7 @@ async function main() {
     include: { auditor: true },
   });
 
-  console.log(
-    '🗂️ Llenando el Catálogo del Banco de Actividades (con sugerencias)...',
-  );
-
+  console.log('🗂️ Llenando el Catálogo del Banco de Actividades...');
   const plantillasData: Prisma.BancoActividadCreateInput[] = [
     {
       titulo: 'Revisión al rubro de Obra Pública',
@@ -217,6 +218,7 @@ async function main() {
     'DEVUELTA',
     'CONCLUIDA',
   ];
+
   const auditoresDisponibles = [
     auditorAuxiliar.auditor!.id,
     auditorTitular.auditor!.id,
@@ -234,6 +236,7 @@ async function main() {
     const nuevaActividad = await prisma.actividad.create({
       data: {
         poa_id: poaCucei2026.id,
+        banco_actividad_id: plantilla.id,
         folio: folioStr,
         titulo: plantilla.titulo,
         justificacion:
@@ -247,63 +250,59 @@ async function main() {
       },
     });
 
-    const cantidadAuditores = Math.floor(Math.random() * 2) + 1;
-    const auditoresSeleccionados = auditoresDisponibles.slice(
-      0,
-      cantidadAuditores,
-    );
-    for (const auditorId of auditoresSeleccionados) {
+    const cantidadAuditores =
+      Math.floor(Math.random() * auditoresDisponibles.length) + 1;
+    const auditoresAsignados = [...auditoresDisponibles]
+      .sort(() => 0.5 - Math.random())
+      .slice(0, cantidadAuditores);
+
+    for (const auditorId of auditoresAsignados) {
       await prisma.actividadAuditor.create({
-        data: { actividad_id: nuevaActividad.id, auditor_id: auditorId },
+        data: {
+          actividad_id: nuevaActividad.id,
+          auditor_id: auditorId,
+        },
       });
     }
 
-    const fechaMedio = new Date((fInicio.getTime() + fFin.getTime()) / 2);
+    if (plantilla.sub_actividades_sugeridas) {
+      let subIndex = 1;
+      for (const subSugerida of plantilla.sub_actividades_sugeridas) {
+        const subInicio = getRandomDate(
+          fInicio,
+          new Date(
+            fInicio.getTime() + (fFin.getTime() - fInicio.getTime()) / 2,
+          ),
+        );
+        const subFin = getRandomDate(subInicio, fFin);
+        const semanas = diffWeeks(subInicio, subFin);
 
-    const tipoFase1 =
-      plantilla.sub_actividades_sugeridas[0]?.tipo_sugerido ||
-      TipoActividad.AUDITORIA;
-    const tipoFase2 =
-      plantilla.sub_actividades_sugeridas[1]?.tipo_sugerido ||
-      TipoActividad.REVISION;
-
-    await prisma.subActividad.createMany({
-      data: [
-        {
-          actividad_id: nuevaActividad.id,
-          descripcion_tarea: 'Fase Inicial Exec',
-          numero_orden: '1',
-          tipo: tipoFase1,
-          estado_operativo: getRandomElement(estadosOperativos),
-          fecha_inicio: fInicio,
-          fecha_termino: fechaMedio,
-          semanas_totales: diffWeeks(fInicio, fechaMedio),
-        },
-        {
-          actividad_id: nuevaActividad.id,
-          descripcion_tarea: 'Fase Final Cierre',
-          numero_orden: '2',
-          tipo: tipoFase2,
-          estado_operativo: getRandomElement(estadosOperativos),
-          fecha_inicio: fechaMedio,
-          fecha_termino: fFin,
-          semanas_totales: diffWeeks(fechaMedio, fFin),
-        },
-      ],
-    });
+        await prisma.subActividad.create({
+          data: {
+            actividad_id: nuevaActividad.id,
+            numero_orden: `1.${subIndex++}`,
+            descripcion_tarea: subSugerida.descripcion,
+            estado_operativo: getRandomElement(estadosOperativos),
+            mensaje_observacion: null,
+            fecha_inicio: subInicio,
+            fecha_termino: subFin,
+            semanas_totales: semanas,
+            tipo: subSugerida.tipo_sugerido,
+          },
+        });
+      }
+    }
   }
 
-  console.log('✅ ¡Siembra completada con éxito!');
+  console.log('✅ ¡Siembra de datos finalizada con éxito absoluto!');
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-    await pool.end();
-  })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
-    await pool.end();
+  .catch((e) => {
+    console.error('❌ Error fatal en el proceso de Seeding:', e);
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+    await pool.end();
   });

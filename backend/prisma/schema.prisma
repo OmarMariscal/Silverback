@@ -93,6 +93,7 @@ model BancoActividad {
   indicadores              String?             @db.Text
   
   sub_actividades_sugeridas BancoSubActividad[]
+  actividades_creadas       Actividad[]
 }
 
 model BancoSubActividad {
@@ -148,7 +149,10 @@ model Actividad {
   
   poa_id              String
   poa                 Poa           @relation(fields: [poa_id], references: [id])
-
+  
+  banco_actividad_id  String?
+  banco_actividad     BancoActividad? @relation(fields: [banco_actividad_id], references: [id])
+  
   sub_actividades     SubActividad[]
   auditores           ActividadAuditor[]
 }
