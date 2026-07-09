@@ -13,11 +13,22 @@ import { ActividadesDirectorioQuery } from './dto/request/actividades-directorio
 import { ActividadesDirectorioResponse } from './dto/response/actividades-directorio.response.dto';
 import { ActividadesGetQuery } from './dto/request/actividades-get.query.dto';
 import { ActividadesGetResponse } from './dto/response/actividades-get.response.dto';
+import { SubActividadesPoaResponse } from './dto/response/sub-actividades-poa.response.dto';
+import { SubActividadesSelectResponse } from './dto/response/sub-actividades-select.response.dto';
+import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
 
 @Injectable()
 export class ActividadesService {
   getResumen(actUuid: string): ActividadesResumenResponse {
     return new ActividadesResumenResponse();
+  }
+
+  getSubActividadesPoa(actividadId: string): SubActividadesPoaResponse {
+    return new SubActividadesPoaResponse();
+  }
+
+  getSubActividadesSelect(actividadId: string): SubActividadesSelectResponse {
+    return new SubActividadesSelectResponse();
   }
 
   postSubActividadesBulk(
@@ -61,7 +72,13 @@ export class ActividadesService {
     return new ActividadesDirectorioResponse();
   }
 
-  getActividades(queryActividades: ActividadesGetQuery): ActividadesGetResponse {
+  getActividades(
+    queryActividades: ActividadesGetQuery,
+  ): ActividadesGetResponse {
     return new ActividadesGetResponse();
+  }
+
+  deleteActividad(actividadId: string): EliminacionCorrecta {
+    return new EliminacionCorrecta();
   }
 }

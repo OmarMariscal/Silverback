@@ -9,4 +9,12 @@ export class ActividadesGetQuery {
   @IsOptional()
   @IsUUID('4')
   auditor_id?: string;
+
+  @ApiPropertyOptional({
+    example: 'centro-uuid-1',
+    description: 'Identificador único (UUID) del centro universitario',
+  })
+  @IsOptional()
+  @IsUUID('4')
+  centro_id?: string;
 }

@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 class EquipoAuditorDto{
     @ApiProperty({
@@ -17,12 +17,12 @@ class EquipoAuditorDto{
 }
 
 export class CrearActividadesDto{
-    @ApiProperty({
+    @ApiPropertyOptional({
             description: "ID de la actividad dentro del banco de actividades",
             type: String,
             example: "banco-uuid-1"
         })
-    banco_actividad_id: string;
+    banco_actividad_id?: string;
 
     @ApiProperty({
             description: "Titulo de la actividad",
