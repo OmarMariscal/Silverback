@@ -48,6 +48,7 @@ El sistema utiliza `npm` para gestionar dependencias de forma aislada sin necesi
  ┣ 📂 frontend          # Aplicación web interactiva (NextJS)
  ┣ 📜 package.json      # Orquestación de workspaces y scripts globales
  ┗ 📜 package-lock.json # Congelación exacta de versiones para todo el equipo
+```
 
 ### Prerrequisitos
 * Node.js (v18 o superior)
