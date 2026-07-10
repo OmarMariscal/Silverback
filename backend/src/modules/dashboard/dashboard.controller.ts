@@ -13,7 +13,7 @@ export class DashboardController {
 
   @ApiOperation({
       summary: 'Entrega los kpis del dashboard contralor',
-      description: ''
+      description: 'Entrega toda la informacion necesaria para las tarjetas superiores del dashboard del contralor.'
     })
   @ApiResponse({
     status: 200,
@@ -27,7 +27,7 @@ export class DashboardController {
 
   @ApiOperation({
     summary: 'Entrega los kpis del dashboard jefa',
-    description: ''
+    description: 'Entrega toda la informacion necesaria para las tarjetas superiores del dashboard de la jefa.'
   })
   @ApiResponse({
     status: 200,
@@ -41,7 +41,7 @@ export class DashboardController {
 
   @ApiOperation({
     summary: 'Entrega los centros con rezago',
-    description: ''
+    description: 'Entrega toda la informacion sobre los centros que tengan actividades con rezago'
   }) 
   @ApiResponse({
     status: 200,

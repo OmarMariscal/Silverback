@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuditoresService } from './auditores.service';
 import { ApiOperation, ApiProduces, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuditoresDataDto } from './DTOS/response/auditores-data.dto';
@@ -10,10 +10,10 @@ export class AuditoresController {
 
   @ApiOperation({
     summary: 'Entrega lista de auditores',
-    description: ''
+    description: 'Entrega a los auditores disponibles para registrar en la actividad'
   }) 
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.FOUND,
     description: 'Obtiene la lista de auditores',
     type: AuditoresDataDto,
   })

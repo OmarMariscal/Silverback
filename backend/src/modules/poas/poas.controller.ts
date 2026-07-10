@@ -7,6 +7,7 @@ import { ApiTags, ApiResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { PresentarPoasResponseErrorDto } from './DTOS/response/poas-presentar-response.dto';
 import { PresentarPoasDto } from './DTOS/request/poas-presentar.dto';
 import { CancelarPoaDataDto } from './DTOS/request/poas-cancelar-data.dto';
+import { describe } from 'node:test';
 
 @ApiTags('POAs')
 @Controller('poas')
@@ -15,7 +16,7 @@ export class PoasController {
 
   @ApiOperation({
     summary: 'Devuelve la POA en la que se esta trabajando',
-    description: ''
+    description: 'Entrega los datos necesarios para armar la POA vigente del anio fiscal'
   })
   @ApiResponse({
     status: 201,
@@ -28,7 +29,7 @@ export class PoasController {
 
    @ApiOperation({
     summary: 'Agregar actividades',
-    description: ''
+    description: 'Recibe los datos para crear actividades dentro de la POA'
   })
   @Post(':poaid/actividades')
   @ApiResponse({
@@ -43,7 +44,7 @@ export class PoasController {
 
    @ApiOperation({
     summary: 'Presentar la poa para el envio',
-    description: ''
+    description: 'Prepara a la POA para poder enviarse a la jefatura'
   })
   @Post(':poaid/presentar')
   @ApiResponse({
@@ -51,18 +52,17 @@ export class PoasController {
     description: 'Error al presentar la POA',
     type: PresentarPoasResponseErrorDto
   })
-  presentarPoa(@Param('poaid') id: string, @Body() presentarPoasDto: PresentarPoasDto, @Res() response): PresentarPoasResponseErrorDto{
-    const poaPresentada = presentarPoasDto;
-    return response.status(422).send(PresentarPoasResponseErrorDto)
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: PresentarPoasDto
+  })
+  presentarPoa(@Param('poaid') id: string, @Res() response){
 
     }
 
-  @ApiResponse({
-
-  })
   @ApiOperation({
     summary: 'Cancela el envio de la POA',
-    description: ''
+    description: 'Se cancela el proceso de envio de POA regresandola al estado anterior.'
   })  
   @ApiResponse({
     description: 'Se regresa el estado de la POA de enviada a en progreso',

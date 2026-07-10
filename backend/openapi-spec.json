@@ -673,7 +673,7 @@
     },
     "/api/v1/poas/mi-poa-actual": {
       "get": {
-        "description": "",
+        "description": "Entrega los datos necesarios para armar la POA vigente del anio fiscal",
         "operationId": "PoasController_getPoaActual",
         "parameters": [],
         "responses": {
@@ -696,7 +696,7 @@
     },
     "/api/v1/poas/{poaid}/actividades": {
       "post": {
-        "description": "",
+        "description": "Recibe los datos para crear actividades dentro de la POA",
         "operationId": "PoasController_agregarActividades",
         "parameters": [
           {
@@ -738,7 +738,7 @@
     },
     "/api/v1/poas/{poaid}/presentar": {
       "post": {
-        "description": "",
+        "description": "Prepara a la POA para poder enviarse a la jefatura",
         "operationId": "PoasController_presentarPoa",
         "parameters": [
           {
@@ -750,17 +750,17 @@
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PresentarPoasDto"
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresentarPoasDto"
+                }
               }
             }
-          }
-        },
-        "responses": {
+          },
           "422": {
             "description": "Error al presentar la POA",
             "content": {
@@ -780,7 +780,7 @@
     },
     "/api/v1/poas/{poaid}/cancelar-envio": {
       "post": {
-        "description": "",
+        "description": "Se cancela el proceso de envio de POA regresandola al estado anterior.",
         "operationId": "PoasController_cancelarEnvio",
         "parameters": [
           {
@@ -794,7 +794,14 @@
         ],
         "responses": {
           "default": {
-            "description": "Se regresa el estado de la POA de enviada a en progreso"
+            "description": "Se regresa el estado de la POA de enviada a en progreso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelarPoaDataDto"
+                }
+              }
+            }
           }
         },
         "summary": "Cancela el envio de la POA",
@@ -805,7 +812,7 @@
     },
     "/api/v1/catalogos/banco-actividades": {
       "get": {
-        "description": "",
+        "description": "Muestra el banco de actividades para que el usuario pueda seleccionar.",
         "operationId": "CatalogoController_getBancoActividades",
         "parameters": [
           {
@@ -835,7 +842,7 @@
     },
     "/api/v1/catalogos/banco-actividades/{id}": {
       "get": {
-        "description": "",
+        "description": "Se devuelve una actividad asociada al ID registrado",
         "operationId": "CatalogoController_getBancoActividadesById",
         "parameters": [
           {
@@ -867,7 +874,7 @@
     },
     "/api/v1/catalogos/banco-actividades/{id}/sub-actividades-sugeridas": {
       "get": {
-        "description": "",
+        "description": "Si la actividad vino del banco, en esta se mostraran sub-actividades sugeridas",
         "operationId": "CatalogoController_getSubActividadesSugeridas",
         "parameters": [
           {
@@ -899,7 +906,7 @@
     },
     "/api/v1/catalogos/centros": {
       "get": {
-        "description": "",
+        "description": "Devuelve los centros de trabajo registrados en el sistema.",
         "operationId": "CatalogoController_getCentros",
         "parameters": [],
         "responses": {
@@ -922,11 +929,11 @@
     },
     "/api/v1/auditores": {
       "get": {
-        "description": "",
+        "description": "Entrega a los auditores disponibles para registrar en la actividad",
         "operationId": "AuditoresController_getAuditores",
         "parameters": [],
         "responses": {
-          "200": {
+          "302": {
             "description": "Obtiene la lista de auditores",
             "content": {
               "application/json": {
@@ -945,7 +952,7 @@
     },
     "/api/v1/dashboard/contralor/kpis": {
       "get": {
-        "description": "",
+        "description": "Entrega toda la informacion necesaria para las tarjetas superiores del dashboard del contralor.",
         "operationId": "DashboardController_getDashboardContralor",
         "parameters": [],
         "responses": {
@@ -968,7 +975,7 @@
     },
     "/api/v1/dashboard/jefatura/kpis": {
       "get": {
-        "description": "",
+        "description": "Entrega toda la informacion necesaria para las tarjetas superiores del dashboard de la jefa.",
         "operationId": "DashboardController_getDashboardJefa",
         "parameters": [],
         "responses": {
@@ -991,7 +998,7 @@
     },
     "/api/v1/dashboard/jefatura/rezago-centros": {
       "get": {
-        "description": "",
+        "description": "Entrega toda la informacion sobre los centros que tengan actividades con rezago",
         "operationId": "DashboardController_getRezagoCentros",
         "parameters": [],
         "responses": {
@@ -2209,6 +2216,54 @@
           "error",
           "message",
           "detalles"
+        ]
+      },
+      "CancelarPoaDto": {
+        "type": "object",
+        "properties": {
+          "poa_id": {
+            "type": "string",
+            "description": "ID de la POA a cancelar",
+            "example": "uuid-poa-1234"
+          },
+          "estado_anterior": {
+            "type": "string",
+            "description": "Estado anterior de la POA",
+            "example": "EN_PROGRESO"
+          },
+          "estado_nuevo": {
+            "type": "string",
+            "description": "Estado nuevo de la POA",
+            "example": "EN_REVISION"
+          },
+          "fecha_cancelacion": {
+            "type": "string",
+            "description": "Fecha de cancelación de la POA",
+            "example": "2026-06-28T19:45:00Z"
+          },
+          "mensaje": {
+            "type": "string",
+            "description": "Mensaje de cancelación de la POA",
+            "example": "El envío ha sido cancelado. El POA vuelve a estar disponible para su edición."
+          }
+        },
+        "required": [
+          "poa_id",
+          "estado_anterior",
+          "estado_nuevo",
+          "fecha_cancelacion",
+          "mensaje"
+        ]
+      },
+      "CancelarPoaDataDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CancelarPoaDto"
+          }
+        },
+        "required": [
+          "data"
         ]
       },
       "BancoActividadesDto": {

@@ -13,7 +13,7 @@ export class CatalogoController {
 
   @ApiOperation({
      summary: 'Muestra el catalogo de actividades',
-     description: ''
+     description: 'Muestra el banco de actividades para que el usuario pueda seleccionar.'
    }) 
   @ApiResponse({
     status: 200,
@@ -25,13 +25,13 @@ export class CatalogoController {
     required: false
   })
   @Get('/banco-actividades')
-  getBancoActividades(@Query() actividad: string, data: BancoActividadesDataDto): BancoActividadesDataDto {
+  getBancoActividades( data: BancoActividadesDataDto, @Query() actividad?: string): BancoActividadesDataDto {
       return data;
   }
 
   @ApiOperation({
     summary: 'Buscar actividad por ID',
-    description: ''
+    description: 'Se devuelve una actividad asociada al ID registrado'
   }) 
   @ApiResponse({
     status: 200,
@@ -45,7 +45,7 @@ export class CatalogoController {
 
   @ApiOperation({
     summary: 'Entrega sub-actividades sugeridas',
-    description: ''
+    description: 'Si la actividad vino del banco, en esta se mostraran sub-actividades sugeridas'
   }) 
   @ApiResponse({
     status: 200,
@@ -59,7 +59,7 @@ export class CatalogoController {
 
   @ApiOperation({
     summary: 'Entrega los centros de trabajo',
-    description: ''
+    description: 'Devuelve los centros de trabajo registrados en el sistema.'
   }) 
   @ApiResponse({
     status: 200,
