@@ -7,6 +7,9 @@ CREATE TYPE "TipoActividad" AS ENUM ('AUDITORIA', 'REVISION');
 -- CreateEnum
 CREATE TYPE "EstadoPoa" AS ENUM ('BORRADOR', 'EN_REVISION', 'DEVUELTA', 'AUTORIZADO');
 
+-- CreateEnum
+CREATE TYPE "EstadoSubActividad" AS ENUM ('SIN_EMPEZAR', 'SOLICITADO', 'EN_PROGRESO', 'EN_REVISION', 'DEVUELTA', 'CONCLUIDA');
+
 -- CreateTable
 CREATE TABLE "CentroUniversitario" (
     "id" TEXT NOT NULL,
@@ -120,7 +123,7 @@ CREATE TABLE "SubActividad" (
     "id" TEXT NOT NULL,
     "numero_orden" TEXT NOT NULL,
     "descripcion_tarea" TEXT NOT NULL,
-    "estado_operativo" TEXT NOT NULL DEFAULT 'SIN_EMPEZAR',
+    "estado_operativo" "EstadoSubActividad" NOT NULL DEFAULT 'SIN_EMPEZAR',
     "mensaje_observacion" TEXT,
     "fecha_inicio" TIMESTAMP(3) NOT NULL,
     "fecha_termino" TIMESTAMP(3) NOT NULL,

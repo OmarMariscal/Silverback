@@ -2,7 +2,8 @@ import {
   PrismaClient,
   TipoActividad,
   Prisma,
-} from '../src/prisma/generated/client';
+  EstadoSubActividad,
+} from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -210,13 +211,14 @@ async function main() {
     },
   });
 
-  const estadosOperativos = [
-    'SIN_EMPEZAR',
-    'SOLICITADO',
-    'EN_PROGRESO',
-    'EN_REVISION',
-    'DEVUELTA',
-    'CONCLUIDA',
+  // 2. Actualiza el arreglo con tus 6 nuevos estados usando el enum nativo
+  const estadosOperativos: EstadoSubActividad[] = [
+    EstadoSubActividad.SIN_EMPEZAR,
+    EstadoSubActividad.SOLICITADO,
+    EstadoSubActividad.EN_PROGRESO,
+    EstadoSubActividad.EN_REVISION,
+    EstadoSubActividad.DEVUELTA,
+    EstadoSubActividad.CONCLUIDA,
   ];
 
   const auditoresDisponibles = [
