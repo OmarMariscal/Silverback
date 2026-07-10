@@ -1,15 +1,20 @@
 import { Controller, Get } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
-import { ApiTags, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiOperation } from '@nestjs/swagger';
 import { DashboardDto } from './DTOS/response/dashboard.dto';
 import { DashboardJefaDto } from './DTOS/response/dashboard-jefa.dto';
-import { RezagoDataDto } from './DTOS/response/dashboard-rezago.dto';
+import { RezagoDataDto
 
+ } from './DTOS/response/dashboard-rezago-data.dto';
 @ApiTags('Dashboard')
 @Controller('dashboard')
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
+  @ApiOperation({
+      summary: 'Entrega los kpis del dashboard contralor',
+      description: ''
+    })
   @ApiResponse({
     status: 200,
     description: 'Obtiene los KPIs del dashboard para el contralor',
@@ -20,6 +25,10 @@ export class DashboardController {
     return dashboardDto;
   }
 
+  @ApiOperation({
+    summary: 'Entrega los kpis del dashboard jefa',
+    description: ''
+  })
   @ApiResponse({
     status: 200,
     description: 'Obtiene los kpis del dashboard de la jefa',
@@ -30,6 +39,10 @@ export class DashboardController {
     return dashboardDto;
   }
 
+  @ApiOperation({
+    summary: 'Entrega los centros con rezago',
+    description: ''
+  }) 
   @ApiResponse({
     status: 200,
     description: 'Obtiene una lista de centros con tareas rezagadas',

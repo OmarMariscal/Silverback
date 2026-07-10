@@ -1,7 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Estado } from "../response/poa-actual.dto";
+import { EstadosActividades } from "@domain/actividad/estados-actividades.enum";
+import { IsDate, IsDateString, IsEnum, IsString } from "class-validator";
 
-class CancelarPoaDto{
+export class CancelarPoaDto{
+    @IsString()
     @ApiProperty({
         description: 'ID de la POA a cancelar',
         type: String,
@@ -9,18 +11,22 @@ class CancelarPoaDto{
     })
     poa_id: string;
 
+    @IsEnum(EstadosActividades)
+    @IsString()
     @ApiProperty({
         description: 'Estado anterior de la POA',
-        example: "EN_REVISION"
+        example: EstadosActividades.EN_PROGRESO
     })
-    estado_anterior: Estado;
+    estado_anterior: EstadosActividades;
 
+    @IsEnum(EstadosActividades)
     @ApiProperty({
         description: 'Estado nuevo de la POA',
-        example: "BORRADOR"
+        example: EstadosActividades.EN_REVISION
     })
-    estado_nuevo: Estado;
+    estado_nuevo: EstadosActividades;
 
+    @IsString()
     @ApiProperty({
         description: 'Fecha de cancelación de la POA',
         type: String,
@@ -28,6 +34,7 @@ class CancelarPoaDto{
     })
     fecha_cancelacion: string;
 
+    @IsString()
     @ApiProperty({
         description: 'Mensaje de cancelación de la POA',
         type: String,
@@ -36,9 +43,3 @@ class CancelarPoaDto{
     mensaje: string;
 }
 
-export class CancelarPoaDataDto{
-    @ApiProperty({
-        type: CancelarPoaDto
-    })
-    data: CancelarPoaDto;
-}

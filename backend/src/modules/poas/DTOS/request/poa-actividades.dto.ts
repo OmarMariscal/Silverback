@@ -1,29 +1,19 @@
-import { ApiProperty } from "@nestjs/swagger";
-
-class EquipoAuditorDto{
-    @ApiProperty({
-            description: "Numero de participantes en la actividad",
-            type: Number,
-            example: 2
-        })
-    total_participantes: number;
-    
-    @ApiProperty({
-            description: "Lista con los IDs de los auditores que participaran en la actividad",
-            type: [String],
-            example: ["uuid-auditor-1", "uuid-auditor-2"]
-        })
-    auditores_ids: string[];
-}
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { EquipoAuditorDto } from "./poa-actividades-auditores.dto";
+import { IsOptional, IsString, IsStrongPassword, IsUUID } from "class-validator";
 
 export class CrearActividadesDto{
-    @ApiProperty({
+    @IsString()
+    @IsUUID()
+    @IsOptional()
+    @ApiPropertyOptional({
             description: "ID de la actividad dentro del banco de actividades",
             type: String,
             example: "banco-uuid-1"
         })
-    banco_actividad_id: string;
+    banco_actividad_id?: string;
 
+    @IsString()
     @ApiProperty({
             description: "Titulo de la actividad",
             type: String,
@@ -31,6 +21,7 @@ export class CrearActividadesDto{
         })
     titulo: string;
 
+    @IsString()
     @ApiProperty({
             description: "Justificacion del porque de la Actividad",
             type: String,
@@ -38,12 +29,37 @@ export class CrearActividadesDto{
         })
     justificacion: string;
 
+    @IsString()
     @ApiProperty({
             description: "Objetivo de la actividad",
             type: String,
-            example: 2026
+            example: "Asegurar la correcta aplicación..."
         })
     objetivo_general: string;
+
+    @IsString()
+    @ApiProperty({
+            description: "Objetivos especificos de la actividad",
+            type: String,
+            example: "Revisar el ejercicio de los recursos y los procesos.."
+        })
+    objetivos_especificos: string;
+
+    @IsString()
+    @ApiProperty({
+            description: "Metas de la actividad",
+            type: String,
+            example: "06 revisiones"
+        })
+    metas: string;
+
+    @IsString()
+    @ApiProperty({
+            description: "Objetivos especificos de la actividad",
+            type: String,
+            example: "Numero de revisiones realizadas entre numero de revisiones programadas"
+        })
+    indicadores: string;
 
     @ApiProperty({
             description: "Informacion sobre el equipo de participantes en esta actividad",

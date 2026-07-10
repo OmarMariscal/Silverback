@@ -1,6 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { IsEnum, IsString, IsUUID } from "class-validator";
+import { TipoSubActividad } from "@domain/actividad/tipos-de-actividades.enum";
 
-class ActividadSugeridaDto{
+export class ActividadSugeridaDto{
+    @IsString()
+    @IsUUID()
     @ApiProperty({
         description: 'ID de la actividad sugerida',
         type: String,
@@ -8,6 +12,7 @@ class ActividadSugeridaDto{
     })
     id: string;
 
+    @IsString()
     @ApiProperty({
         description: 'Descripcion de la actividad sugerida',
         type: String,
@@ -15,18 +20,12 @@ class ActividadSugeridaDto{
     })
     descripcion: string;
 
+    @IsString()
+    @IsEnum(TipoSubActividad)
     @ApiProperty({
         description: 'Que tipo de actividad es la sugerida',
-        type: String,
-        example: "AUDITORIA"
+        example: TipoSubActividad.AUDITORIA
     })
-    tipo_sugerido: string;
+    tipo_sugerido: TipoSubActividad;
 }
 
-export class ActividadSugeridaDataDto{
-    @ApiProperty({
-        description: 'Lista de actividades sugeridas',
-        type: [ActividadSugeridaDto],
-    })
-    data: ActividadSugeridaDto[];
-}

@@ -1,20 +1,27 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { IsEnum, IsNumber, IsString, IsUUID } from "class-validator";
+import { TipoSubActividad } from "@domain/actividad/tipos-de-actividades.enum";
 
-class BancoActividadesDto{
+export class BancoActividadesDto{
+
+    @IsString()
+    @IsUUID()
     @ApiProperty({
         description: 'ID de la actividad',
-        type: Number,
+        type: String,
         example: "banco-uuid-1"
     })
-    id: number;
+    id: string;
 
+    @IsString()
+    @IsEnum(TipoSubActividad)
     @ApiProperty({
         description: 'Tipo de actividad',
-        type: String,
-        example: "AUDITORIA"
+        example: TipoSubActividad.AUDITORIA
     })
-    tipo: string;
+    tipo: TipoSubActividad;
 
+    @IsString()
     @ApiProperty({
         description: 'Titulo de la actividad',
         type: String,
@@ -22,6 +29,7 @@ class BancoActividadesDto{
     })
     titulo: string;
 
+    @IsString()
     @ApiProperty({
         description: 'Explicacion breve de la actividad',
         type: String,
@@ -31,17 +39,3 @@ class BancoActividadesDto{
 
 }
 
-export class BancoActividadesDataDto{
-
-    @ApiProperty({
-        description: 'Lista de actividades',
-        type: [BancoActividadesDto],
-        example: [{
-            id: 1,
-            tipo: "AUDITORIA",
-            titulo: "Revision al rubro de Obra Publica",
-            descripcion_corta: "Verificar el adecuado cumplimiento de los procedimientos relativos a la..."
-        }]
-    })
-    data: BancoActividadesDto[];
-}

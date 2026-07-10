@@ -1,20 +1,22 @@
-import { Body, Controller, Get, Param, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Query, Res } from '@nestjs/common';
 import { PoasService } from './poas.service';
 import { PoaActualDto } from './DTOS/response/poa-actual.dto';
 import { CrearActividadesDto } from './DTOS/request/poa-actividades.dto';
 import { CrearActividadesResponseDto } from './DTOS/response/poa-actividades.response.dto';
-import { ApiTags, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { PresentarPoasResponseErrorDto } from './DTOS/response/poas-presentar-response.dto';
 import { PresentarPoasDto } from './DTOS/request/poas-presentar.dto';
-import { CancelarPoaDataDto } from './DTOS/request/poas-cancelar.dto';
+import { CancelarPoaDataDto } from './DTOS/request/poas-cancelar-data.dto';
 
 @ApiTags('POAs')
-
 @Controller('poas')
 export class PoasController {
   constructor(private readonly poasService: PoasService) {}
 
-
+  @ApiOperation({
+    summary: 'Devuelve la POA en la que se esta trabajando',
+    description: ''
+  })
   @ApiResponse({
     status: 201,
     type: PoaActualDto
@@ -24,6 +26,10 @@ export class PoasController {
     return poaActual;
   }
 
+   @ApiOperation({
+    summary: 'Agregar actividades',
+    description: ''
+  })
   @Post(':poaid/actividades')
   @ApiResponse({
     status: 201,
@@ -35,9 +41,13 @@ export class PoasController {
     return response.status(201).send(CrearActividadesResponseDto)
   }
 
+   @ApiOperation({
+    summary: 'Presentar la poa para el envio',
+    description: ''
+  })
   @Post(':poaid/presentar')
   @ApiResponse({
-    status: 422,
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
     description: 'Error al presentar la POA',
     type: PresentarPoasResponseErrorDto
   })
@@ -47,10 +57,19 @@ export class PoasController {
 
     }
 
-  @Post()
-  cancelarEnvio(@Param('poaid') id: string, @Body() cancelarPoaDto: CancelarPoaDataDto){
-      const poaCancelada = cancelarPoaDto;
-      return poaCancelada;
+  @ApiResponse({
 
+  })
+  @ApiOperation({
+    summary: 'Cancela el envio de la POA',
+    description: ''
+  })  
+  @ApiResponse({
+    description: 'Se regresa el estado de la POA de enviada a en progreso',
+    type: CancelarPoaDataDto
+  })
+  @Post(':poaid/cancelar-envio')
+  cancelarEnvio(@Param('poaid') id: string){
+      
     }
 }
