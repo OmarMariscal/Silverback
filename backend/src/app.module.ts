@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './core/auth/auth.module';
@@ -9,7 +10,18 @@ import { AuditoresModule } from './modules/auditores/auditores.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
-  imports: [AuthModule, ActividadesModule, PoasModule, CatalogoModule, AuditoresModule, DashboardModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env', 'backend/.env'],
+    }),
+    AuthModule,
+    ActividadesModule,
+    PoasModule,
+    CatalogoModule,
+    AuditoresModule,
+    DashboardModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
