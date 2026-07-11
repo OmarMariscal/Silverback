@@ -1,7 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { IsString } from "class-validator";
 
-class AuditoresDto{
+export class AuditoresDto{
 
+    @IsString()
     @ApiProperty({
         description: 'Identificador unico del auditor',
         type: String,
@@ -9,6 +11,7 @@ class AuditoresDto{
     })
     id: string;
 
+    @IsString()
     @ApiProperty({
         description: 'Nombre completo del auditor',
         type: String,
@@ -16,6 +19,7 @@ class AuditoresDto{
     })
     nombre_completo: string;
 
+    @IsString()
     @ApiProperty({
         description: 'Cargo del auditor',
         type: String,
@@ -25,10 +29,3 @@ class AuditoresDto{
 
 }
 
-export class AuditoresDataDto {
-    @ApiProperty({
-        description: 'Lista de auditores',
-        type: [AuditoresDto]
-    })
-    data: AuditoresDto[];
-}

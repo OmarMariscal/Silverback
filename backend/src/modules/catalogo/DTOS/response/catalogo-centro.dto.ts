@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-class CentroDto{
+export class CentroDto{
     @ApiProperty({
         description: 'ID del centro de trabajo',
         type: String,
@@ -30,10 +30,3 @@ class CentroDto{
     subtitulo_interfaz: string;
 }
 
-export class CentroDataDto{
-    @ApiProperty({
-        description: 'Lista de centros de trabajo',
-        type: [CentroDto],
-    })
-    data: CentroDto[];
-}

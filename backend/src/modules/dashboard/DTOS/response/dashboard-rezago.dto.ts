@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { DistribucionDto } from "./dashboard-rezago-distribucion.dto";
 
-class RezagoDto{
+export class RezagoDto{
     @ApiProperty({
         description: 'ID unico del centro universitario',
         type: String,
@@ -23,24 +24,9 @@ class RezagoDto{
     centro_nombre: string;
 
     @ApiProperty({
-        description: 'Numero de actividades criticas',
-        type: Number,
-        example: 8
+        description: 'Distribucion del centro con rezago',
+        type: DistribucionDto
     })
-    actividades_criticas: number;
-
-    @ApiProperty({
-        description: 'Que tanto del total de actividades son criticas',
-        type: Number,
-        example: 36.3
-    })
-    porcentaje_del_rezago_global: number;
+    distribucion: DistribucionDto;
 }
 
-export class RezagoDataDto{
-    @ApiProperty({
-        description: 'Lista de los centros rezagados',
-        type: [RezagoDto]
-    })
-    data: RezagoDto[];
-}

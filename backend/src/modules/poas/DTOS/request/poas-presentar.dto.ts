@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Estado } from "../response/poa-actual.dto";
+import { EstadosActividades } from "@domain/actividad/estados-actividades.enum";
 
-class PresentarPoasDataDto {
+export class PresentarPoasDto {
     @ApiProperty({
         description: 'ID de la POA a presentar',
         type: String,
@@ -11,15 +11,15 @@ class PresentarPoasDataDto {
 
     @ApiProperty({
         description: 'Estado anterior de la POA',
-        example: "BORRADOR",
+        example: EstadosActividades.EN_PROGRESO,
     })
-    estado_anterior: Estado;
+    estado_anterior: EstadosActividades;
 
     @ApiProperty({
         description: 'Estado nuevo de la POA',
-        example: "EN_REVISION"
+        example: EstadosActividades.EN_REVISION
     })
-    estado_nuevo: Estado;
+    estado_nuevo: EstadosActividades;
 
     @ApiProperty({
         description: 'Fecha y hora en la que se envio la POA',
@@ -36,10 +36,5 @@ class PresentarPoasDataDto {
     mensaje: string;
     }
     
-export class PresentarPoasDto{
-    @ApiProperty({ 
-        type: PresentarPoasDataDto 
-    })
-    data: PresentarPoasDataDto;
-}
+
     

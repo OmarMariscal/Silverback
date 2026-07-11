@@ -1,6 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { IsString, IsUUID } from "class-validator";
 
 export class BancoIdDto {
+
+    @IsString()
+    @IsUUID()
     @ApiProperty({
         description: 'ID del banco de actividades',
         type: String,
@@ -8,6 +12,7 @@ export class BancoIdDto {
     })
     id: string;
 
+    @IsString()
     @ApiProperty({
         description: 'Titulo de la actividad',
         type: String,
@@ -15,6 +20,7 @@ export class BancoIdDto {
     })
     titulo: string;
 
+    @IsString()
     @ApiProperty({
         description: 'Justificación de la actividad',
         type: String,
@@ -22,6 +28,7 @@ export class BancoIdDto {
     })
     justificacion_plantilla: string;
 
+    @IsString()
     @ApiProperty({
         description: 'Objetivo general de la actividad',
         type: String,

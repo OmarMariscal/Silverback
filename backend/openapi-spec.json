@@ -833,6 +833,7 @@
     },
     "/api/v1/poas/mi-poa-actual": {
       "get": {
+        "description": "Entrega los datos necesarios para armar la POA vigente del anio fiscal",
         "operationId": "PoasController_getPoaActual",
         "parameters": [],
         "responses": {
@@ -847,6 +848,7 @@
             }
           }
         },
+        "summary": "Devuelve la POA en la que se esta trabajando",
         "tags": [
           "POAs"
         ]
@@ -854,6 +856,7 @@
     },
     "/api/v1/poas/{poaid}/actividades": {
       "post": {
+        "description": "Recibe los datos para crear actividades dentro de la POA",
         "operationId": "PoasController_agregarActividades",
         "parameters": [
           {
@@ -887,6 +890,7 @@
             }
           }
         },
+        "summary": "Agregar actividades",
         "tags": [
           "POAs"
         ]
@@ -894,6 +898,7 @@
     },
     "/api/v1/poas/{poaid}/presentar": {
       "post": {
+        "description": "Prepara a la POA para poder enviarse a la jefatura",
         "operationId": "PoasController_presentarPoa",
         "parameters": [
           {
@@ -905,17 +910,17 @@
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PresentarPoasDto"
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresentarPoasDto"
+                }
               }
             }
-          }
-        },
-        "responses": {
+          },
           "422": {
             "description": "Error al presentar la POA",
             "content": {
@@ -927,13 +932,15 @@
             }
           }
         },
+        "summary": "Presentar la poa para el envio",
         "tags": [
           "POAs"
         ]
       }
     },
-    "/api/v1/poas": {
+    "/api/v1/poas/{poaid}/cancelar-envio": {
       "post": {
+        "description": "Se cancela el proceso de envio de POA regresandola al estado anterior.",
         "operationId": "PoasController_cancelarEnvio",
         "parameters": [
           {
@@ -945,21 +952,19 @@
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CancelarPoaDataDto"
+        "responses": {
+          "default": {
+            "description": "Se regresa el estado de la POA de enviada a en progreso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelarPoaDataDto"
+                }
               }
             }
           }
         },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
+        "summary": "Cancela el envio de la POA",
         "tags": [
           "POAs"
         ]
@@ -967,6 +972,7 @@
     },
     "/api/v1/catalogos/banco-actividades": {
       "get": {
+        "description": "Muestra el banco de actividades para que el usuario pueda seleccionar.",
         "operationId": "CatalogoController_getBancoActividades",
         "parameters": [
           {
@@ -988,6 +994,7 @@
             }
           }
         },
+        "summary": "Muestra el catalogo de actividades",
         "tags": [
           "Catalogos"
         ]
@@ -995,6 +1002,7 @@
     },
     "/api/v1/catalogos/banco-actividades/{id}": {
       "get": {
+        "description": "Se devuelve una actividad asociada al ID registrado",
         "operationId": "CatalogoController_getBancoActividadesById",
         "parameters": [
           {
@@ -1018,6 +1026,7 @@
             }
           }
         },
+        "summary": "Buscar actividad por ID",
         "tags": [
           "Catalogos"
         ]
@@ -1025,6 +1034,7 @@
     },
     "/api/v1/catalogos/banco-actividades/{id}/sub-actividades-sugeridas": {
       "get": {
+        "description": "Si la actividad vino del banco, en esta se mostraran sub-actividades sugeridas",
         "operationId": "CatalogoController_getSubActividadesSugeridas",
         "parameters": [
           {
@@ -1048,6 +1058,7 @@
             }
           }
         },
+        "summary": "Entrega sub-actividades sugeridas",
         "tags": [
           "Catalogos"
         ]
@@ -1055,6 +1066,7 @@
     },
     "/api/v1/catalogos/centros": {
       "get": {
+        "description": "Devuelve los centros de trabajo registrados en el sistema.",
         "operationId": "CatalogoController_getCentros",
         "parameters": [],
         "responses": {
@@ -1069,6 +1081,7 @@
             }
           }
         },
+        "summary": "Entrega los centros de trabajo",
         "tags": [
           "Catalogos"
         ]
@@ -1076,10 +1089,11 @@
     },
     "/api/v1/auditores": {
       "get": {
+        "description": "Entrega a los auditores disponibles para registrar en la actividad",
         "operationId": "AuditoresController_getAuditores",
         "parameters": [],
         "responses": {
-          "200": {
+          "302": {
             "description": "Obtiene la lista de auditores",
             "content": {
               "application/json": {
@@ -1090,6 +1104,7 @@
             }
           }
         },
+        "summary": "Entrega lista de auditores",
         "tags": [
           "Auditores"
         ]
@@ -1097,6 +1112,7 @@
     },
     "/api/v1/dashboard/contralor/kpis": {
       "get": {
+        "description": "Entrega toda la informacion necesaria para las tarjetas superiores del dashboard del contralor.",
         "operationId": "DashboardController_getDashboardContralor",
         "parameters": [],
         "responses": {
@@ -1111,6 +1127,7 @@
             }
           }
         },
+        "summary": "Entrega los kpis del dashboard contralor",
         "tags": [
           "Dashboard"
         ]
@@ -1118,6 +1135,7 @@
     },
     "/api/v1/dashboard/jefatura/kpis": {
       "get": {
+        "description": "Entrega toda la informacion necesaria para las tarjetas superiores del dashboard de la jefa.",
         "operationId": "DashboardController_getDashboardJefa",
         "parameters": [],
         "responses": {
@@ -1132,6 +1150,7 @@
             }
           }
         },
+        "summary": "Entrega los kpis del dashboard jefa",
         "tags": [
           "Dashboard"
         ]
@@ -1139,6 +1158,7 @@
     },
     "/api/v1/dashboard/jefatura/rezago-centros": {
       "get": {
+        "description": "Entrega toda la informacion sobre los centros que tengan actividades con rezago",
         "operationId": "DashboardController_getRezagoCentros",
         "parameters": [],
         "responses": {
@@ -1153,6 +1173,7 @@
             }
           }
         },
+        "summary": "Entrega los centros con rezago",
         "tags": [
           "Dashboard"
         ]
@@ -2313,18 +2334,26 @@
           },
           "estado": {
             "type": "string",
-            "enum": [
-              "SIN ENVIAR",
-              "EN REVISION",
-              "DEVUELTA",
-              "ACEPTADA",
-              "BORRADOR"
-            ],
             "description": "Estado de la actividad(enum)",
-            "example": "BORRADOR"
+            "example": "EN_PROGRESO"
+          },
+          "fecha_inicio": {
+            "type": "string",
+            "description": "Fecha de inicio de la POA",
+            "example": "Ene 2026"
+          },
+          "fecha_termino": {
+            "type": "string",
+            "description": "Fecha de termino de la POA",
+            "example": "Dic 2026"
+          },
+          "es_rezagado": {
+            "type": "boolean",
+            "description": "Le indica al sistema si la POA tiene actividades rezagadas.",
+            "example": false
           },
           "actividades_resumen": {
-            "description": "Lista de acrividades de manera resumida",
+            "description": "Lista de actividades de manera resumida",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ActividadesResumenDto"
@@ -2335,6 +2364,9 @@
           "id",
           "anio_fiscal",
           "estado",
+          "fecha_inicio",
+          "fecha_termino",
+          "es_rezagado",
           "actividades_resumen"
         ]
       },
@@ -2384,7 +2416,22 @@
           "objetivo_general": {
             "type": "string",
             "description": "Objetivo de la actividad",
-            "example": 2026
+            "example": "Asegurar la correcta aplicación..."
+          },
+          "objetivos_especificos": {
+            "type": "string",
+            "description": "Objetivos especificos de la actividad",
+            "example": "Revisar el ejercicio de los recursos y los procesos.."
+          },
+          "metas": {
+            "type": "string",
+            "description": "Metas de la actividad",
+            "example": "06 revisiones"
+          },
+          "indicadores": {
+            "type": "string",
+            "description": "Objetivos especificos de la actividad",
+            "example": "Numero de revisiones realizadas entre numero de revisiones programadas"
           },
           "equipo_auditor": {
             "description": "Informacion sobre el equipo de participantes en esta actividad",
@@ -2399,6 +2446,9 @@
           "titulo",
           "justificacion",
           "objetivo_general",
+          "objetivos_especificos",
+          "metas",
+          "indicadores",
           "equipo_auditor"
         ]
       },
@@ -2427,7 +2477,7 @@
           "mensaje"
         ]
       },
-      "PresentarPoasDataDto": {
+      "PresentarPoasDto": {
         "type": "object",
         "properties": {
           "poa_id": {
@@ -2438,7 +2488,7 @@
           "estado_anterior": {
             "type": "string",
             "description": "Estado anterior de la POA",
-            "example": "BORRADOR"
+            "example": "EN_PROGRESO"
           },
           "estado_nuevo": {
             "type": "string",
@@ -2462,17 +2512,6 @@
           "estado_nuevo",
           "fecha_envio",
           "mensaje"
-        ]
-      },
-      "PresentarPoasDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/PresentarPoasDataDto"
-          }
-        },
-        "required": [
-          "data"
         ]
       },
       "PresentarPoasResponseErrorDto": {
@@ -2517,12 +2556,12 @@
           "estado_anterior": {
             "type": "string",
             "description": "Estado anterior de la POA",
-            "example": "EN_REVISION"
+            "example": "EN_PROGRESO"
           },
           "estado_nuevo": {
             "type": "string",
             "description": "Estado nuevo de la POA",
-            "example": "BORRADOR"
+            "example": "EN_REVISION"
           },
           "fecha_cancelacion": {
             "type": "string",
@@ -2558,7 +2597,7 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "number",
+            "type": "string",
             "description": "ID de la actividad",
             "example": "banco-uuid-1"
           },
@@ -2590,14 +2629,6 @@
         "properties": {
           "data": {
             "description": "Lista de actividades",
-            "example": [
-              {
-                "id": 1,
-                "tipo": "AUDITORIA",
-                "titulo": "Revision al rubro de Obra Publica",
-                "descripcion_corta": "Verificar el adecuado cumplimiento de los procedimientos relativos a la..."
-              }
-            ],
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/BancoActividadesDto"
@@ -3185,6 +3216,31 @@
           "grafica_distribucion_estado"
         ]
       },
+      "DistribucionDto": {
+        "type": "object",
+        "properties": {
+          "actividades_criticas": {
+            "type": "number",
+            "description": "Numero de actividades en semaforo rojo",
+            "example": 8
+          },
+          "actividades_precaucion": {
+            "type": "number",
+            "description": "Numero de actividades en semaforo amarillo",
+            "example": 10
+          },
+          "total": {
+            "type": "number",
+            "description": "Suma de actividades criticas y en precaucion",
+            "example": 18
+          }
+        },
+        "required": [
+          "actividades_criticas",
+          "actividades_precaucion",
+          "total"
+        ]
+      },
       "RezagoDto": {
         "type": "object",
         "properties": {
@@ -3203,23 +3259,20 @@
             "description": "Nombre del centro universitario",
             "example": "Centro Universitario de Ciencias de la Salud"
           },
-          "actividades_criticas": {
-            "type": "number",
-            "description": "Numero de actividades criticas",
-            "example": 8
-          },
-          "porcentaje_del_rezago_global": {
-            "type": "number",
-            "description": "Que tanto del total de actividades son criticas",
-            "example": 36.3
+          "distribucion": {
+            "description": "Distribucion del centro con rezago",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DistribucionDto"
+              }
+            ]
           }
         },
         "required": [
           "centro_id",
           "centro_clave",
           "centro_nombre",
-          "actividades_criticas",
-          "porcentaje_del_rezago_global"
+          "distribucion"
         ]
       },
       "RezagoDataDto": {
