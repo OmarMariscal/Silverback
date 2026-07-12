@@ -16,7 +16,7 @@
     "outDir": "./dist",
     "paths": {
         "@domain/*": ["./src/domain/*"],
-        "@prisma/*": ["./src/prisma/*"],
+        "@database/*": ["./src/prisma/*"],
         "@core/*": ["./src/core/*"],
         "@modules/*": ["./src/modules/*"],
     },

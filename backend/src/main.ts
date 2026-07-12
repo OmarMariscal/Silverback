@@ -1,4 +1,4 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, HttpAdapterHost } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ActividadesDirectorioAsignacionJefa } from './modules/actividades/dto/response/actividades-directorio-asignacion-jefa.dto';
 import { ActividadesDirectorioAsignacionContralor } from './modules/actividades/dto/response/actividades-directorio-asignacion-contralor.dto';
+import { PrismaClientExceptionFilter } from '@core/filters/prisma-client-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,6 +22,10 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  //Configurar elo filtro de excepciones global de prisma
+  const { httpAdapter } = app.get<HttpAdapterHost>(HttpAdapterHost);
+  app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
 
   // Configuración de la Especificación de Swagger
   const config = new DocumentBuilder()

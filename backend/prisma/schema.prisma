@@ -6,7 +6,6 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/prisma/generated/client"
 }
 
 // ==========================================
@@ -93,6 +92,7 @@ model BancoActividad {
   indicadores              String?             @db.Text
   
   sub_actividades_sugeridas BancoSubActividad[]
+  actividades_creadas       Actividad[]
 }
 
 model BancoSubActividad {
@@ -114,6 +114,15 @@ enum EstadoPoa {
   EN_REVISION
   DEVUELTA     
   AUTORIZADO
+}
+
+enum EstadoSubActividad {
+  SIN_EMPEZAR
+  SOLICITADO
+  EN_PROGRESO
+  EN_REVISION
+  DEVUELTA
+  CONCLUIDA
 }
 
 model Poa {
@@ -148,7 +157,10 @@ model Actividad {
   
   poa_id              String
   poa                 Poa           @relation(fields: [poa_id], references: [id])
-
+  
+  banco_actividad_id  String?
+  banco_actividad     BancoActividad? @relation(fields: [banco_actividad_id], references: [id])
+  
   sub_actividades     SubActividad[]
   auditores           ActividadAuditor[]
 }
@@ -169,7 +181,7 @@ model SubActividad {
   numero_orden           String        // Ej. "1.1"
   descripcion_tarea      String        @db.Text
   // La sub-actividad es la dueña del flujo operativo
-  estado_operativo       String        @default("SIN_EMPEZAR")
+  estado_operativo       EstadoSubActividad        @default(SIN_EMPEZAR)
   mensaje_observacion    String?       @db.Text
   
   fecha_inicio      DateTime

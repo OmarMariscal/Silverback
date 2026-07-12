@@ -16,10 +16,16 @@ import { ActividadesGetResponse } from './dto/response/actividades-get.response.
 import { SubActividadesPoaResponse } from './dto/response/sub-actividades-poa.response.dto';
 import { SubActividadesSelectResponse } from './dto/response/sub-actividades-select.response.dto';
 import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
+import { JwtPayloadDto } from '@core/auth/dto/jwt-payload.dto';
+import { PrismaService } from '@database/prisma.service';
 
 @Injectable()
 export class ActividadesService {
-  getResumen(actUuid: string): ActividadesResumenResponse {
+  constructor(private readonly prismaService: PrismaService) {}
+
+  async getResumen(actUuid: string): Promise<ActividadesResumenResponse> {
+    const total = await this.prismaService.subActividad.count();
+    console.log(total);
     return new ActividadesResumenResponse();
   }
 
@@ -45,9 +51,14 @@ export class ActividadesService {
     return new SubActividadesSyncResponse();
   }
 
-  getFichaTecnica(actUuid: string): ActividadesFichaTecnicaResponse {
+  getFichaTecnica(
+    usuarioActual: JwtPayloadDto,
+    actUuid: string,
+  ): ActividadesFichaTecnicaResponse {
+    console.log(usuarioActual.rol);
     return new ActividadesFichaTecnicaResponse();
   }
+
   patchFichaTecnica(
     actUuid: string,
     fichaTecnica: ActividadesPatchFichaTecnicaRequest,

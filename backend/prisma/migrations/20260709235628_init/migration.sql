@@ -7,6 +7,9 @@ CREATE TYPE "TipoActividad" AS ENUM ('AUDITORIA', 'REVISION');
 -- CreateEnum
 CREATE TYPE "EstadoPoa" AS ENUM ('BORRADOR', 'EN_REVISION', 'DEVUELTA', 'AUTORIZADO');
 
+-- CreateEnum
+CREATE TYPE "EstadoSubActividad" AS ENUM ('SIN_EMPEZAR', 'SOLICITADO', 'EN_PROGRESO', 'EN_REVISION', 'DEVUELTA', 'CONCLUIDA');
+
 -- CreateTable
 CREATE TABLE "CentroUniversitario" (
     "id" TEXT NOT NULL,
@@ -102,6 +105,7 @@ CREATE TABLE "Actividad" (
     "porcentaje_global" DOUBLE PRECISION DEFAULT 0.0,
     "es_rezago" BOOLEAN NOT NULL DEFAULT false,
     "poa_id" TEXT NOT NULL,
+    "banco_actividad_id" TEXT,
 
     CONSTRAINT "Actividad_pkey" PRIMARY KEY ("id")
 );
@@ -119,10 +123,11 @@ CREATE TABLE "SubActividad" (
     "id" TEXT NOT NULL,
     "numero_orden" TEXT NOT NULL,
     "descripcion_tarea" TEXT NOT NULL,
-    "estado_operativo" TEXT NOT NULL DEFAULT 'SIN_EMPEZAR',
+    "estado_operativo" "EstadoSubActividad" NOT NULL DEFAULT 'SIN_EMPEZAR',
     "mensaje_observacion" TEXT,
     "fecha_inicio" TIMESTAMP(3) NOT NULL,
     "fecha_termino" TIMESTAMP(3) NOT NULL,
+    "fecha_envio" TIMESTAMP(3),
     "semanas_totales" INTEGER NOT NULL,
     "tipo" "TipoActividad" NOT NULL,
     "actividad_id" TEXT NOT NULL,
@@ -177,6 +182,9 @@ ALTER TABLE "Poa" ADD CONSTRAINT "Poa_contralor_id_fkey" FOREIGN KEY ("contralor
 
 -- AddForeignKey
 ALTER TABLE "Actividad" ADD CONSTRAINT "Actividad_poa_id_fkey" FOREIGN KEY ("poa_id") REFERENCES "Poa"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Actividad" ADD CONSTRAINT "Actividad_banco_actividad_id_fkey" FOREIGN KEY ("banco_actividad_id") REFERENCES "BancoActividad"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ActividadAuditor" ADD CONSTRAINT "ActividadAuditor_actividad_id_fkey" FOREIGN KEY ("actividad_id") REFERENCES "Actividad"("id") ON DELETE CASCADE ON UPDATE CASCADE;
