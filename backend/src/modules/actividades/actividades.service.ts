@@ -13,11 +13,28 @@ import { ActividadesDirectorioQuery } from './dto/request/actividades-directorio
 import { ActividadesDirectorioResponse } from './dto/response/actividades-directorio.response.dto';
 import { ActividadesGetQuery } from './dto/request/actividades-get.query.dto';
 import { ActividadesGetResponse } from './dto/response/actividades-get.response.dto';
+import { SubActividadesPoaResponse } from './dto/response/sub-actividades-poa.response.dto';
+import { SubActividadesSelectResponse } from './dto/response/sub-actividades-select.response.dto';
+import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
+import { JwtPayloadDto } from '@core/auth/dto/jwt-payload.dto';
+import { PrismaService } from '@database/prisma.service';
 
 @Injectable()
 export class ActividadesService {
-  getResumen(actUuid: string): ActividadesResumenResponse {
+  constructor(private readonly prismaService: PrismaService) {}
+
+  async getResumen(actUuid: string): Promise<ActividadesResumenResponse> {
+    const total = await this.prismaService.subActividad.count();
+    console.log(total);
     return new ActividadesResumenResponse();
+  }
+
+  getSubActividadesPoa(actividadId: string): SubActividadesPoaResponse {
+    return new SubActividadesPoaResponse();
+  }
+
+  getSubActividadesSelect(actividadId: string): SubActividadesSelectResponse {
+    return new SubActividadesSelectResponse();
   }
 
   postSubActividadesBulk(
@@ -34,9 +51,14 @@ export class ActividadesService {
     return new SubActividadesSyncResponse();
   }
 
-  getFichaTecnica(actUuid: string): ActividadesFichaTecnicaResponse {
+  getFichaTecnica(
+    usuarioActual: JwtPayloadDto,
+    actUuid: string,
+  ): ActividadesFichaTecnicaResponse {
+    console.log(usuarioActual.rol);
     return new ActividadesFichaTecnicaResponse();
   }
+
   patchFichaTecnica(
     actUuid: string,
     fichaTecnica: ActividadesPatchFichaTecnicaRequest,
@@ -61,7 +83,13 @@ export class ActividadesService {
     return new ActividadesDirectorioResponse();
   }
 
-  getActividades(queryActividades: ActividadesGetQuery): ActividadesGetResponse {
+  getActividades(
+    queryActividades: ActividadesGetQuery,
+  ): ActividadesGetResponse {
     return new ActividadesGetResponse();
+  }
+
+  deleteActividad(actividadId: string): EliminacionCorrecta {
+    return new EliminacionCorrecta();
   }
 }

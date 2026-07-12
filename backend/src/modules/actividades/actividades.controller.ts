@@ -8,6 +8,8 @@ import {
   Patch,
   Put,
   Query,
+  UseGuards,
+  Delete,
 } from '@nestjs/common';
 import { ActividadesService } from './actividades.service';
 import {
@@ -33,9 +35,16 @@ import { ActividadesDirectorioResponse } from './dto/response/actividades-direct
 import { ActividadesDirectorioQuery } from './dto/request/actividades-directorio.query.dto';
 import { ActividadesGetResponse } from './dto/response/actividades-get.response.dto';
 import { ActividadesGetQuery } from './dto/request/actividades-get.query.dto';
+import { SubActividadesPoaResponse } from './dto/response/sub-actividades-poa.response.dto';
+import { SubActividadesSelectResponse } from './dto/response/sub-actividades-select.response.dto';
+import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
+import { JwtAuthGuard } from '@core/guards/jwt.guard';
+import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
+import { JwtPayloadDto } from '@core/auth/dto/jwt-payload.dto';
 
 @ApiTags('Actividades')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('actividades')
 export class ActividadesController {
   constructor(private readonly actividadesService: ActividadesService) {}
@@ -162,6 +171,64 @@ export class ActividadesController {
   }
 
   @ApiOperation({
+    summary: 'Listado de sub-actividades',
+    description:
+      'Endpoint para obtener el listado de las actividades de la vista completa en la pantalla de la generación de la POA',
+  })
+  @ApiParam({
+    name: 'actividadId',
+    description: 'Identificador único (UUID) de la actividad principal',
+    example: 'act-01-uuid',
+    required: true,
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Actividades recuperadas con éxito',
+    type: SubActividadesPoaResponse,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Actividad no encontrada',
+    type: HttpErrorDto,
+  })
+  @Get(':actividadId/sub-actividades-poa')
+  getSubActividadePoas(
+    @Param('actividadId') actividadId: string,
+  ): SubActividadesPoaResponse {
+    return this.actividadesService.getSubActividadesPoa(actividadId);
+  }
+
+  @ApiOperation({
+    summary: 'Sub-actividades seleccionadas y no seleccionadas',
+    description:
+      'Listado de sub-actividades seleccionadas y proveninetes del banco. Endpoint para el botón de `agregar sub-actividades` de la creación de la POA',
+  })
+  @ApiParam({
+    name: 'actividadId',
+    description: 'Identificador único (UUID) de la actividad principal',
+    example: 'act-01-uuid',
+    required: true,
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Actividades recuperadas con exito',
+    type: SubActividadesSelectResponse,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Actividad no encontrada',
+    type: HttpErrorDto,
+  })
+  @Get(':actividadId/sub-actividades-select')
+  getSubActividadesSelect(
+    @Param('actividadId') actividadId: string,
+  ): SubActividadesSelectResponse {
+    return this.actividadesService.getSubActividadesSelect(actividadId);
+  }
+
+  @ApiOperation({
     summary: 'Selección de subactividades',
     description: 'Sincronización de las subactividades seleccionadas',
   })
@@ -254,8 +321,9 @@ export class ActividadesController {
   @Get(':actividadId/ficha-tecnica')
   getFichaTecnica(
     @Param('actividadId') actUuid: string,
+    @UsuarioActual() usuarioActual: JwtPayloadDto,
   ): ActividadesFichaTecnicaResponse {
-    return this.actividadesService.getFichaTecnica(actUuid);
+    return this.actividadesService.getFichaTecnica(usuarioActual, actUuid);
   }
 
   @ApiOperation({
@@ -291,5 +359,34 @@ export class ActividadesController {
     @Body() fichaTecnica: ActividadesPatchFichaTecnicaRequest,
   ): ActividadesFichaTecnicaResponse {
     return this.actividadesService.patchFichaTecnica(actUuid, fichaTecnica);
+  }
+
+  @ApiOperation({
+    summary: 'Eliminar actividad',
+    description:
+      'Endpoint para eliminar una actividad que le pertenezca al mismo contralor',
+  })
+  @ApiParam({
+    name: 'actividadId',
+    example: 'act-uuid-01',
+    description: 'Identificador Unico (UUID) de la actividad principal',
+    required: true,
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Actividad eliminada correctamente',
+    type: EliminacionCorrecta,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Actividad no encontrada',
+    type: HttpErrorDto,
+  })
+  @Delete(':actividadId')
+  deleteActividad(
+    @Param('actividadId') actividadId: string,
+  ): EliminacionCorrecta {
+    return this.actividadesService.deleteActividad(actividadId);
   }
 }

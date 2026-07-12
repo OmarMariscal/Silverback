@@ -12,6 +12,9 @@
   "scripts": {
     "dev:frontend": "npm run dev --workspace=frontend",
     "dev:backend": "npm run start:dev --workspace=backend",
-    "install:all": "npm install"
+    "install:all": "npm install",
+    "db:migrate": "npm exec --workspace=backend prisma migrate dev",
+    "db:generate": "npm exec --workspace=backend prisma generate",
+    "db:sync": "npm run db:migrate && npm run db:generate"
   }
 }

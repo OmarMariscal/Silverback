@@ -72,6 +72,16 @@
               "example": "auditor-uuid-1",
               "type": "string"
             }
+          },
+          {
+            "name": "centro_id",
+            "required": false,
+            "in": "query",
+            "description": "Identificador único (UUID) del centro universitario",
+            "schema": {
+              "example": "centro-uuid-1",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -423,6 +433,106 @@
         ]
       }
     },
+    "/api/v1/actividades/{actividadId}/sub-actividades-poa": {
+      "get": {
+        "description": "Endpoint para obtener el listado de las actividades de la vista completa en la pantalla de la generación de la POA",
+        "operationId": "ActividadesController_getSubActividadePoas",
+        "parameters": [
+          {
+            "name": "actividadId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la actividad principal",
+            "schema": {
+              "format": "uuid",
+              "example": "act-01-uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Actividades recuperadas con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubActividadesPoaResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Actividad no encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Listado de sub-actividades",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
+    "/api/v1/actividades/{actividadId}/sub-actividades-select": {
+      "get": {
+        "description": "Listado de sub-actividades seleccionadas y proveninetes del banco. Endpoint para el botón de `agregar sub-actividades` de la creación de la POA",
+        "operationId": "ActividadesController_getSubActividadesSelect",
+        "parameters": [
+          {
+            "name": "actividadId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la actividad principal",
+            "schema": {
+              "format": "uuid",
+              "example": "act-01-uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Actividades recuperadas con exito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubActividadesSelectResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Actividad no encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sub-actividades seleccionadas y no seleccionadas",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
     "/api/v1/actividades/{actividadId}/sub-actividades/bulk": {
       "post": {
         "description": "Sincronización de las subactividades seleccionadas",
@@ -666,6 +776,56 @@
           }
         ],
         "summary": "Edición de la ficha técnica",
+        "tags": [
+          "Actividades"
+        ]
+      }
+    },
+    "/api/v1/actividades/{actividadId}": {
+      "delete": {
+        "description": "Endpoint para eliminar una actividad que le pertenezca al mismo contralor",
+        "operationId": "ActividadesController_deleteActividad",
+        "parameters": [
+          {
+            "name": "actividadId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador Unico (UUID) de la actividad principal",
+            "schema": {
+              "format": "uuid",
+              "example": "act-uuid-01",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Actividad eliminada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EliminacionCorrecta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Actividad no encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Eliminar actividad",
         "tags": [
           "Actividades"
         ]
@@ -1056,23 +1216,55 @@
           "password"
         ]
       },
+      "Rol": {
+        "type": "string",
+        "enum": [
+          "JEFA",
+          "CONTRALOR",
+          "AUDITOR"
+        ],
+        "description": "Rol de la sesión inciada"
+      },
       "AuthLoginUserData": {
         "type": "object",
         "properties": {
-          "rol": {
+          "id": {
             "type": "string",
+            "example": "uuid-usuario-123",
+            "description": "ID general del usuario"
+          },
+          "nombre_completo": {
+            "type": "string",
+            "example": "Mtro. Braulio Vicente",
+            "description": "Nombre para mostrar en la UI"
+          },
+          "rol": {
             "example": "CONTRALOR",
-            "description": "Rol del usuario loggeado"
+            "description": "Rol de la sesión inciada",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Rol"
+              }
+            ]
           },
           "centro_id": {
-            "type": "string",
+            "type": "object",
             "example": "uuid-cucei",
-            "description": "UID del centro universitario"
+            "description": "UID del centro universitario",
+            "nullable": true
+          },
+          "perfil_id": {
+            "type": "string",
+            "example": "uuid-perfil-456",
+            "description": "El ID de su perfil específico"
           }
         },
         "required": [
+          "id",
+          "nombre_completo",
           "rol",
-          "centro_id"
+          "centro_id",
+          "perfil_id"
         ]
       },
       "AuthLoginResponse": {
@@ -1621,6 +1813,154 @@
           "indicadores"
         ]
       },
+      "SubActividadesPoaFechas": {
+        "type": "object",
+        "properties": {
+          "fecha_inicio": {
+            "type": "string",
+            "example": "2026-03-20",
+            "description": "Fecha de inicio previamente establecida"
+          },
+          "fecha_termino": {
+            "type": "string",
+            "example": "2026-05-12",
+            "description": "Fecha de término previamente establecida"
+          },
+          "semanas": {
+            "type": "number",
+            "example": 7,
+            "description": "Número de semanas que hay entre la fecha de inicio y la fecha de término"
+          }
+        },
+        "required": [
+          "fecha_inicio",
+          "fecha_termino",
+          "semanas"
+        ]
+      },
+      "SubActividadesPoaData": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "subact-uuid-1",
+            "description": "Identificador único (UUID) de la sub-actividad"
+          },
+          "folio": {
+            "type": "string",
+            "example": "2.1",
+            "description": "Folio de orden de la sub-actividad"
+          },
+          "descripcion": {
+            "type": "string",
+            "example": "Revisión al rubro de Obra Pública. Verificar el adecuado cumplimiento a los procedimientos relativos a la planeación",
+            "description": "Descripción de la sub-actividad"
+          },
+          "tipo": {
+            "example": "AUDITORIA",
+            "description": "Tipo de la sub-actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TipoActividad"
+              }
+            ]
+          },
+          "fechas": {
+            "description": "Rango de fechas previamente establecidas",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SubActividadesPoaFechas"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "folio",
+          "descripcion",
+          "tipo",
+          "fechas"
+        ]
+      },
+      "SubActividadesPoaResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Detalles de las sub-actividades previamente establecidos",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubActividadesPoaData"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "SubActividadesSelectData": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "subact-uuid-1",
+            "description": "Identificador único (UUID) de la sub-actividad"
+          },
+          "folio": {
+            "type": "string",
+            "example": "2.1",
+            "description": "Folio de orden de la sub-actividad"
+          },
+          "descripcion": {
+            "type": "string",
+            "example": "Revisión al rubro de Obra Pública. Verificar el adecuado cumplimiento a los procedimientos relativos a la planeación",
+            "description": "Descripción de la sub-actividad"
+          },
+          "tipo": {
+            "example": "AUDITORIA",
+            "description": "Tipo de la sub-actividad",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TipoActividad"
+              }
+            ]
+          },
+          "fechas": {
+            "default": {},
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SubActividadesPoaFechas"
+              }
+            ]
+          },
+          "seleccionada": {
+            "type": "boolean",
+            "example": false,
+            "description": "Valor boolenao si la sub-actividad está seleccionada. Para valores falsos fechas vienen vacías"
+          }
+        },
+        "required": [
+          "id",
+          "folio",
+          "descripcion",
+          "tipo",
+          "seleccionada"
+        ]
+      },
+      "SubActividadesSelectResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Descripción de las sub-actividades seleccionadas y no seleccionadas",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubActividadesSelectData"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
       "TipoSubActividad": {
         "type": "string",
         "enum": [
@@ -1948,6 +2288,25 @@
             }
           }
         }
+      },
+      "EliminacionCorrecta": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": true,
+            "description": "Define si la eliminacion fue correctamente ejecutada"
+          },
+          "mensaje": {
+            "type": "string",
+            "example": "Eliminacion realizada correctamente",
+            "description": "Mensaje relativo a la operacion"
+          }
+        },
+        "required": [
+          "status",
+          "mensaje"
+        ]
       },
       "ActividadesResumenDto": {
         "type": "object",
@@ -2989,15 +3348,6 @@
           "centro_clave",
           "contralor"
         ]
-      },
-      "Rol": {
-        "type": "string",
-        "enum": [
-          "JEFA",
-          "CONTRALOR",
-          "AUDITOR"
-        ],
-        "description": "Rol del usuario"
       },
       "ActividadesDirectorioAsignacionContralor": {
         "type": "object",
