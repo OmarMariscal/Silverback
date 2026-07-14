@@ -10,8 +10,6 @@ export class ActividadEntity{
         private estadoPoa: EstadosPoa,
         private detalles: string,
         private tipo: TipoSubActividad,
-        private fechaConclusion: Date,
-        private fechaInicio: Date
     ){
 
     }
@@ -25,7 +23,9 @@ export class ActividadEntity{
             throw new ReglaNegocioException("Solo usuarios contralores pueden solicitar aprobacion.")
         }
 
-        if(this.estadoPoa != EstadosPoa.ACEPTADA)
+        if(this.estadoPoa != EstadosPoa.ACEPTADA){
+
+        }
 
         this.estado = EstadosActividades.SOLICITADO
     }
@@ -44,7 +44,7 @@ export class ActividadEntity{
 
     enviar(rolUsuario: Roles){
 
-        if(this.estado != EstadosActividades.EN_PROGRESO || EstadosActividades.DEVUELTA){
+        if(this.estado != EstadosActividades.EN_PROGRESO && this.estado != EstadosActividades.DEVUELTA){
             throw new ReglaNegocioException("Solo se pueden enviar actividades en progreso.")
         }
 
@@ -75,6 +75,8 @@ export class ActividadEntity{
                 throw new ReglaNegocioException("No se puede devolver la tarea sin al menos una recomendacion.")
             }
         }
+
+        this.estado = EstadosActividades.DEVUELTA
     }
 
     concluir(rolUsuario: Roles){

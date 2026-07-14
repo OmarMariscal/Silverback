@@ -11,7 +11,7 @@ export class PoaEntity{
     ){}
 
     enviar(rolUsuario: Roles){
-        if(this.estado != EstadosPoa.BORRADOR || EstadosPoa.DEVUELTA){
+        if(this.estado != EstadosPoa.BORRADOR && this.estado != EstadosPoa.DEVUELTA){
             throw new ReglaNegocioException("Solo se pueden enviar POAs que esten en borrador.")
         }
 
