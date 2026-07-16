@@ -1,3 +1,15 @@
+### Organización de carpetas
+
+Como su proyecto usa la carpeta `src` (Source), todo nuestro trabajo vivirá dentro de `frontend/src/`. Hoy mismo, antes de programar, abran su editor (VS Code) y creen las carpetas que les faltan. El acuerdo queda así:
+
+- **El territorio de Rogelio:**
+    - `/frontend/src/components/ui/` -> Aquí guardará sus botones, tarjetas y modales aislados.
+- **El territorio de Angel:**
+    - `/frontend/src/app/` -> Aquí armará las pantallas finales (ya existe).
+    - `/frontend/src/types/` -> Aquí guardará el archivo `tipos-actividades.ts` (El Contrato de Props).
+    - `/frontend/src/services/` -> Aquí hará sus archivos para conectarse a la API de Emiliano (ej. `api-actividades.ts`).
+    - `/frontend/src/store/` -> Aquí pondrá su estado global de Zustand.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
@@ -33,4 +45,4 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details
