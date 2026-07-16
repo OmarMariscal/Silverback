@@ -125,6 +125,12 @@ export class ActividadEntity {
     this.subActividades.push(subActividad);
   }
 
+  public eliminarSubActividad(subActividadId: string): void {
+    this.subActividades = this.subActividades.filter(
+      (sub) => sub.getId() != subActividadId,
+    );
+  }
+
   public asignarAuditor(auditorId: string): void {
     // No permitimos IDs vacíos
     if (!auditorId || auditorId.trim() === '') {
