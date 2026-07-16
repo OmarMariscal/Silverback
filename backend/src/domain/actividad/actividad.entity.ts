@@ -1,6 +1,6 @@
 import { SubactividadEntity } from '@domain/subactividades/subactividad.entity';
 import { EstadosActividades } from './estados-actividades.enum';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common'; //Cambiar por Excepción de Regla de Negocio cuando esté lista
 
 export class ActividadEntity {
   constructor(
@@ -19,119 +19,117 @@ export class ActividadEntity {
     private subActividades: SubactividadEntity[],
   ) {}
 
-  //Funciones auxiliares
+  // FUNCIONES AUXILIARES (PRIVADAS)
+
   private validarCampos(): string {
     const camposVacios: string[] = [];
 
-    for (const [clave, valor] of Object.entries(this)) {
-      const estaVacio =
-        (typeof valor === 'string' && valor.trim() === '') ||
-        (valor instanceof Date && isNaN(valor.getTime())) ||
-        valor === null ||
-        valor === undefined;
+    // Validamos de forma explícita solo lo que es vital para la Ficha Técnica
 
-      if (estaVacio) {
-        camposVacios.push(clave);
+    //Mapeo Explícito de los atributos
+    const camposRequeridos = [
+      { nombre: 'Descripción', valor: this.descripcion },
+      { nombre: 'Justificación', valor: this.justificacion },
+      { nombre: 'Objetivo General', valor: this.objetivo_general },
+      { nombre: 'Objetivos Particulares', valor: this.objetivos_particulares },
+      { nombre: 'Meta del Proyecto', valor: this.meta_del_proyecto },
+      { nombre: 'Indicadores', valor: this.indicadores },
+    ];
+
+    // Buscamos si alguno de ellos está vacío
+    camposRequeridos.forEach((campo) => {
+      if (!campo.valor || campo.valor.trim() === '') {
+        camposVacios.push(campo.nombre);
       }
-    }
+    });
 
     if (camposVacios.length > 0) {
-      return `Ficha Técnica: Los siguientes campos no pueden estar vacíos: ${camposVacios.join(', ')}`;
+      return `Ficha Técnica incompleta. Faltan los siguientes campos: ${camposVacios.join(', ')}`;
     }
     return '';
   }
 
   private validarFechasTerminoSubActividades(): string {
-    const subActividadesFechasInvalidas = this.subActividades.filter(
+    // Verificamos que ninguna fecha de término de las sub-actividades esté más lejana que la fecha de terminación que se estableció de su actividad Principal
+    const subActividadesInvalidas = this.subActividades.filter(
       (subActividad) => {
         const fechaTerminoSub = subActividad.getFechaConclusion();
+        if (!fechaTerminoSub) return false;
 
-        if (!fechaTerminoSub) {
-          return;
-        }
-
-        return (
-          new Date(fechaTerminoSub).getTime() >
-          new Date(this.fecha_termino).getTime()
-        );
+        return fechaTerminoSub.getTime() > this.fecha_termino.getTime();
       },
     );
 
-    return subActividadesFechasInvalidas.map((sub) => sub.getId()).join(', ');
+    if (subActividadesInvalidas.length > 0) {
+      const ids = subActividadesInvalidas.map((sub) => sub.getId()).join(', ');
+      return `Las siguientes sub-actividades superan la fecha de término del proyecto: [${ids}]`;
+    }
+    return '';
   }
 
-  //Getter's
+  // Getter's
+
   public getId(): string {
     return this.id;
   }
-
   public getFolio(): string {
     return this.folio;
   }
-
   public getDescripcion(): string {
     return this.descripcion;
   }
-
   public getJustificacion(): string {
     return this.justificacion;
   }
-
   public getObjetivoGeneral(): string {
     return this.objetivo_general;
   }
-
   public getObjetivosParticulares(): string {
     return this.objetivos_particulares;
   }
-
   public getMetaDelProyecto(): string {
     return this.meta_del_proyecto;
   }
-
   public getIndicadores(): string {
     return this.indicadores;
   }
-
   public getFechaInicio(): Date {
     return this.fecha_inicio;
   }
 
-  public getFechaTerminl(): Date {
+  // Typo corregido
+  public getFechaTermino(): Date {
     return this.fecha_termino;
   }
 
+  // Protegemos la inmutabilidad de la entidad devolviendo copias de los arreglos
   public getAuditoresIds(): string[] {
-    return this.auditoresIds;
+    return [...this.auditoresIds];
   }
-
   public getSubActividades(): SubactividadEntity[] {
-    return this.subActividades;
+    return [...this.subActividades];
   }
 
-  //Manejo de Sub-Actividades
+  // MANEJO DE COLECCIONES (FAIL-FAST)
+
   public agregarSubActividad(subActividad: SubactividadEntity): void {
-    //Validar que la subActividad no este ya en el arreglo antes de agregarla
+    // Buscamos si se está intentando agregar una sub-actividad repetida
     const repetida = this.subActividades.some(
       (sub) => sub.getId() === subActividad.getId(),
     );
-
     if (repetida) {
       throw new BadRequestException(
         `La sub-actividad de ID ${subActividad.getId()} ya pertenece a esta actividad`,
       );
     }
-
     this.subActividades.push(subActividad);
   }
 
   public asignarAuditor(auditorId: string): void {
-    //Evitar ID's duplicados, IDs vacios o nulos
+    // No permitimos IDs vacíos
     if (!auditorId || auditorId.trim() === '') {
-      throw new BadRequestException(`El ID de auditor ${auditorId} está vacío`);
+      throw new BadRequestException(`El ID de auditor está vacío`);
     }
-
-    //Incluimos el ID del auditor sólo si no está ya en el arreglo.
     if (!this.auditoresIds.includes(auditorId)) {
       this.auditoresIds.push(auditorId);
     }
@@ -141,49 +139,36 @@ export class ActividadEntity {
     this.auditoresIds = this.auditoresIds.filter((id) => id !== auditorId);
   }
 
-  /*
-  Reglas de Negocio:
-  Revisar si la actividad cumple con los requisitos mínimos para ser parte integra de una POA
-  */
+  // REGLAS DE NEGOCIO E INTEGRIDAD
 
   public validarIntegridad(): string[] {
     const errores: string[] = [];
-    //Regla 1: Valodar que la ficha técnica no tiene espacios faltantes.
-    const regla1 = this.validarCampos();
-    if (regla1) {
-      errores.push(regla1);
-    }
-    //Regla 2: Una ACtividad Principal debe tener al menos una actividad princiapl
+
+    // Regla 1: Campos obligatorios
+    const errorCampos = this.validarCampos();
+    if (errorCampos) errores.push(errorCampos);
+
+    // Regla 2: Mínimo 1 sub-actividad
     if (this.subActividades.length === 0) {
       errores.push(
-        'La Actividad Principal debe tener al menos 1 sub-actividad',
+        'La Actividad Principal debe tener al menos 1 sub-actividad.',
       );
     }
 
-    //Regla 3: La fecha de conclusión de las sub-actividades no debe ser mayor a la fecha de término de la POA
-    const subActividadesFechaTerminoInvalida =
-      this.validarFechasTerminoSubActividades();
-
-    if (subActividadesFechaTerminoInvalida) {
-      errores.push(subActividadesFechaTerminoInvalida);
-    }
+    // Regla 3: Coherencia de Fechas
+    const errorFechas = this.validarFechasTerminoSubActividades();
+    if (errorFechas) errores.push(errorFechas);
 
     return errores;
   }
 
   public calcularPorcentajeAvance(): number {
-    // Para validar, evitamos errores al incluir un caso base
-    if (this.subActividades.length === 0) {
-      return 0;
-    }
+    if (this.subActividades.length === 0) return 0;
 
-    //Obtener el total de actividades en el estado CONCLUIDA
     const actividadesConcluidas = this.subActividades.filter(
-      (subActividad) =>
-        subActividad.getEstado() === EstadosActividades.CONCLUIDA,
+      (sub) => sub.getEstado() === EstadosActividades.CONCLUIDA,
     ).length;
 
-    // Calcular el avance y redondearlo
     const avance = (actividadesConcluidas * 100) / this.subActividades.length;
     return Math.round(avance * 100) / 100;
   }
