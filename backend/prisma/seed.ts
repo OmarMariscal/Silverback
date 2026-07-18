@@ -203,11 +203,16 @@ async function main() {
   );
 
   console.log('🏭 Fabricando POA y 15 Actividades aleatorias para CUCEI...');
+  const faprobado = getRandomDate(
+    new Date('2026-01-02'),
+    new Date('2026-01-31'),
+  );
   const poaCucei2026 = await prisma.poa.create({
     data: {
       anio_fiscal: 2026,
       estado: 'AUTORIZADO',
       contralor_id: contralorCucei.contralor!.id,
+      fecha_aprobado: faprobado,
     },
   });
 

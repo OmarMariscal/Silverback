@@ -15,6 +15,8 @@ export class PoaEntity {
     private estado: EstadosPoa,
     private mensajeResolucion: string | null = null,
     private actividades: ActividadEntity[] = [],
+
+    private fechaAprobado: Date | null = null,
   ) {}
 
   // Funciones Auxiliares
@@ -158,7 +160,7 @@ export class PoaEntity {
     this.mensajeResolucion = retroalimentacion;
   }
 
-  public autorizar(usuarioActual: Actor): void {
+  public autorizar(usuarioActual: Actor, fecha: Date): void {
     // Validar el estado inicial
     this.validarEstadoInicial([EstadosPoa.EN_REVISION]);
 
@@ -169,6 +171,7 @@ export class PoaEntity {
 
     // Actualizar el Estado
     this.estado = EstadosPoa.AUTORIZADA;
+    this.fechaAprobado = fecha;
   }
 
   public agregarActividad(actividad: ActividadEntity): void {

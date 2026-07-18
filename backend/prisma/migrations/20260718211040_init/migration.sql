@@ -85,6 +85,7 @@ CREATE TABLE "Poa" (
     "id" TEXT NOT NULL,
     "anio_fiscal" INTEGER NOT NULL,
     "estado" "EstadoPoa" NOT NULL DEFAULT 'BORRADOR',
+    "fecha_aprobado" TIMESTAMP(3),
     "contralor_id" TEXT NOT NULL,
 
     CONSTRAINT "Poa_pkey" PRIMARY KEY ("id")
