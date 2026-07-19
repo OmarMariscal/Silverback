@@ -3,11 +3,12 @@ import { EstadosSemaforo } from "./estados-semaforo-enum";
 export class SemafotoEntity{
     constructor(
         private fechaInicio: Date,
+        private fechaHoy: Date = new Date()
     ){
         this.calcularSemaforo(new Date())
     }
 
-    calcularDiasHabiles(fechaActual: Date): number{
+    private calcularDiasHabiles(fechaActual: Date): number{
         let dias = 0;
         const fechaAuxiliar = new Date(this.fechaInicio.getTime());
         while (fechaAuxiliar<=fechaActual){
@@ -18,7 +19,7 @@ export class SemafotoEntity{
         return dias;
     }
 
-    calcularSemaforo(fechaActual: Date): EstadosSemaforo{
+    public calcularSemaforo(fechaActual: Date): EstadosSemaforo{
         const numeroDias = this.calcularDiasHabiles(fechaActual)
 
         if(numeroDias<=60) return EstadosSemaforo.A_TIEMPO;
@@ -26,7 +27,7 @@ export class SemafotoEntity{
         return EstadosSemaforo.CRITICO
         }
 
-    obtenerEstado(): EstadosSemaforo{
+    public obtenerEstado(): EstadosSemaforo{
         return this.calcularSemaforo(new Date());
     }
 
