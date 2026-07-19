@@ -6,21 +6,23 @@ export class ActividadEntity {
   constructor(
     private readonly id: string,
     private readonly folio: string,
-    private readonly descripcion: string,
+    private readonly titulo: string, // CORREGIDO: Empata con Prisma
     private readonly justificacion: string,
-    private readonly objetivo_general: string,
-    private readonly objetivos_particulares: string,
-    private readonly meta_del_proyecto: string,
+    private readonly objetivoGeneral: string, // CamelCase
+    private readonly objetivosParticulares: string, // CamelCase
+    private readonly metaDelProyecto: string, // CamelCase
     private readonly indicadores: string,
-    private readonly fecha_inicio: Date,
-    private readonly fecha_termino: Date,
+    private readonly fechaInicio: Date, // CamelCase
+    private readonly fechaTermino: Date, // CamelCase
+    private readonly esRezago: boolean, // NUEVO: Vital para reglas de negocio
 
     private auditoresIds: string[],
     private subActividades: SubactividadEntity[],
+
+    private readonly bancoActividadId: string | null = null, // NUEVO: Opcional, por si viene de plantilla
   ) {}
 
   // FUNCIONES AUXILIARES (PRIVADAS)
-
   private validarCampos(): string {
     const camposVacios: string[] = [];
 
@@ -28,11 +30,11 @@ export class ActividadEntity {
 
     //Mapeo Explícito de los atributos
     const camposRequeridos = [
-      { nombre: 'Descripción', valor: this.descripcion },
+      { nombre: 'Titulo', valor: this.titulo },
       { nombre: 'Justificación', valor: this.justificacion },
-      { nombre: 'Objetivo General', valor: this.objetivo_general },
-      { nombre: 'Objetivos Particulares', valor: this.objetivos_particulares },
-      { nombre: 'Meta del Proyecto', valor: this.meta_del_proyecto },
+      { nombre: 'Objetivo General', valor: this.objetivoGeneral },
+      { nombre: 'Objetivos Particulares', valor: this.objetivosParticulares },
+      { nombre: 'Meta del Proyecto', valor: this.metaDelProyecto },
       { nombre: 'Indicadores', valor: this.indicadores },
     ];
 
@@ -50,13 +52,12 @@ export class ActividadEntity {
   }
 
   private validarFechasTerminoSubActividades(): string {
-    // Verificamos que ninguna fecha de término de las sub-actividades esté más lejana que la fecha de terminación que se estableció de su actividad Principal
     const subActividadesInvalidas = this.subActividades.filter(
       (subActividad) => {
-        const fechaTerminoSub = subActividad.getFechaConclusion();
+        const fechaTerminoSub = subActividad.getFechaConclusionEstimada();
         if (!fechaTerminoSub) return false;
 
-        return fechaTerminoSub.getTime() > this.fecha_termino.getTime();
+        return fechaTerminoSub.getTime() > this.fechaTermino.getTime();
       },
     );
 
@@ -68,44 +69,58 @@ export class ActividadEntity {
   }
 
   // Getter's
-
   public getId(): string {
     return this.id;
   }
+
   public getFolio(): string {
     return this.folio;
   }
-  public getDescripcion(): string {
-    return this.descripcion;
+
+  public getTitulo(): string {
+    return this.titulo;
   }
+
   public getJustificacion(): string {
     return this.justificacion;
   }
+
   public getObjetivoGeneral(): string {
-    return this.objetivo_general;
+    return this.objetivoGeneral;
   }
+
   public getObjetivosParticulares(): string {
-    return this.objetivos_particulares;
+    return this.objetivosParticulares;
   }
+
   public getMetaDelProyecto(): string {
-    return this.meta_del_proyecto;
+    return this.metaDelProyecto;
   }
+
   public getIndicadores(): string {
     return this.indicadores;
   }
+
   public getFechaInicio(): Date {
-    return this.fecha_inicio;
+    return this.fechaInicio;
   }
 
-  // Typo corregido
   public getFechaTermino(): Date {
-    return this.fecha_termino;
+    return this.fechaTermino;
   }
 
-  // Protegemos la inmutabilidad de la entidad devolviendo copias de los arreglos
+  public getEsRezago(): boolean {
+    return this.esRezago;
+  }
+
+  public getBancoActividadId(): string | null {
+    return this.bancoActividadId;
+  }
+
   public getAuditoresIds(): string[] {
     return [...this.auditoresIds];
   }
+
   public getSubActividades(): SubactividadEntity[] {
     return [...this.subActividades];
   }
