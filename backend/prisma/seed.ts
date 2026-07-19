@@ -3,6 +3,7 @@ import {
   TipoActividad,
   Prisma,
   EstadoSubActividad,
+  EstadoPoa,
 } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { Pool } from 'pg';
@@ -207,16 +208,18 @@ async function main() {
     new Date('2026-01-02'),
     new Date('2026-01-31'),
   );
+
   const poaCucei2026 = await prisma.poa.create({
     data: {
       anio_fiscal: 2026,
-      estado: 'AUTORIZADO',
+      estado: EstadoPoa.AUTORIZADO,
       contralor_id: contralorCucei.contralor!.id,
+      centro_id: cucei.id,
       fecha_aprobado: faprobado,
+      mensaje_resolucion: 'POA aprobado tras revisión inicial por la Jefatura.',
     },
   });
 
-  // 2. Actualiza el arreglo con tus 6 nuevos estados usando el enum nativo
   const estadosOperativos: EstadoSubActividad[] = [
     EstadoSubActividad.SIN_EMPEZAR,
     EstadoSubActividad.SOLICITADO,

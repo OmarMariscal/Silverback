@@ -8,11 +8,20 @@ import { Roles } from '@domain/roles/roles.enum';
 export class SubactividadEntity {
   constructor(
     private readonly id: string,
+    private readonly numeroOrden: string,
+    private readonly descripcion: string,
+
+    // Estado y Tipo
     private estado: EstadosActividades,
     private readonly tipo: TipoSubActividad,
-    private fechaAprobacion: Date | null,
-    private fechaConclusion: Date | null,
-    private mensajeResolucion: string | null,
+
+    // Fechas planeadas (Fijas desde la creación)
+    private readonly fechaInicio: Date,
+    private readonly fechaTermino: Date,
+
+    // Mutables (Cambian con las transiciones)
+    private fechaEnvio: Date | null = null,
+    private mensajeResolucion: string | null = null,
   ) {}
 
   private validarEstadoInicial(
@@ -52,24 +61,45 @@ export class SubactividadEntity {
     return this.id;
   }
 
+  public getNumeroOrden(): string {
+    return this.numeroOrden;
+  }
+
+  public getDescripcion(): string {
+    return this.descripcion;
+  }
+
   public getEstado(): EstadosActividades {
     return this.estado;
   }
 
-  public getTipoSubActividad(): TipoSubActividad {
+  public getTipo(): TipoSubActividad {
     return this.tipo;
   }
 
-  public getFechaAprobacion(): Date | null {
-    return this.fechaAprobacion;
+  public getFechaInicio(): Date {
+    return this.fechaInicio;
   }
 
-  public getFechaConclusion(): Date | null {
-    return this.fechaConclusion;
+  public getFechaConclusionEstimada(): Date {
+    return this.fechaTermino;
   }
 
-  public getMensajeResolucion(): string | null {
+  public getFechaEnvio(): Date | null {
+    return this.fechaEnvio;
+  }
+
+  public getObservaciones(): string | null {
     return this.mensajeResolucion;
+  }
+
+  public calcularSemanasTotales(): number {
+    const milisegundos =
+      this.fechaTermino.getTime() - this.fechaInicio.getTime();
+    const dias = Math.ceil(milisegundos / (1000 * 60 * 60 * 24));
+    const semanas = Math.ceil(dias / 7);
+
+    return semanas > 0 ? semanas : 1;
   }
 
   public solicitarArranque(rolActual: Actor, fechaInicio: Date): void {
@@ -90,7 +120,7 @@ export class SubactividadEntity {
 
     // Actualizar el estado
     this.estado = EstadosActividades.SOLICITADO;
-    this.fechaAprobacion = fechaInicio;
+    this.fechaEnvio = fechaInicio;
   }
 
   public habilitarProgreso(rolActual: Actor): void {
@@ -108,7 +138,7 @@ export class SubactividadEntity {
     this.estado = EstadosActividades.EN_PROGRESO;
   }
 
-  public enviarARevision(rolActual: Actor): void {
+  public enviarARevision(rolActual: Actor, fechaReal: Date): void {
     // Se tiene que tener el estado EN_PROGRESO o DEVUELTA para pasar a EN_REVISION
     this.validarEstadoInicial([
       EstadosActividades.EN_PROGRESO,
@@ -129,6 +159,7 @@ export class SubactividadEntity {
 
     // Actualizar el estado
     this.estado = EstadosActividades.EN_REVISION;
+    this.fechaEnvio = fechaReal;
   }
 
   public devolver(rolActual: Actor, retroalimentacion: string | null): void {
@@ -154,7 +185,7 @@ export class SubactividadEntity {
     this.mensajeResolucion = retroalimentacion;
   }
 
-  public concluir(rolActual: Actor, fechaReal: Date): void {
+  public concluir(rolActual: Actor): void {
     //Se tiene que poner
     this.validarEstadoInicial([EstadosActividades.EN_REVISION]);
     /*
@@ -166,6 +197,5 @@ export class SubactividadEntity {
 
     // Actualizar el estado
     this.estado = EstadosActividades.CONCLUIDA;
-    this.fechaConclusion = fechaReal;
   }
 }
