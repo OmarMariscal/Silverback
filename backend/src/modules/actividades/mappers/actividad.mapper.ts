@@ -1,7 +1,7 @@
 import { Mapper } from '@core/interfaces/mapper.interface';
 import { Actividad as PrismaActividad } from '@prisma/client';
 import { ActividadEntity } from '@domain/actividad/actividad.entity';
-import { PrismaActividadPayload } from './payload/prisma-actividad.payload';
+import { PrismaActividadPayload } from '../types/actividad-payload.type';
 import { SubActividadMapper } from './subactividad.mapper';
 
 export class ActividadMapper implements Mapper<
