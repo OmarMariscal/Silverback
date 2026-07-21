@@ -8,13 +8,15 @@ import { EstadosPoa } from './estados-poa.enum';
 export class PoaEntity {
   constructor(
     private readonly id: string,
+    private readonly anioFiscal: number,
     private readonly contralorId: string,
     private readonly centroUniversitarioId: string,
-    private readonly ejercicio: number,
 
     private estado: EstadosPoa,
     private mensajeResolucion: string | null = null,
     private actividades: ActividadEntity[] = [],
+
+    private fechaAprobado: Date | null = null,
   ) {}
 
   // Funciones Auxiliares
@@ -64,10 +66,6 @@ export class PoaEntity {
     return this.centroUniversitarioId;
   }
 
-  public getEjercicio(): number {
-    return this.ejercicio;
-  }
-
   public getMensajeResolucion(): string | null {
     return this.mensajeResolucion;
   }
@@ -78,6 +76,14 @@ export class PoaEntity {
 
   public getActividades(): ActividadEntity[] {
     return [...this.actividades];
+  }
+
+  public getAnioFiscal(): number {
+    return this.anioFiscal;
+  }
+
+  public getFechaAprobado(): Date | null {
+    return this.fechaAprobado;
   }
 
   public enviarARevision(
@@ -158,7 +164,7 @@ export class PoaEntity {
     this.mensajeResolucion = retroalimentacion;
   }
 
-  public autorizar(usuarioActual: Actor): void {
+  public autorizar(usuarioActual: Actor, fecha: Date): void {
     // Validar el estado inicial
     this.validarEstadoInicial([EstadosPoa.EN_REVISION]);
 
@@ -169,6 +175,7 @@ export class PoaEntity {
 
     // Actualizar el Estado
     this.estado = EstadosPoa.AUTORIZADA;
+    this.fechaAprobado = fecha;
   }
 
   public agregarActividad(actividad: ActividadEntity): void {

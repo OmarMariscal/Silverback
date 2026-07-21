@@ -18,6 +18,7 @@ import { SubActividadesSelectResponse } from './dto/response/sub-actividades-sel
 import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
 import { JwtPayloadDto } from '@core/auth/dto/jwt-payload.dto';
 import { PrismaService } from '@database/prisma.service';
+import { Actor } from '@domain/roles/actor.interface';
 
 @Injectable()
 export class ActividadesService {
@@ -52,10 +53,10 @@ export class ActividadesService {
   }
 
   getFichaTecnica(
-    usuarioActual: JwtPayloadDto,
+    usuarioActual: Actor,
     actUuid: string,
   ): ActividadesFichaTecnicaResponse {
-    console.log(usuarioActual.rol);
+    console.log(usuarioActual);
     return new ActividadesFichaTecnicaResponse();
   }
 

@@ -1,6 +1,8 @@
 import { SubactividadEntity } from '@domain/subactividades/subactividad.entity';
 import { KpiDistribucionPastel } from './interfaces/kpi-distribucion-pastel.interface';
 import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
+import { KpiRiesgoDistribucion } from './interfaces/kpi-distribucion-riesgo.interface';
+import { KpiDetalleRiesgo } from './interfaces/kpi-detalle-riesgo.interface';
 
 export class CalculadoraKpiService {
   public static generarDistribucionEstados(
@@ -36,5 +38,20 @@ export class CalculadoraKpiService {
     });
 
     return resultado;
+  }
+
+  //Firma de métodos que necesitan la clase del semáforo
+  public static generarDistribucionPorRiesgo(
+    subActividades: SubactividadEntity[],
+    semaforoService: any, //Camibar por semáforo Service una vez se implemente
+  ): KpiRiesgoDistribucion[] {
+    throw new Error('Método No Implementado Aún');
+  }
+
+  public static obtenerRadarRiesgos(
+    subActividades: SubactividadEntity[],
+    semaforoService: any, //Cambiar a Semáforo Service una vez se implemente
+  ): KpiDetalleRiesgo[] {
+    throw new Error('Método no Implementado Aún');
   }
 }

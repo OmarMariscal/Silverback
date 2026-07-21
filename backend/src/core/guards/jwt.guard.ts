@@ -24,12 +24,20 @@ export class JwtAuthGuard implements CanActivate {
       const mockCentro =
         request.headers['x-mock-centro'] || 'uuid-centro-cucei';
 
+      const mockPermisosHeader = request.headers['x-mock-permisos'];
+      const mockPermisos =
+        mockPermisosHeader !== undefined
+          ? mockPermisosHeader.toString() === 'true'
+          : true;
+
       // Creamos el Payload Falso simulando lo que tendría un JWT
+      // Dentro de tu JwtAuthGuard...
       const mockPayload: JwtPayloadDto = {
-        usuario_id: `mock-user-${rolStr.toLowerCase()}`, // Ej. mock-user-contralor
+        usuario_id: `mock-user-${rolStr.toLowerCase()}`,
         rol: rolStr,
         centro_id: rolStr === 'JEFA' ? null : mockCentro,
-        perfil_id: `mock-perfil-${rolStr.toLowerCase()}`, // Vital para las relaciones de Prisma
+        perfil_id: `mock-perfil-${rolStr.toLowerCase()}`,
+        permisos_especiales: mockPermisos,
       };
 
       // Inyectamos el usuario en la Request de Express
