@@ -24,6 +24,7 @@ model CentroUniversitario {
   nombre      String      @unique
   clave       String      @unique // Ej. "CUVALLES"
   contralores Contralor[]
+  poas        Poa[]
 }
 
 model Usuario {
