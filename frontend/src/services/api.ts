@@ -1,4 +1,7 @@
 // frontend/src/services/api.ts
+// Este archivo contiene la configuración de Axios para comunicarse con el backend de Emiliano. Define la baseURL, los headers por defecto y los interceptores para manejar tokens de autenticación y errores de respuesta.
+// En palabras sencillas: Este archivo es como un "centro de control" para todas las llamadas HTTP que hagamos al backend. Configura cómo se hacen las peticiones y qué hacer si algo sale mal, como cuando el token de sesión expira.
+
 import axios, { InternalAxiosRequestConfig } from 'axios';
 
 // Creamos una instancia base apuntando al servidor de Emiliano

@@ -1,4 +1,7 @@
 // frontend/src/services/poa.adapter.ts
+// Este archivo contiene funciones que traducen los datos crudos que nos da el backend de Emiliano a la forma que Rogelio espera en la UI. Cada función toma un DTO de la API y devuelve un objeto con las props que los componentes del POA necesitan.
+// En palabras sencillas: Este archivo es como un "traductor" que convierte el lenguaje del backend al lenguaje de la UI. Así, cuando Rogelio recibe los datos, ya están en un formato que entiende y puede usar sin problemas.
+
 // IMPORTACIÓN DE PROPS
 import { CabeceraPOAProps, TarjetaActividadPOAProps, SubactividadFilaProps, FichaTecnicaExpandida, OpcionAuditorProps } from '../types/poa-contratos';
 // IMPORTACIÓN DE DTOS
@@ -44,16 +47,16 @@ export const adaptarPoaActual = (
 
 /**
  * TRADUCTOR 2: Para las Subactividades (Lazy Loading)
- * Toma el array de subactividades crudas y lo aplana para la tabla de Rogelio.
+ * Toma el objeto de respuesta completo y lo convierte para la tabla de Rogelio.
  */
 export const adaptarSubactividadesUI = (
-  datosAPI: PoaApi.SubActividadesPoaData[]
+  datosAPI: PoaApi.SubActividadesPoaResponse // Recibimos la respuesta DTO completa
 ): SubactividadFilaProps[] => {
-  return datosAPI.map((sub) => ({
+  // Accedemos a .data para poder usar el .map() de los arreglos
+  return datosAPI.data.map((sub) => ({
     id: sub.id,
     folioSecuencial: sub.folio,
     descripcion: sub.descripcion,
-    // Sacamos los datos del objeto anidado 'fechas' del backend
     fechaInicioFormateada: sub.fechas.fecha_inicio,
     fechaTerminoFormateada: sub.fechas.fecha_termino,
     semanasTotales: sub.fechas.semanas
