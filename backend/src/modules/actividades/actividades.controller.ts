@@ -40,7 +40,7 @@ import { SubActividadesSelectResponse } from './dto/response/sub-actividades-sel
 import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
 import { JwtAuthGuard } from '@core/guards/jwt.guard';
 import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
-import { JwtPayloadDto } from '@core/auth/dto/jwt-payload.dto';
+import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
 
 @ApiTags('Actividades')
 @ApiBearerAuth()
@@ -321,9 +321,12 @@ export class ActividadesController {
   @Get(':actividadId/ficha-tecnica')
   getFichaTecnica(
     @Param('actividadId') actUuid: string,
-    @UsuarioActual() usuarioActual: JwtPayloadDto,
+    @UsuarioActual() usuarioActual: SesionUsuario,
   ): ActividadesFichaTecnicaResponse {
-    return this.actividadesService.getFichaTecnica(usuarioActual, actUuid);
+    return this.actividadesService.getFichaTecnica(
+      usuarioActual.actor,
+      actUuid,
+    );
   }
 
   @ApiOperation({

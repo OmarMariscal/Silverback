@@ -24,6 +24,7 @@ model CentroUniversitario {
   nombre      String      @unique
   clave       String      @unique // Ej. "CUVALLES"
   contralores Contralor[]
+  poas        Poa[]
 }
 
 model Usuario {
@@ -129,9 +130,14 @@ model Poa {
   id           String      @id @default(uuid())
   anio_fiscal  Int         
   estado       EstadoPoa   @default(BORRADOR)
-  
+  fecha_aprobado DateTime?
+  mensaje_resolucion   String?   @db.Text
+
   contralor_id String
   contralor    Contralor   @relation(fields: [contralor_id], references: [id])
+  
+  centro_id    String
+  centro       CentroUniversitario @relation(fields: [centro_id], references: [id])
 
   actividades  Actividad[]
 
