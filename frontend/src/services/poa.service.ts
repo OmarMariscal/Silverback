@@ -1,4 +1,7 @@
 // frontend/src/services/poa.service.ts
+// Este archivo contiene los servicios que se comunican con el backend de Emiliano para todo lo relacionado con el POA. Cada función corresponde a un endpoint específico y devuelve los datos en el formato que Rogelio espera, usando adaptadores si es necesario.
+// En palabras sencillas: Este archivo es como un "puente" entre la UI y el backend. Cada función es un camino que lleva datos desde la API hasta los componentes de la UI, y viceversa. Si los datos vienen en un formato raro, usamos adaptadores para traducirlos a algo que la UI pueda entender fácilmente.
+
 import { api } from './api';
 import { adaptarPoaActual } from './poa.adapter';
 // Importamos los modelos de datos directamente de nuestra especificación de API (TODO agrupado bajo el namespace 'PoaApi')

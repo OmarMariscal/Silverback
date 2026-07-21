@@ -1,4 +1,6 @@
 // frontend/src/types/poa-api.ts
+// El plano exacto de los datos que nos regresa el backend de Emiliano, para que TypeScript nos ayude a no equivocarnos al leerlos
+// En palabras sencillas: Este archivo es como un "mapa" que nos dice cómo se ven los datos que vienen del backend. Así, cuando escribimos código para usar esos datos, TypeScript nos avisa si estamos haciendo algo mal, como si estuviéramos buscando una calle que no existe en el mapa.
 
 export type TipoActividadAPI = "AUDITORIA" | "REVISION";
 export type EstadoActividadAPI = "SIN_EMPEZAR" | "SOLICITADO" | "EN_PROGRESO" | "EN_REVISION" | "DEVUELTA" | "CONCLUIDA";
