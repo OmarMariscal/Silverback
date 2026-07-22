@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ActividadesController } from './actividades.controller';
-import { ActividadesService } from './actividades.service';
+import { ActividadesService } from '../../application/actividades.service';
 
 describe('ActividadesController', () => {
   let controller: ActividadesController;
