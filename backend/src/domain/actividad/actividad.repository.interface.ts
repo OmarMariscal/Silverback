@@ -1,0 +1,34 @@
+import { ActividadEntity } from './actividad.entity';
+
+export const ACTIVIDAD_REPOSITORY_TOKEN = Symbol('ACTIVIDAD_REPOSITORY_TOKEN');
+
+export interface IActividadRepository {
+  /**
+   *Recupera el Agregado Raíz cfompleto (Actividad Padre + Subactividades Hijas)
+   * Es indispensable para hidratar la Entidad en memotira antes de ejectuar
+   * cualquier comando o regla de negocio.
+   *
+   * @param id IIdentificador único de la Actividad
+   * @returns La entidad hidratada o null si no existe
+   */
+  obtenerPorId(id: string): Promise<ActividadEntity | null>;
+
+  /**
+   * Persiste el estado actual del Agregado Raíz completo
+   *
+   * Actúa como un "Upsert" a nivel de dominio: Si la entidad es nueva, la crea.
+   * Si ya existe, actualiza al padre y sincroniza automáticamente las
+   * sub-actividades hijas modificadas.
+   *
+   * @param actividad La entidad con las reglas de negocio ya validadas
+   */
+  guardar(actividad: ActividadEntity): Promise<void>;
+
+  /**
+   * Ejecuta la eliminación (física o lógica, según lo decida la infraestructura)
+   * del agregado completo, garantizando quye no queden sub-actividades huérfanas.
+   *
+   * @param id Identificador único de la Actividad
+   */
+  eliminar(id: string): Promise<void>;
+}

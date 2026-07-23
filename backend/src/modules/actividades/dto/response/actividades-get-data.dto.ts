@@ -16,7 +16,7 @@ export class ActividadesGetData {
   titulo!: string;
 
   @ApiProperty({
-    default: 'Rango de fechas en registro de la sub-actividad',
+    description: 'Rango de fechas en registro de la sub-actividad',
     type: ActividadesGetRangoFechas,
   })
   rango_fechas!: ActividadesGetRangoFechas;

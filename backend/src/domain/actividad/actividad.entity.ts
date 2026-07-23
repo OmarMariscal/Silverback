@@ -1,4 +1,4 @@
-import { SubactividadEntity } from '@domain/subactividades/subactividad.entity';
+import { SubactividadEntity } from '@domain/actividad/subactividad.entity';
 import { EstadosActividades } from './estados-actividades.enum';
 import { BadRequestException } from '@nestjs/common'; //Cambiar por Excepción de Regla de Negocio cuando esté lista
 

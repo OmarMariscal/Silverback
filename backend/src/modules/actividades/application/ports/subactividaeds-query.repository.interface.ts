@@ -21,6 +21,7 @@ export interface ISubactividadesQueryRepository {
    */
   obtenerProximasAVencer(
     limite: number,
+    usuarioUuid: string,
   ): Promise<SubActividadesProximasAVencerResumen[]>;
 
   /*

@@ -1,3 +1,3 @@
 export interface FiltrosSupervision {
-  centroUuid?: string;
+  usuarioUuid: string;
 }
