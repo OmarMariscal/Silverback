@@ -1,12 +1,12 @@
 import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Query, Res } from '@nestjs/common';
-import { PoasService } from './poas.service';
-import { PoaActualDto } from './DTOS/response/poa-actual.dto';
-import { CrearActividadesDto } from './DTOS/request/poa-actividades.dto';
-import { CrearActividadesResponseDto } from './DTOS/response/poa-actividades.response.dto';
+import { PoasService } from '@modules/poas/application/poas.service';
+import { PoaActualDto } from '../../dto/response/poa-actual.dto';
+import { CrearActividadesDto } from '../../dto/request/poa-actividades.dto';
+import { CrearActividadesResponseDto } from '../../dto/response/poa-actividades.response.dto';
 import { ApiTags, ApiResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
-import { PresentarPoasResponseErrorDto } from './DTOS/response/poas-presentar-response.dto';
-import { PresentarPoasDto } from './DTOS/request/poas-presentar.dto';
-import { CancelarPoaDataDto } from './DTOS/request/poas-cancelar-data.dto';
+import { PresentarPoasResponseErrorDto } from '../../dto/response/poas-presentar-response.dto';
+import { PresentarPoasDto } from '../../dto/request/poas-presentar.dto';
+import { CancelarPoaDataDto } from '../../dto/request/poas-cancelar-data.dto';
 import { describe } from 'node:test';
 
 @ApiTags('POAs')

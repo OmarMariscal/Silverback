@@ -137,6 +137,27 @@ export class PoaEntity {
 
     // Actualizar el cambio de estado si lleg'o hasta aqui
     this.estado = EstadosPoa.EN_REVISION;
+    // Limpiar el mensaje de resolución
+    this.mensajeResolucion = null;
+  }
+
+  public cancelarEnvio(usuarioActual: Actor): void {
+    //Solo una POA en estado EN_REVISION puede cancelar su envio
+    this.validarEstadoInicial([EstadosPoa.EN_REVISION]);
+
+    //Solo el Rol de Contralor o Auditor con permisos puede hacer la acción
+    const actorContralor = crearActor(Roles.CONTRALOR);
+    const actorAuditorPermisos = crearActor(Roles.AUDITOR, true);
+    const logAccion = `Cancelar un envío de una POA en estado ${this.estado}`;
+
+    this.validarRolPermitido(
+      [actorContralor, actorAuditorPermisos],
+      usuarioActual,
+      logAccion,
+    );
+
+    //Autorizar el cambio de estado
+    this.estado = EstadosPoa.BORRADOR;
   }
 
   public devolver(

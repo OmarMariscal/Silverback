@@ -7,6 +7,7 @@ import { SubActividadProximaVencerResult } from './results/subactividad-proxima-
 import { SubActividadSelectResult } from './results/subactividad-select.result';
 import { SubActividadSupervisionResult } from './results/subactividad-supervision.result';
 import { SubActividadesDirectorioResult } from './results/subactividades-directorio.result';
+import { FiltroProximasAVencer } from './filtros/proximas-a-vencer.filtro.interface';
 
 export const SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN = Symbol(
   'SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN',
@@ -20,8 +21,7 @@ export interface ISubactividadesQueryRepository {
    * evaluados por el SemaforoService en la capa de aplicación.
    */
   obtenerProximasAVencer(
-    limite: number,
-    usuarioUuid: string,
+    filtros: FiltroProximasAVencer,
   ): Promise<SubActividadProximaVencerResult[]>;
 
   /*
