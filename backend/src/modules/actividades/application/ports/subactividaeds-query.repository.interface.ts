@@ -1,12 +1,12 @@
 import { PaginacionMetadata } from '@core/common/dto/response/paginacion-metadata';
-import { ActividadesDirectorioData } from '@modules/actividades/dto/response/actividades-directorio-data.dto';
-import { ActividadesSupervisionSubActividadInfo } from '@modules/actividades/dto/response/actividades-supervision-sub-actividad-info.dto';
-import { SubActividadesSelectData } from '@modules/actividades/dto/response/sub--actividades-select-data.dto';
-import { SubActividadesPoaData } from '@modules/actividades/dto/response/sub-actividades-poa-data.dto';
-import { SubActividadesProximasAVencerResumen } from '@modules/actividades/dto/response/sub-actividades-proximas-a-vencer-resumen.dto';
 import { FiltrosDirectorio } from './filtros/directorio.filtro.interface';
 import { PaginacionParams } from './filtros/paginacion-params.filtro.interface';
 import { FiltrosSupervision } from './filtros/supervision.filtro.interface';
+import { SubActividadPoaResult } from './results/subactividad-para-poa.result';
+import { SubActividadProximaVencerResult } from './results/subactividad-proxima-a-vencer.result';
+import { SubActividadSelectResult } from './results/subactividad-select.result';
+import { SubActividadSupervisionResult } from './results/subactividad-supervision.result';
+import { SubActividadesDirectorioResult } from './results/subactividades-directorio.result';
 
 export const SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN = Symbol(
   'SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN',
@@ -22,7 +22,7 @@ export interface ISubactividadesQueryRepository {
   obtenerProximasAVencer(
     limite: number,
     usuarioUuid: string,
-  ): Promise<SubActividadesProximasAVencerResumen[]>;
+  ): Promise<SubActividadProximaVencerResult[]>;
 
   /*
    * Endpoint: GET /api/v1/actividades/supervision
@@ -33,7 +33,7 @@ export interface ISubactividadesQueryRepository {
     paginacion: PaginacionParams,
   ): Promise<{
     meta: PaginacionMetadata;
-    data: ActividadesSupervisionSubActividadInfo[];
+    data: SubActividadSupervisionResult[];
   }>;
 
   /**
@@ -44,7 +44,10 @@ export interface ISubactividadesQueryRepository {
   obtenerDirectorio(
     filtros: FiltrosDirectorio,
     paginacion: PaginacionParams,
-  ): Promise<{ meta: PaginacionMetadata; data: ActividadesDirectorioData[] }>;
+  ): Promise<{
+    meta: PaginacionMetadata;
+    data: SubActividadesDirectorioResult[];
+  }>;
 
   /**
    * Endpoint: GET /api/v1/actividades/{actividadId}/sub-actividades-poa
@@ -53,7 +56,7 @@ export interface ISubactividadesQueryRepository {
    */
   obtenerPorActividadIdParaPoa(
     actividadId: string,
-  ): Promise<SubActividadesPoaData[]>;
+  ): Promise<SubActividadPoaResult[]>;
 
   /**
    * Endpoint: GET /api/v1/actividades/{actividadId}/sub-actividades-select
@@ -62,5 +65,5 @@ export interface ISubactividadesQueryRepository {
    */
   obtenerPorActividadIdParaPoaSeleccionadas(
     actividadId: string,
-  ): Promise<SubActividadesSelectData[]>;
+  ): Promise<SubActividadSelectResult[]>;
 }
