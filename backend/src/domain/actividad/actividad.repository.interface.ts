@@ -14,6 +14,15 @@ export interface IActividadRepository {
   obtenerPorId(id: string): Promise<ActividadEntity | null>;
 
   /**
+   * Recupera el Agregado Raíz completo (Actividad Padre + Subactividades Hijas)
+   * De todas las relacionadas ocn un POA especíofico.
+   *
+   * @param id Identificaddor único de la Actividad
+   * @returns Array con las as entidades que pertenencen a la POA
+   */
+  obtenerPorPoaId(id: string): Promise<ActividadEntity[]>;
+
+  /**
    * Persiste el estado actual del Agregado Raíz completo
    *
    * Actúa como un "Upsert" a nivel de dominio: Si la entidad es nueva, la crea.

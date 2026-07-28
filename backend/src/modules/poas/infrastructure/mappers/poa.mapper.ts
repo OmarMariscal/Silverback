@@ -2,10 +2,8 @@ import { EstadoPoa, Poa as PrismaPoa } from '@prisma/client';
 import { PoaEntity } from '@domain/poa/poa.entity';
 import { EstadosPoa } from '@domain/poa/estados-poa.enum';
 import { Mapper } from '@core/interfaces/mapper.interface';
-import { PrismaPoaPayload } from '../types/poa-payload.type';
-import { ActividadMapper } from '@modules/actividades/infrastructure/mappers/actividad.mapper';
 
-export class PoaMapper implements Mapper<PoaEntity, PrismaPoaPayload> {
+export class PoaMapper implements Mapper<PoaEntity, PrismaPoa> {
   // Diccionarios Estáticos
   private static readonly MAPA_ESTADOS_A_DOMINIO: Record<
     EstadoPoa,
@@ -25,17 +23,10 @@ export class PoaMapper implements Mapper<PoaEntity, PrismaPoaPayload> {
       [EstadosPoa.AUTORIZADA]: EstadoPoa.AUTORIZADO,
     };
 
-  constructor(
-    private readonly actividadMapper: ActividadMapper = new ActividadMapper(),
-  ) {}
+  constructor() {}
 
-  public toDomain(raw: PrismaPoaPayload): PoaEntity {
-    //1. Hidratamos todo el árbol de actividades delegando al hijo
-    const actividadesHidratadas = raw.actividades.map((actRaw) =>
-      this.actividadMapper.toDomain(actRaw),
-    );
-
-    //2. Construimos la entidad princiipal
+  public toDomain(raw: PrismaPoa): PoaEntity {
+    // Construimos la entidad princiipal
     return new PoaEntity(
       raw.id,
       raw.anio_fiscal,
@@ -43,7 +34,7 @@ export class PoaMapper implements Mapper<PoaEntity, PrismaPoaPayload> {
       raw.centro_id,
       PoaMapper.MAPA_ESTADOS_A_DOMINIO[raw.estado],
       raw.mensaje_resolucion,
-      actividadesHidratadas,
+      [], // Hidratación superficial por defecto. La vcreación de snapshots no le corresponde al mapper.
       raw.fecha_aprobado,
     );
   }
