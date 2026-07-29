@@ -67,6 +67,7 @@ export class SubActividadMapper implements Mapper<
       raw.fecha_termino,
       raw.fecha_envio,
       raw.mensaje_observacion,
+      raw.banco_sub_actividad_id,
     );
   }
 
@@ -85,6 +86,7 @@ export class SubActividadMapper implements Mapper<
       semanas_totales: entity.calcularSemanasTotales(),
       tipo: SubActividadMapper.MAPA_TIPOS_A_PRISMA[entity.getTipo()],
       mensaje_observacion: entity.getObservaciones() || null,
+      banco_sub_actividad_id: entity.getBancoSubActividadId() || null,
     };
   }
 }

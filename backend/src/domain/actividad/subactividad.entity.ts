@@ -23,6 +23,8 @@ export class SubactividadEntity {
     // Mutables (Cambian con las transiciones)
     private fechaEnvio: Date | null = null,
     private mensajeResolucion: string | null = null,
+
+    private readonly bancoSubActividadId: string | null = null,
   ) {}
 
   private validarEstadoInicial(
@@ -93,6 +95,10 @@ export class SubactividadEntity {
 
   public getObservaciones(): string | null {
     return this.mensajeResolucion;
+  }
+
+  public getBancoSubActividadId(): string | null {
+    return this.bancoSubActividadId;
   }
 
   public calcularSemanasTotales(): number {
