@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PoasController } from './poas.controller';
-import { PoasService } from './poas.service';
+import { PoasService } from '@modules/poas/application/poas.service';
 
 describe('PoasController', () => {
   let controller: PoasController;

@@ -1,4 +1,4 @@
-import { SubactividadEntity } from '@domain/subactividades/subactividad.entity';
+import { SubactividadEntity } from '@domain/actividad/subactividad.entity';
 import { KpiDistribucionPastel } from './interfaces/kpi-distribucion-pastel.interface';
 import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
 import { KpiRiesgoDistribucion } from './interfaces/kpi-distribucion-riesgo.interface';

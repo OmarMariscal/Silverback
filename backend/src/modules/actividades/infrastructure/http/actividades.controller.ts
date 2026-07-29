@@ -1,46 +1,46 @@
+import { PaginacionQueryDto } from '@core/common/dto/request/paginacion.query.dto';
+import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
+import { HttpErrorDto } from '@core/common/dto/response/http-error.dto';
+import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
+import { JwtAuthGuard } from '@core/guards/jwt.guard';
+import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
+import { ActividadesService } from '@modules/actividades/application/actividades.service';
+import { ActividadesDirectorioQuery } from '@modules/actividades/dto/request/actividades-directorio.query.dto';
+import { ActividadesGetQuery } from '@modules/actividades/dto/request/actividades-get.query.dto';
+import { ActividadesPatchFichaTecnicaRequest } from '@modules/actividades/dto/request/actividades-path-ficha-tecnica.request.dto';
+import { SubActividadesBulkRequest } from '@modules/actividades/dto/request/sub-actividadedes-bulk.request.dto';
+import { SubActividadesProximasAVencerQuery } from '@modules/actividades/dto/request/sub-actividades-proximas-a-vencer.query.dto';
+import { SubActividadesSyncRequest } from '@modules/actividades/dto/request/sub-actividades-sync.request.dto';
+import { ActividadesDirectorioResponse } from '@modules/actividades/dto/response/actividades-directorio.response.dto';
+import { ActividadesFichaTecnicaResponse } from '@modules/actividades/dto/response/actividades-ficha-tecnica.response.dto';
+import { ActividadesGetResponse } from '@modules/actividades/dto/response/actividades-get.response.dto';
+import { ActividadesResumenResponse } from '@modules/actividades/dto/response/actividades-resumen.response.dto';
+import { ActividadesSupervicionGetResponse } from '@modules/actividades/dto/response/actividades-supervision-get.response.dto';
+import { SubActividadesBulkResponse } from '@modules/actividades/dto/response/sub-actividades-bulk.response.dto';
+import { SubActividadesPoaResponse } from '@modules/actividades/dto/response/sub-actividades-poa.response.dto';
+import { SubActividadesProximasVencerResponse } from '@modules/actividades/dto/response/sub-actividades-proximas-a-vencer-get.response.dto';
+import { SubActividadesSelectResponse } from '@modules/actividades/dto/response/sub-actividades-select.response.dto';
+import { SubActividadesSyncResponse } from '@modules/actividades/dto/response/sub-actividades-sync.response.dto';
 import {
-  Controller,
-  Get,
-  Post,
-  Param,
-  HttpStatus,
   Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
   Patch,
+  Post,
   Put,
   Query,
   UseGuards,
-  Delete,
 } from '@nestjs/common';
-import { ActividadesService } from './actividades.service';
 import {
-  ApiParam,
-  ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { ActividadesResumenResponse } from './dto/response/actividades-resumen.response.dto';
-import { HttpErrorDto } from '@core/common/dto/response/http-error.dto';
-import { SubActividadesBulkResponse } from './dto/response/sub-actividades-bulk.response.dto';
-import { SubActividadesBulkRequest } from './dto/request/sub-actividadedes-bulk.request.dto';
-import { SubActividadesSyncRequest } from './dto/request/sub-actividades-sync.request.dto';
-import { SubActividadesSyncResponse } from './dto/response/sub-actividades-sync.response.dto';
-import { ActividadesFichaTecnicaResponse } from './dto/response/actividades-ficha-tecnica.response.dto';
-import { ActividadesPatchFichaTecnicaRequest } from './dto/request/actividades-path-ficha-tecnica.request.dto';
-import { SubActividadesProximasVencerResponse } from './dto/response/sub-actividades-proximas-a-vencer-get.response.dto';
-import { SubActividadesProximasAVencerQuery } from './dto/request/sub-actividades-proximas-a-vencer.query.dto';
-import { PaginacionQueryDto } from '@core/common/dto/request/paginacion.query.dto';
-import { ActividadesSupervicionGetResponse } from './dto/response/actividades-supervision-get.response.dto';
-import { ActividadesDirectorioResponse } from './dto/response/actividades-directorio.response.dto';
-import { ActividadesDirectorioQuery } from './dto/request/actividades-directorio.query.dto';
-import { ActividadesGetResponse } from './dto/response/actividades-get.response.dto';
-import { ActividadesGetQuery } from './dto/request/actividades-get.query.dto';
-import { SubActividadesPoaResponse } from './dto/response/sub-actividades-poa.response.dto';
-import { SubActividadesSelectResponse } from './dto/response/sub-actividades-select.response.dto';
-import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
-import { JwtAuthGuard } from '@core/guards/jwt.guard';
-import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
-import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
 
 @ApiTags('Actividades')
 @ApiBearerAuth()

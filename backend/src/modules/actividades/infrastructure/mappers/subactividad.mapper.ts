@@ -3,7 +3,7 @@ import {
   SubActividad as PrismaSubActividad,
   TipoActividad,
 } from '@prisma/client';
-import { SubactividadEntity } from '@domain/subactividades/subactividad.entity';
+import { SubactividadEntity } from '@domain/actividad/subactividad.entity';
 import { Mapper } from '@core/interfaces/mapper.interface';
 import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
 import { TipoSubActividad } from '@domain/actividad/tipos-de-actividades.enum';
