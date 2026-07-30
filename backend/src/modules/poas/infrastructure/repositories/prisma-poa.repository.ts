@@ -3,6 +3,8 @@ import { PoaEntity } from '@domain/poa/poa.entity';
 import { IPoaRepository } from '@domain/poa/poa.repository.interface';
 import { PoaMapper } from '../mappers/poa.mapper';
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { TransactionHandle } from '@domain/shared/transaction.interface';
 
 @Injectable()
 export class PrismaPoaRepository implements IPoaRepository {
@@ -21,14 +23,13 @@ export class PrismaPoaRepository implements IPoaRepository {
     return this.poaMapper.toDomain(raw);
   }
 
-  async guardar(poa: PoaEntity): Promise<void> {
-    const dataPersistence = this.poaMapper.toPersistence(poa);
-
-    //Solo actualiza los metadatos. Las actividades se guardan en su propio repositorio
-    await this.prisma.poa.upsert({
-      where: { id: poa.getId() },
-      create: dataPersistence,
-      update: dataPersistence,
+  async guardar(poa: PoaEntity, tx?: TransactionHandle): Promise<void> {
+    const client = (tx as Prisma.TransactionClient | undefined) ?? this.prisma;
+    const data = this.poaMapper.toPersistence(poa);
+    await client.poa.upsert({
+      where: { id: data.id },
+      create: data,
+      update: data,
     });
   }
 

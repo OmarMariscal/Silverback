@@ -229,6 +229,39 @@ export class ActividadesController {
   }
 
   @ApiOperation({
+    summary: 'Obtener la ficha técnica',
+    description:
+      'Retorna la ficha técnica de una actividad principal registrada anteriormente.',
+  })
+  @ApiParam({
+    name: 'actividadId',
+    description: 'Identificador único (UUID) de la actividad principal',
+    example: 'act-uuid-1',
+    required: true,
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ActividadesFichaTecnicaResponse,
+    description: 'Operación realizada con éxito',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    type: HttpErrorDto,
+    description: 'Actividad no encontrada',
+  })
+  @Get(':actividadId/ficha-tecnica')
+  getFichaTecnica(
+    @Param('actividadId') actUuid: string,
+    @UsuarioActual() usuarioActual: SesionUsuario,
+  ): ActividadesFichaTecnicaResponse {
+    return this.actividadesService.getFichaTecnica(
+      usuarioActual.actor,
+      actUuid,
+    );
+  }
+
+  @ApiOperation({
     summary: 'Selección de subactividades',
     description: 'Sincronización de las subactividades seleccionadas',
   })
@@ -293,39 +326,6 @@ export class ActividadesController {
     return this.actividadesService.putSubActividadesSync(
       actUuid,
       subActividades,
-    );
-  }
-
-  @ApiOperation({
-    summary: 'Obtener la ficha técnica',
-    description:
-      'Retorna la ficha técnica de una actividad principal registrada anteriormente.',
-  })
-  @ApiParam({
-    name: 'actividadId',
-    description: 'Identificador único (UUID) de la actividad principal',
-    example: 'act-uuid-1',
-    required: true,
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    type: ActividadesFichaTecnicaResponse,
-    description: 'Operación realizada con éxito',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    type: HttpErrorDto,
-    description: 'Actividad no encontrada',
-  })
-  @Get(':actividadId/ficha-tecnica')
-  getFichaTecnica(
-    @Param('actividadId') actUuid: string,
-    @UsuarioActual() usuarioActual: SesionUsuario,
-  ): ActividadesFichaTecnicaResponse {
-    return this.actividadesService.getFichaTecnica(
-      usuarioActual.actor,
-      actUuid,
     );
   }
 

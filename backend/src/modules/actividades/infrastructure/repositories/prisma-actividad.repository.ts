@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { IActividadRepository } from '@domain/actividad/actividad.repository.interface';
-import { ActividadEntity } from '@domain/actividad/actividad.entity';
-import { ActividadMapper } from '../mappers/actividad.mapper';
 import { PrismaService } from '@database/prisma.service';
+import { ActividadEntity } from '@domain/actividad/actividad.entity';
+import { IActividadRepository } from '@domain/actividad/actividad.repository.interface';
+import { TransactionHandle } from '@domain/shared/transaction.interface';
+import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { ActividadMapper } from '../mappers/actividad.mapper';
 import { SubActividadMapper } from '../mappers/subactividad.mapper';
 
 @Injectable()
@@ -35,75 +37,85 @@ export class PrismaActividadRepository implements IActividadRepository {
     return rawList.map((raw) => this.actividadMapper.toDomain(raw));
   }
 
-  async guardar(actividad: ActividadEntity): Promise<void> {
+  async guardar(
+    actividad: ActividadEntity,
+    tx?: TransactionHandle,
+  ): Promise<void> {
     const actividadid = actividad.getId();
     const dataPadre = this.actividadMapper.toPersistence(actividad);
 
-    // Extraemos las colecciaones en memoria
+    // Extraemos las colecciones en memoria
     const subActividades = actividad.getSubActividades();
     const subActividadesIds = subActividades.map((sub) => sub.getId());
     const auditoresIds = actividad.getAuditoresIds();
 
     /**
-     * TRANSACCIÓN ATÓMICA
-     * Garantiza que si falla la actualización de una subactividad
-     * se revierte absolutamente todo, manteniendo la base de datos pristina.
+     * 1. Definimos el bloque de operaciones
+     * Extraemos la lógica a una función interna que recibe un cliente Prisma.
      */
-    await this.prisma.$transaction(async (tx) => {
-      //1. Actualizar el agregado raíz (actividad)
-      await tx.actividad.update({
+    const ejecutarOperacionesAtomicas = async (
+      clientePrisma: Prisma.TransactionClient,
+    ) => {
+      // A. Actualizar el agregado raíz (actividad)
+      await clientePrisma.actividad.update({
         where: { id: actividadid },
         data: dataPadre,
       });
 
-      // 2. Sincronizar subactividades (Relación 1:N)
-      // A. Eliminar las sub-actividades quye fueron removidas del dominio
-      await tx.subActividad.deleteMany({
+      // B. Sincronizar subactividades (Relación 1:N)
+      await clientePrisma.subActividad.deleteMany({
         where: {
           actividad_id: actividadid,
           id: { notIn: subActividadesIds },
         },
       });
 
-      // B. Upsert (Crear / Actualizar) las sub-actividades existentes
       for (const sub of subActividades) {
         const subData = this.subActividadMapper.toPersistence(sub);
-        await tx.subActividad.upsert({
+        await clientePrisma.subActividad.upsert({
           where: { id: sub.getId() },
-          create: {
-            ...subData,
-            actividad_id: actividadid,
-          },
+          create: { ...subData, actividad_id: actividadid },
           update: subData,
         });
       }
 
-      // 3. Sincronizar auditores (Tabla puente N:M)
-      // A. Eliminar los auditores que ya no están asignados
-      await tx.actividadAuditor.deleteMany({
+      // C. Sincronizar auditores (Tabla puente N:M)
+      await clientePrisma.actividadAuditor.deleteMany({
         where: {
           actividad_id: actividadid,
           auditor_id: { notIn: auditoresIds },
         },
       });
 
-      //B. Conectar los auditores actuales
       for (const auditorId of auditoresIds) {
-        await tx.actividadAuditor.upsert({
+        await clientePrisma.actividadAuditor.upsert({
           where: {
             actividad_id_auditor_id: {
               actividad_id: actividadid,
               auditor_id: auditorId,
             },
           },
-          create: {
-            actividad_id: actividadid,
-            auditor_id: auditorId,
-          },
-          update: {}, // Si la relación ya existe, no hacemos nada
+          create: { actividad_id: actividadid, auditor_id: auditorId },
+          update: {},
         });
       }
-    });
+    };
+
+    /**
+     * 2. Motor de Ejecución (Dual Mode)
+     */
+    if (tx) {
+      // MODO A: Viene de un Unit Of Work global (Ej. PoasService)
+      // Usamos el 'tx' inyectado para unirnos a la transacción masiva sin abrir una nueva.
+      await ejecutarOperacionesAtomicas(tx as Prisma.TransactionClient);
+    } else {
+      // MODO B: Ejecución Individual (Ej. ActividadesService)
+      // Como no hay Unit Of Work global, Prisma abre su propia transacción atómica interna
+      // para proteger la integridad de este Agregado Raíz.
+      await this.prisma.$transaction(async (internalTx) => {
+        await ejecutarOperacionesAtomicas(internalTx);
+      });
+    }
   }
 
   async eliminar(id: string): Promise<void> {
