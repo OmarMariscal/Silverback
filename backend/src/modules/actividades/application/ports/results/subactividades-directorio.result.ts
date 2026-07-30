@@ -12,7 +12,7 @@ export interface SubActividadesDirectorioResult {
   centro_clave: string | null;
   contralor: string | null;
   participacion_porcentaje: number | null;
-  auditor_apoyo: string | null;
+  auditor_apoyo: string[];
 
   // Atributos del estado operativo
   codigo_estado: EstadosActividades;

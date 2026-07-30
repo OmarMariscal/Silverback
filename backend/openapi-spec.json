@@ -1485,16 +1485,21 @@
             "example": 1,
             "description": "Página enviada en el get actual"
           },
-          "total_páginas": {
+          "total_paginas": {
             "type": "number",
             "example": 9,
             "description": "Total de páginas en las que se dividió la respuesta"
+          },
+          "limite": {
+            "type": "number",
+            "example": 10,
+            "description": "Límite de registros por página"
           }
         },
         "required": [
           "total_registros",
           "pagina_actual",
-          "total_páginas"
+          "total_paginas"
         ]
       },
       "ActividadesSupervisionResolucionJefa": {

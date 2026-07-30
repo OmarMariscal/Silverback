@@ -8,6 +8,8 @@ import { SubActividadSelectResult } from './results/subactividad-select.result';
 import { SubActividadSupervisionResult } from './results/subactividad-supervision.result';
 import { SubActividadesDirectorioResult } from './results/subactividades-directorio.result';
 import { FiltroProximasAVencer } from './filtros/proximas-a-vencer.filtro.interface';
+import { FiltroObtenerPorActividadId } from './filtros/obtener-por-actividad.filtro';
+import { FiltroSeleccionadas } from './filtros/seleccionadas.filtro';
 
 export const SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN = Symbol(
   'SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN',
@@ -55,7 +57,7 @@ export interface ISubactividadesQueryRepository {
    * Reglas: Retorna la estructura exacta de folios y fechas anidadas.
    */
   obtenerPorActividadIdParaPoa(
-    actividadId: string,
+    filtro: FiltroObtenerPorActividadId,
   ): Promise<SubActividadPoaResult[]>;
 
   /**
@@ -64,6 +66,6 @@ export interface ISubactividadesQueryRepository {
    * Reglas: Retorna la estructura exacta de folios, fechas anidades y un booleano de selección
    */
   obtenerPorActividadIdParaPoaSeleccionadas(
-    actividadId: string,
+    filtro: FiltroSeleccionadas,
   ): Promise<SubActividadSelectResult[]>;
 }

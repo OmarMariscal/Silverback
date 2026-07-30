@@ -19,13 +19,18 @@ import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.
 import { JwtPayloadDto } from '@core/auth/dto/jwt-payload.dto';
 import { PrismaService } from '@database/prisma.service';
 import { Actor } from '@domain/roles/actor.interface';
+import { PrismaSubActividadQueryRepository } from '../infrastructure/repositories/prisma-actividad-query.repository';
 
 @Injectable()
 export class ActividadesService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async getResumen(actUuid: string): Promise<ActividadesResumenResponse> {
-    const total = await this.prismaService.subActividad.count();
+    const pruebaOb = new PrismaSubActividadQueryRepository(this.prismaService);
+    const total = await pruebaOb.obtenerPorActividadIdParaPoaSeleccionadas({
+      actividadId: 'cb32ce5d-1041-44ad-a2fa-09a0c38b9676',
+      usuarioUuid: '2d61da29-79f9-431b-9ba7-c0a7844e5ac5',
+    });
     console.log(total);
     return new ActividadesResumenResponse();
   }

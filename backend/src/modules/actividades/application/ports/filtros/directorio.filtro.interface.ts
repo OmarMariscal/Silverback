@@ -5,6 +5,8 @@ export interface FiltrosDirectorio {
   search?: string;
   usuarioUuid?: string;
   centroUuid?: string;
-  tipoActividad?: TipoSubActividad;
-  estadoFlujo?: EstadosActividades;
+  tipoActividad?: TipoSubActividad[];
+  estadoFlujo?: EstadosActividades[];
+  fechaInicio?: Date;
+  fechaFin?: Date;
 }
