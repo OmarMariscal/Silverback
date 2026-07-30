@@ -835,7 +835,80 @@
       "get": {
         "description": "Entrega los datos necesarios para armar la POA vigente del anio fiscal",
         "operationId": "PoasController_getPoaActual",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "query",
+            "description": "ID unico de la POA actual",
+            "schema": {
+              "example": "poa-2026-uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "anio_fiscal",
+            "required": true,
+            "in": "query",
+            "description": "Anio fiscal en la que se encuentra la POA",
+            "schema": {
+              "example": 2026,
+              "type": "number"
+            }
+          },
+          {
+            "name": "estado",
+            "required": true,
+            "in": "query",
+            "description": "Estado de la actividad(enum)",
+            "schema": {
+              "example": "EN_PROGRESO",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fecha_inicio",
+            "required": true,
+            "in": "query",
+            "description": "Fecha de inicio de la POA",
+            "schema": {
+              "example": "Ene 2026",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fecha_termino",
+            "required": true,
+            "in": "query",
+            "description": "Fecha de termino de la POA",
+            "schema": {
+              "example": "Dic 2026",
+              "type": "string"
+            }
+          },
+          {
+            "name": "es_rezagado",
+            "required": true,
+            "in": "query",
+            "description": "Le indica al sistema si la POA tiene actividades rezagadas.",
+            "schema": {
+              "example": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "actividades_resumen",
+            "required": true,
+            "in": "query",
+            "description": "Lista de actividades de manera resumida",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ActividadesResumenDto"
+              }
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": "",
@@ -848,6 +921,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Devuelve la POA en la que se esta trabajando",
         "tags": [
           "POAs"
@@ -890,6 +968,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Agregar actividades",
         "tags": [
           "POAs"
@@ -932,6 +1015,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Presentar la poa para el envio",
         "tags": [
           "POAs"
@@ -964,6 +1052,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Cancela el envio de la POA",
         "tags": [
           "POAs"

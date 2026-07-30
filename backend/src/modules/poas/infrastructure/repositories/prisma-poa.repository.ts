@@ -2,7 +2,9 @@ import { PrismaService } from '@database/prisma.service';
 import { PoaEntity } from '@domain/poa/poa.entity';
 import { IPoaRepository } from '@domain/poa/poa.repository.interface';
 import { PoaMapper } from '../mappers/poa.mapper';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class PrismaPoaRepository implements IPoaRepository {
   constructor(
     private readonly prisma: PrismaService,

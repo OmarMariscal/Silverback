@@ -1,25 +1,51 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@database/prisma.service';
-import { ISubactividadesQueryRepository } from '@modules/actividades/application/ports/subactividaeds-query.repository.interface';
-import { FiltroProximasAVencer } from '@modules/actividades/application/ports/filtros/proximas-a-vencer.filtro.interface';
-import { SubActividadProximaVencerResult } from '@modules/actividades/application/ports/results/subactividad-proxima-a-vencer.result';
-import { EstadoSubActividad, Prisma } from '@prisma/client';
 import { PaginacionMetadata } from '@core/common/dto/response/paginacion-metadata';
+import {
+  traducirEstadoSubActividadADominio,
+  traducirEstadoSubActividadAPrisma,
+  traducirTipoSubActividadADominio,
+} from '@core/utils/estados-sub-actividades.traslator';
+import { PrismaService } from '@database/prisma.service';
 import { PaginacionParams } from '@modules/actividades/application/ports/filtros/paginacion-params.filtro.interface';
-import { FiltrosSupervision } from '@modules/actividades/application/ports/filtros/supervision.filtro.interface';
-import { SubActividadSupervisionResult } from '@modules/actividades/application/ports/results/subactividad-supervision.result';
-import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
-import { FiltrosDirectorio } from '@modules/actividades/application/ports/filtros/directorio.filtro.interface';
-import { SubActividadesDirectorioResult } from '@modules/actividades/application/ports/results/subactividades-directorio.result';
-import { TipoSubActividad } from '@domain/actividad/tipos-de-actividades.enum';
+import { FiltroActividades } from '@modules/actividades/application/ports/filtros/subactividad-get-actividades.filtro.interface';
+import { FiltroObtenerPorActividadId } from '@modules/actividades/application/ports/filtros/subactividad-obtener-por-actividad.filtro';
+import { FiltroProximasAVencer } from '@modules/actividades/application/ports/filtros/subactividad-proximas-a-vencer.filtro.interface';
+import { FiltroSeleccionadas } from '@modules/actividades/application/ports/filtros/subactividad-seleccionadas.filtro';
+import { FiltrosSupervision } from '@modules/actividades/application/ports/filtros/subactividad-supervision.filtro.interface';
+import { FiltrosDirectorio } from '@modules/actividades/application/ports/filtros/subactividaddirectorio.filtro.interface';
+import { SubActividadGetResult } from '@modules/actividades/application/ports/results/subactividad-get.result';
 import { SubActividadPoaResult } from '@modules/actividades/application/ports/results/subactividad-para-poa.result';
-import { FiltroObtenerPorActividadId } from '@modules/actividades/application/ports/filtros/obtener-por-actividad.filtro';
-import { FiltroSeleccionadas } from '@modules/actividades/application/ports/filtros/seleccionadas.filtro';
+import { SubActividadProximaVencerResult } from '@modules/actividades/application/ports/results/subactividad-proxima-a-vencer.result';
 import { SubActividadSelectResult } from '@modules/actividades/application/ports/results/subactividad-select.result';
+import { SubActividadSupervisionResult } from '@modules/actividades/application/ports/results/subactividad-supervision.result';
+import { SubActividadesDirectorioResult } from '@modules/actividades/application/ports/results/subactividades-directorio.result';
+import { ISubactividadesQueryRepository } from '@modules/actividades/application/ports/subactividaeds-query.repository.interface';
+import { Injectable } from '@nestjs/common';
+import { EstadoSubActividad, Prisma } from '@prisma/client';
 
 @Injectable()
 export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  private construirFiltroAcceso(
+    usuarioUuid: string,
+  ): Prisma.ActividadWhereInput {
+    return {
+      OR: [
+        { auditores: { some: { auditor: { usuario_id: usuarioUuid } } } },
+        { poa: { contralor: { usuario_id: usuarioUuid } } },
+        { poa: { contralor: { jefa: { usuario_id: usuarioUuid } } } },
+      ],
+    };
+  }
+
+  /**
+   * Endpoint: GET /api/v1/actividades/proximas-vencer
+   */
+  obtenerActividades(
+    filtros: FiltroActividades,
+  ): Promise<SubActividadGetResult[]> {
+    throw new Error('Método no Implementado');
+  }
 
   /**
    * Endpoint: GET /api/v1/actividades/proximas-vencer
@@ -33,19 +59,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
         estado_operativo: {
           notIn: [EstadoSubActividad.CONCLUIDA],
         },
-        actividad: {
-          OR: [
-            {
-              auditores: {
-                some: { auditor: { usuario_id: filtros.usuarioUuid } },
-              },
-            },
-            { poa: { contralor: { usuario_id: filtros.usuarioUuid } } },
-            {
-              poa: { contralor: { jefa: { usuario_id: filtros.usuarioUuid } } },
-            },
-          ],
-        },
+        actividad: this.construirFiltroAcceso(filtros.usuarioUuid),
       },
       orderBy: {
         fecha_termino: 'asc',
@@ -93,17 +107,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       },
 
       //row-level Security (RLS) Emulado
-      actividad: {
-        OR: [
-          {
-            auditores: {
-              some: { auditor: { usuario_id: filtros.usuarioUuid } },
-            },
-          },
-          { poa: { contralor: { usuario_id: filtros.usuarioUuid } } },
-          { poa: { contralor: { jefa: { usuario_id: filtros.usuarioUuid } } } },
-        ],
-      },
+      actividad: this.construirFiltroAcceso(filtros.usuarioUuid),
     };
 
     //3. Mapeo Seguro de Ordenamiento Dinámico
@@ -148,7 +152,9 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       id: raw.id,
       titulo: raw.descripcion_tarea,
       // Mapeo seguro de Prisma a Dominio
-      estado_resolucion: raw.estado_operativo as unknown as EstadosActividades,
+      estado_resolucion: traducirEstadoSubActividadADominio(
+        raw.estado_operativo,
+      ),
       fecha_envio: raw.fecha_envio!,
       fecha_vencimiento_poa: raw.fecha_termino,
     }));
@@ -189,21 +195,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
     const wherePrisma: Prisma.SubActividadWhereInput = {
       AND: [
         {
-          actividad: {
-            OR: [
-              {
-                auditores: {
-                  some: { auditor: { usuario_id: filtros.usuarioUuid } },
-                },
-              },
-              { poa: { contralor: { usuario_id: filtros.usuarioUuid } } },
-              {
-                poa: {
-                  contralor: { jefa: { usuario_id: filtros.usuarioUuid } },
-                },
-              },
-            ],
-          },
+          actividad: this.construirFiltroAcceso(filtros.usuarioUuid),
         },
       ],
     };
@@ -235,8 +227,8 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
 
     // B y C. Múltiples Estados Operativos (Consolidado para evitar duplicidad de push)
     if (filtros.estadoFlujo && filtros.estadoFlujo.length > 0) {
-      const estadosPrisma = filtros.estadoFlujo.map(
-        (estadoDominio) => estadoDominio as unknown as EstadoSubActividad,
+      const estadosPrisma = filtros.estadoFlujo.map((estadoDominio) =>
+        traducirEstadoSubActividadAPrisma(estadoDominio),
       );
 
       (wherePrisma.AND as Prisma.SubActividadWhereInput[]).push({
@@ -340,7 +332,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
         id: raw.id,
         identificador: raw.numero_orden,
 
-        tipo: raw.tipo as unknown as TipoSubActividad,
+        tipo: traducirTipoSubActividadADominio(raw.tipo),
 
         titulo: raw.descripcion_tarea,
         fecha_termino: raw.fecha_termino,
@@ -351,7 +343,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
         participacion_porcentaje: raw.actividad?.porcentaje_global ?? null,
 
         auditor_apoyo: auditorDeApoyo,
-        codigo_estado: raw.estado_operativo as unknown as EstadosActividades,
+        codigo_estado: traducirEstadoSubActividadADominio(raw.estado_operativo),
         cantidad_observaciones: 3, // Retorno ESTATICO. CAMBIAR EN LA ITERACIÓN 2
       };
     });
@@ -382,17 +374,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
 
         AND: [
           {
-            actividad: {
-              OR: [
-                {
-                  auditores: {
-                    some: { auditor: { usuario_id: filtro.usuarioUuid } },
-                  },
-                },
-                { poa: { contralor: { usuario_id: filtro.usuarioUuid } } },
-                { poa: { contralor: { jefa_id: filtro.usuarioUuid } } },
-              ],
-            },
+            actividad: this.construirFiltroAcceso(filtro.usuarioUuid),
           },
         ],
       },
@@ -414,7 +396,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       id: sub.id,
       folio: sub.numero_orden,
       descripcion: sub.descripcion_tarea,
-      tipo: sub.tipo as TipoSubActividad,
+      tipo: traducirTipoSubActividadADominio(sub.tipo),
       fecha_inicio: sub.fecha_inicio,
       fecha_termino: sub.fecha_termino,
     }));
@@ -453,15 +435,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
     const actividadPadre = await this.prisma.actividad.findFirst({
       where: {
         id: filtro.actividadId,
-        OR: [
-          {
-            auditores: {
-              some: { auditor: { usuario_id: filtro.usuarioUuid } },
-            },
-          },
-          { poa: { contralor: { usuario_id: filtro.usuarioUuid } } },
-          { poa: { contralor: { jefa: { usuario_id: filtro.usuarioUuid } } } },
-        ],
+        ...this.construirFiltroAcceso(filtro.usuarioUuid),
       },
       select: selectArgs,
     });
@@ -477,7 +451,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
         id: sub.id,
         folio: sub.numero_orden,
         descripcion: sub.descripcion_tarea,
-        tipo: sub.tipo as string as TipoSubActividad,
+        tipo: traducirTipoSubActividadADominio(sub.tipo),
         seleccionada: true,
         fecha_inicio: sub.fecha_inicio,
         fecha_termino: sub.fecha_termino,
@@ -500,7 +474,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
         id: sugerencia.id,
         folio: '-',
         descripcion: sugerencia.descripcion,
-        tipo: sugerencia.tipo_sugerido as string as TipoSubActividad,
+        tipo: traducirTipoSubActividadADominio(sugerencia.tipo_sugerido),
         seleccionada: false,
       }));
 

@@ -1,21 +1,32 @@
 import { PaginacionMetadata } from '@core/common/dto/response/paginacion-metadata';
-import { FiltrosDirectorio } from './filtros/directorio.filtro.interface';
+import { FiltrosDirectorio } from './filtros/subactividaddirectorio.filtro.interface';
 import { PaginacionParams } from './filtros/paginacion-params.filtro.interface';
-import { FiltrosSupervision } from './filtros/supervision.filtro.interface';
+import { FiltrosSupervision } from './filtros/subactividad-supervision.filtro.interface';
 import { SubActividadPoaResult } from './results/subactividad-para-poa.result';
 import { SubActividadProximaVencerResult } from './results/subactividad-proxima-a-vencer.result';
 import { SubActividadSelectResult } from './results/subactividad-select.result';
 import { SubActividadSupervisionResult } from './results/subactividad-supervision.result';
 import { SubActividadesDirectorioResult } from './results/subactividades-directorio.result';
-import { FiltroProximasAVencer } from './filtros/proximas-a-vencer.filtro.interface';
-import { FiltroObtenerPorActividadId } from './filtros/obtener-por-actividad.filtro';
-import { FiltroSeleccionadas } from './filtros/seleccionadas.filtro';
+import { FiltroProximasAVencer } from './filtros/subactividad-proximas-a-vencer.filtro.interface';
+import { FiltroObtenerPorActividadId } from './filtros/subactividad-obtener-por-actividad.filtro';
+import { FiltroSeleccionadas } from './filtros/subactividad-seleccionadas.filtro';
+import { FiltroActividades } from './filtros/subactividad-get-actividades.filtro.interface';
+import { SubActividadGetResult } from './results/subactividad-get.result';
 
 export const SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN = Symbol(
   'SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN',
 );
 
 export interface ISubactividadesQueryRepository {
+  /**
+   * Endpoint: GET /api/v1/actividades
+   * Propósito: Construir la tabla de las actividades completas para las vistas de la Jefa y Contralor
+   * Reglas: Debe devolvar un arrays con las actividades filtradas
+   */
+  obtenerActividades(
+    filtros: FiltroActividades,
+  ): Promise<SubActividadGetResult[]>;
+
   /**
    * Endpoint: GET /api/v1/actividades/proximas-vencer
    * Propósito: Dashboard - Alertas rápidas.
