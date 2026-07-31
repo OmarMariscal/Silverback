@@ -4,7 +4,7 @@ import { ActividadesController } from './infrastructure/http/actividades.control
 import { PrismaModule } from '@database/prisma.module';
 import { ActividadMapper } from './infrastructure/mappers/actividad.mapper';
 import { SubActividadMapper } from './infrastructure/mappers/subactividad.mapper';
-import { PrismaSubActividadQueryRepository } from './infrastructure/repositories/prisma-actividad-query.repository';
+import { PrismaSubActividadQueryRepository } from './infrastructure/repositories/prisma-subactividad-query.repository';
 import { PrismaActividadRepository } from './infrastructure/repositories/prisma-actividad.repository';
 import { ACTIVIDAD_REPOSITORY_TOKEN } from '@domain/actividad/actividad.repository.interface';
 import { SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN } from './application/ports/subactividaeds-query.repository.interface';

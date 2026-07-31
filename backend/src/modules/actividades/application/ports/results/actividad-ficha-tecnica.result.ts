@@ -4,8 +4,8 @@ export interface ActividadFichaTecnicaResult {
   id: string;
   titulo: string;
   justificacion: string;
-  objetivo_general: string;
-  objetivos_particulares: string;
+  objetivoGeneral: string;
+  objetivosParticulares: string;
   metaDelProyecto: string;
   indicadores: string;
 

@@ -18,7 +18,6 @@ import { SubActividadesSelectResponse } from '../dto/response/sub-actividades-se
 import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
 import { PrismaService } from '@database/prisma.service';
 import { Actor } from '@domain/roles/actor.interface';
-import { PrismaSubActividadQueryRepository } from '../infrastructure/repositories/prisma-actividad-query.repository';
 
 @Injectable()
 export class ActividadesService {

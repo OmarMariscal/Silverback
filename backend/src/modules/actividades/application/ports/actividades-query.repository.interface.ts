@@ -16,7 +16,7 @@ export interface IActividadesQueryRepository {
    */
   obtenerResumenPorId(
     filtro: FiltroActividadResumen,
-  ): Promise<ActividadResumenResult>;
+  ): Promise<ActividadResumenResult | null>;
 
   /**
    * Endpoint: GET /api/v1/actividades/{actividadId}/ficha-tecnica
@@ -25,5 +25,5 @@ export interface IActividadesQueryRepository {
    */
   obtenerPorIdFichaTecnica(
     filtro: FiltroActividadFichaTecnica,
-  ): Promise<ActividadFichaTecnicaResult>;
+  ): Promise<ActividadFichaTecnicaResult | null>;
 }
