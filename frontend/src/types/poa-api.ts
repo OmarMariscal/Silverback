@@ -5,13 +5,14 @@
 export type TipoActividadAPI = "AUDITORIA" | "REVISION";
 export type EstadoActividadAPI = "SIN_EMPEZAR" | "SOLICITADO" | "EN_PROGRESO" | "EN_REVISION" | "DEVUELTA" | "CONCLUIDA";
 
-// 1. Esquema de respuesta para GET /poas/mi-poa-actual
+// 1. GET /poas/mi-poa-actual
 export interface ActividadesResumenDto {
   id: string;
   folio: string;
   titulo: string;
   participacion_global: number;
   auditores_nombres: string[];
+  es_rezagado: boolean; // NUEVO
 }
 
 export interface PoaActualDto {
@@ -20,11 +21,11 @@ export interface PoaActualDto {
   estado: string;
   fecha_inicio: string;
   fecha_termino: string;
-  es_rezagado: boolean;
+  // es_rezagado: eliminado de aquí, ya no es global
   actividades_resumen: ActividadesResumenDto[];
 }
 
-// 2. Esquema de respuesta para POST poas/{poaid}/presentar
+// 2. POST poas/{poaid}/presentar
 export interface PresentarPoasDto {
   poa_id: string;
   estado_anterior: string;
@@ -33,7 +34,14 @@ export interface PresentarPoasDto {
   mensaje: string;
 }
 
-// 3. Esquema de respuesta para POST poas/{poaid}/cancelar-envio
+// Error 422 estructurado al presentar POA (espejo exacto del spec)
+export interface PresentarPoasResponseErrorDto {
+  error: string;
+  message: string;
+  detalles: string[];
+}
+
+// 3. POST poas/{poaid}/cancelar-envio
 export interface CancelarPoaDto {
   poa_id: string;
   estado_anterior: string;
@@ -46,7 +54,7 @@ export interface CancelarPoaDataDto {
   data: CancelarPoaDto;
 }
 
-// 4. Esquema de respuesta para GET y PATCH de Ficha Técnica
+// 4. GET /actividades/{id}/ficha-tecnica
 export interface ActividadesAuditoresResumen {
   id: string;
   nombre: string;
@@ -63,7 +71,18 @@ export interface ActividadesFichaTecnicaResponse {
   equipo_auditor: ActividadesAuditoresResumen[];
 }
 
-// 5. Esquema de respuesta para GET actividades/{id}/sub-actividades-poa
+// PATCH /actividades/{id}/ficha-tecnica
+export interface ActividadesPatchFichaTecnicaRequest {
+  titulo?: string;
+  justificacion?: string;
+  objetivo_general?: string;
+  objetivos_particulares?: string;
+  meta_del_proyecto?: string;
+  indicadores?: string;
+  auditores_ids?: string[];
+}
+
+// 5. GET /actividades/{id}/sub-actividades-poa
 export interface SubActividadesPoaFechas {
   fecha_inicio: string;
   fecha_termino: string;
@@ -82,7 +101,19 @@ export interface SubActividadesPoaResponse {
   data: SubActividadesPoaData[];
 }
 
-// 6. Esquema de respuesta para PUT actividades/{id}/sub-actividades/sync
+// 6. PUT /actividades/{id}/sub-actividades/sync
+export interface SubActividadDetallesSync {
+  id?: string | null;
+  descripcion_tarea: string;
+  fecha_inicio: string;
+  fecha_termino: string;
+  tipo: TipoActividadAPI;
+}
+
+export interface SubActividadesSyncRequest {
+  sub_actividades: SubActividadDetallesSync[];
+}
+
 export interface SubActividadesSyncResume {
   creadas: number;
   actualizadas: number;
@@ -94,107 +125,116 @@ export interface SubActividadesSyncResponse {
   resumen: SubActividadesSyncResume;
 }
 
-// 7. Esquema para GET /catalogos/banco-actividades
+// 7. GET /catalogos/banco-actividades
 export interface BancoActividadesDataDto {
   id: string;
   titulo: string;
-  descripcion_corta: string; // Mapeado de tus notas en endpoints.txt
+  descripcion_corta: string;
+  tipo: TipoActividadAPI;
 }
 
 export interface BancoActividadesDto {
   data: BancoActividadesDataDto[];
 }
 
-// 8. Esquema para GET /catalogos/banco-actividades/{id}
-export interface BancoldDto {
+// 8. GET /catalogos/banco-actividades/{id}
+export interface BancoIdDto {
   id: string;
   titulo: string;
-  justificacion: string;
-  objetivo_general: string;
-  objetivos_particulares: string;
-  meta_del_proyecto: string;
-  indicadores: string;
+  justificacion_plantilla: string;
+  objetivo_gen_plantilla: string;
 }
 
-// 9. Esquema para GET /auditores
+// 9. GET /auditores
 export interface AuditoresDataDto {
   id: string;
-  nombre_completo: string; 
-  cargo: string;
+  nombre_completo: string;
+  cargo_etiqueta: string;
 }
 
 export interface AuditoresDto {
   data: AuditoresDataDto[];
 }
 
-// 10. Esquema para GET /catalogos/banco-actividades/{id}/sub-actividades-sugeridas
+// 10. GET /catalogos/banco-actividades/{id}/sub-actividades-sugeridas
 export interface ActividadSugeridaDataDto {
   id: string;
   descripcion: string;
-  tipo: TipoActividadAPI;
+  tipo_sugerido: TipoActividadAPI;
 }
 
 export interface ActividadSugeridaDto {
   data: ActividadSugeridaDataDto[];
 }
 
-// 11. Esquema para POST /poas/{poaid}/actividades (Crear Actividad)
+// 11. POST /poas/{poaid}/actividades (Crear Actividad)
 export interface CrearActividadesDto {
   titulo: string;
   justificacion: string;
   objetivo_general: string;
-  objetivos_particulares: string;
-  meta_del_proyecto: string;
+  objetivos_especificos: string;
+  metas: string;
   indicadores: string;
-  banco_actividades_id?: string; // Opcional si es desde cero
-  auditores_ids: string[];
+  banco_actividad_id?: string; // Omitible si es null
+  equipo_auditor: {
+    total_participantes: number;
+    auditores_ids: string[];
+  };
 }
 
 export interface CrearActividadesResponseDto {
-  id: string; // Te regresan el UUID de la nueva actividad
-  titulo: string;
-  justificacion: string;
-  objetivo_general: string;
-  objetivos_particulares: string;
-  meta_del_proyecto: string;
-  indicadores: string;
+  id: string;
+  folio: string;
+  mensaje: string;
 }
 
-// 12. Esquema para GET /actividades/{actividadid}/sub-actividades-select
+// 12. GET /actividades/{actividadid}/sub-actividades-select (CORREGIDO: fechas opcionales anidadas)
 export interface SubActividadesSelectData {
   id: string;
+  folio: string;
   descripcion: string;
   tipo: TipoActividadAPI;
+  fechas?: SubActividadesPoaFechas;
+  seleccionada: boolean;
 }
 
 export interface SubActividadesSelectResponse {
   data: SubActividadesSelectData[];
 }
 
-// 13. Esquema para POST /actividades/{actividadid}/sub-actividades/bulk
+// 13. POST /actividades/{actividadid}/sub-actividades/bulk
 export interface SubActividadesBulkRequest {
   sub_actividades: {
-    descripcion: string;
+    descripcion_tarea: string;
+    fecha_inicio: string;
+    fecha_termino: string;
     tipo: TipoActividadAPI;
   }[];
 }
 
 export interface SubActividadesBulkResponse {
   mensaje: string;
-  creadas: number;
+  data: {
+    id: string;
+    numero_orden: number;
+    semanas_totales: number;
+  }[];
 }
 
-// 14. Esquema para DELETE /actividades/{actividadid}
+// 14. DELETE /actividades/{actividadid}
 export interface EliminacionCorrecta {
-  mensaje: string; // Mapeado del Swagger "EliminacionCorrecta"
+  status: boolean;
+  mensaje: string;
 }
 
-//Faltan: 
-// GET catalogos/banco-actividades
-//GET catalogos/banco-actividades/{id}
-//GET auditores
-//GET catalogos/banco-actividades/{id}/sub-actividades-sugeridas
-//GET poas/{poaid}/actividades
-//POST actividades/{actividadid}/sub-actividades/bulk
-//GET actividades/{actividadid}/sub-actividades-select
-//DELETE actividades/{actividadid}
+// 15. GET /catalogos/centros (CORREGIDO: subtitulo_interfaz incluido)
+export interface CentroDataDto {
+  id: string;
+  clave: string;
+  nombre: string;
+  subtitulo_interfaz: string;
+}
+
+export interface CentroDto {
+  data: CentroDataDto[];
+}
