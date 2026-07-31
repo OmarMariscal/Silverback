@@ -5,7 +5,7 @@ import { IsOptional, IsEnum, IsString, IsUUID } from 'class-validator';
 import { TipoSubActividad } from '@domain/actividad/tipos-de-actividades.enum';
 import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
 
-export class ActividadesDirectorioQuery extends PaginacionQueryDto {
+export class SubActividadesDirectorioQuery extends PaginacionQueryDto {
   @ApiPropertyOptional({
     enum: ActividadesSortColumn,
     default: ActividadesSortColumn.FECHA_TERMINO,

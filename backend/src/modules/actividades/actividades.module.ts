@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ActividadesService } from './application/actividades.service';
+import { SubactividadesService } from './application/subactividades.service';
 import { ActividadesController } from './infrastructure/http/actividades.controller';
+import { SubactividadesController } from './infrastructure/http/subactividades.controller';
 import { PrismaModule } from '@database/prisma.module';
 import { ActividadMapper } from './infrastructure/mappers/actividad.mapper';
 import { SubActividadMapper } from './infrastructure/mappers/subactividad.mapper';
@@ -11,7 +13,7 @@ import { SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN } from './application/ports/subac
 
 @Module({
   imports: [PrismaModule],
-  controllers: [ActividadesController],
+  controllers: [ActividadesController, SubactividadesController],
   providers: [
     //1. Mappers (Dependencias sin Interfaz)
     ActividadMapper,
@@ -19,6 +21,7 @@ import { SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN } from './application/ports/subac
 
     // 2. Services
     ActividadesService,
+    SubactividadesService,
 
     // 3. Repositorios (Bindeados a sus tokens)
     {
@@ -30,5 +33,6 @@ import { SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN } from './application/ports/subac
       useClass: PrismaSubActividadQueryRepository,
     },
   ],
+  exports: [ACTIVIDAD_REPOSITORY_TOKEN],
 })
 export class ActividadesModule {}

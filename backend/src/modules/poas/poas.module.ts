@@ -4,8 +4,10 @@ import { PoasController } from './infrastructure/http/poas.controller';
 import { PoaMapper } from './infrastructure/mappers/poa.mapper';
 import { POA_REPOSITORY_TOKEN } from '@domain/poa/poa.repository.interface';
 import { PrismaPoaRepository } from './infrastructure/repositories/prisma-poa.repository';
+import { ActividadesModule } from '@modules/actividades/actividades.module';
 
 @Module({
+  imports: [ActividadesModule],
   controllers: [PoasController],
   providers: [
     // 1. Mappers (Dependencias Sin Interaz)
