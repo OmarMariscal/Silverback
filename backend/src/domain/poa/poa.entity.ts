@@ -2,8 +2,10 @@ import { ActividadEntity } from '@domain/actividad/actividad.entity';
 import { crearActor } from '@domain/roles/actor.factory';
 import { Actor } from '@domain/roles/actor.interface';
 import { Roles } from '@domain/roles/roles.enum';
-import { BadRequestException } from '@nestjs/common';
 import { EstadosPoa } from './estados-poa.enum';
+import { ReglaNegocioException } from '@domain/excepciones/regla-negocio.exception';
+import { CodigoDeViolacion } from '@domain/codigos/codigo-violado.enum';
+import { ValidacionIntegridadException } from '@domain/excepciones/validacion-integridad.exception';
 
 export class PoaEntity {
   constructor(
@@ -22,11 +24,11 @@ export class PoaEntity {
   // Funciones Auxiliares
   private validarEstadoInicial(
     estadoInicial: EstadosPoa[],
-    excepcionClase: new (mensaje: string) => Error = BadRequestException,
   ): void {
     if (!estadoInicial.includes(this.estado)) {
-      throw new excepcionClase(
-        `Operación inválida. La sub-actividad está en ${this.estado}, pero requiere estar en: ${estadoInicial.join(' o ')}.`,
+      throw new ReglaNegocioException(
+        `Operación inválida. La POA está en ${this.estado}, pero requiere estar en: ${estadoInicial.join(' o ')}.`,
+        CodigoDeViolacion.ESTADO_INVALIDO
       );
     }
   }
@@ -47,8 +49,9 @@ export class PoaEntity {
     }
 
     //Llegar aquí significa que el rol no coincide exactamente con el de los roles permitidos
-    throw new BadRequestException(
+    throw new ReglaNegocioException(
       `El rol ${rolActual.rol} no tiene los privilegios necesarios para ${accion}`,
+      CodigoDeViolacion.ROL_INVALIDO
     );
   }
 
@@ -107,18 +110,21 @@ export class PoaEntity {
     );
 
     // Validaciones y recopialción de logs
-    const erroresPoa: string[] = [];
+    const erroresPoa: ReglaNegocioException[] = [];
 
     // Regla 1: Se deben incluir todas las actividades rezagadas
     if (cantidadRezagadasPendientes > 0) {
-      erroresPoa.push(
-        `Faltan ${cantidadRezagadasPendientes} actividades rezagadas por incluirse`,
+      erroresPoa.push( new ReglaNegocioException(`Faltan ${cantidadRezagadasPendientes} actividades rezagadas por incluirse`, 
+        CodigoDeViolacion.DATOS_INSUFICIENTES)
+        
       );
     }
 
     // Regla 2: Se tiene que tener mínimo una Actividad Principal
     if (this.actividades.length === 0) {
-      erroresPoa.push(`El POA debe tener por lo menos 1 Actividad Principal`);
+      erroresPoa.push(new ReglaNegocioException(`El POA debe tener por lo menos 1 Actividad Principal`,
+        CodigoDeViolacion.DATOS_INSUFICIENTES
+      ));
     }
 
     // Regla 3: Revisar la integridad de cada actividad
@@ -129,9 +135,10 @@ export class PoaEntity {
 
     // Verificamos si se captó algún log de error
     if (erroresPoa.length > 0) {
-      throw new BadRequestException(
-        // CAMBIAR POR VALIDACION INTEGRATE EXCEPCIÓN cuando esté listo
-        `La POA de ID ${this.id} no cumple con los requisitos para ser enviada a revisión \n- ${erroresPoa.join('\n- ')}`,
+      throw new ValidacionIntegridadException(
+        `La POA de ID ${this.id} no cumple con los requisitos para ser enviada a revisión \n
+        - ${erroresPoa.map(e => e.message).join('\n- ')}`,
+        erroresPoa
       );
     }
 
@@ -175,8 +182,9 @@ export class PoaEntity {
 
     // Se tiene que devolver con al menos una observación
     if (retroalimentacion === null || retroalimentacion.length === 0) {
-      throw new BadRequestException(
+      throw new ReglaNegocioException(
         `Para pasar al estado ${EstadosPoa.DEVUELTA} se tiene que anexar algún comentario`,
+        CodigoDeViolacion.DATOS_INSUFICIENTES
       );
     }
 
@@ -208,8 +216,9 @@ export class PoaEntity {
     );
 
     if (existe) {
-      throw new BadRequestException(
+      throw new ReglaNegocioException(
         `El ID de actividad ${actividad.getId()} ya está registrada en la POA`,
+        CodigoDeViolacion.ENTIDAD_REPETIDA
       );
     }
 

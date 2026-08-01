@@ -1,9 +1,10 @@
 import { TipoSubActividad } from '@domain/actividad/tipos-de-actividades.enum';
 import { crearActor } from '@domain/roles/actor.factory';
 import { Actor } from '@domain/roles/actor.interface';
-import { BadRequestException } from '@nestjs/common'; // Cambiar por Excepción de Regla de Negocio cuando quede codificada
 import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
 import { Roles } from '@domain/roles/roles.enum';
+import { ReglaNegocioException } from '@domain/excepciones/regla-negocio.exception';
+import { CodigoDeViolacion } from '@domain/codigos/codigo-violado.enum';
 
 export class SubactividadEntity {
   constructor(
@@ -26,11 +27,11 @@ export class SubactividadEntity {
 
   private validarEstadoInicial(
     estadoInicial: EstadosActividades[],
-    excepcionClase: new (mensaje: string) => Error = BadRequestException,
   ): void {
     if (!estadoInicial.includes(this.estado)) {
-      throw new excepcionClase(
+      throw new ReglaNegocioException(
         `Operación inválida. La sub-actividad está en ${this.estado}, pero requiere estar en: ${estadoInicial.join(' o ')}.`,
+        CodigoDeViolacion.ESTADO_INVALIDO
       );
     }
   }
@@ -51,8 +52,9 @@ export class SubactividadEntity {
     }
 
     //Llegar aquí significa que el rol no coincide exactamente con el de los roles permitidos
-    throw new BadRequestException(
+    throw new ReglaNegocioException(
       `El rol ${rolActual.rol} no tiene los privilegios necesarios para ${accion}`,
+      CodigoDeViolacion.ROL_INVALIDO
     );
   }
 
@@ -175,8 +177,9 @@ export class SubactividadEntity {
 
     // Se tiene que tener algo en la observación
     if (retroalimentacion === null || retroalimentacion.length === 0) {
-      throw new BadRequestException(
+      throw new ReglaNegocioException(
         `La justificación de la devolución no debe estar vacía`,
+        CodigoDeViolacion.DATOS_INSUFICIENTES
       );
     }
 

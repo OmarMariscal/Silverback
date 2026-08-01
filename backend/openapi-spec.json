@@ -2341,6 +2341,11 @@
             "items": {
               "type": "string"
             }
+          },
+          "es_rezagado": {
+            "type": "boolean",
+            "description": "Le indica al sistema si la actividad es rezagada.",
+            "example": false
           }
         },
         "required": [
@@ -2348,7 +2353,8 @@
           "folio",
           "titulo",
           "participacion_global",
-          "auditores_nombres"
+          "auditores_nombres",
+          "es_rezagado"
         ]
       },
       "PoaActualDto": {
@@ -2367,7 +2373,7 @@
           "estado": {
             "type": "string",
             "description": "Estado de la actividad(enum)",
-            "example": "EN_PROGRESO"
+            "example": "BORRADOR"
           },
           "fecha_inicio": {
             "type": "string",
@@ -2378,11 +2384,6 @@
             "type": "string",
             "description": "Fecha de termino de la POA",
             "example": "Dic 2026"
-          },
-          "es_rezagado": {
-            "type": "boolean",
-            "description": "Le indica al sistema si la POA tiene actividades rezagadas.",
-            "example": false
           },
           "actividades_resumen": {
             "description": "Lista de actividades de manera resumida",
@@ -2398,7 +2399,6 @@
           "estado",
           "fecha_inicio",
           "fecha_termino",
-          "es_rezagado",
           "actividades_resumen"
         ]
       },

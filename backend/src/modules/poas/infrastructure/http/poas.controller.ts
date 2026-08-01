@@ -24,7 +24,7 @@ export class PoasController {
   })
   @Get('/mi-poa-actual')
   getPoaActual(poaActual: PoaActualDto){
-    return poaActual;
+    return this.poasService.obtenerPoa(poaActual);
   }
 
    @ApiOperation({

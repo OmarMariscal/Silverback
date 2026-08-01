@@ -3,6 +3,8 @@ import { KpiDistribucionPastel } from './interfaces/kpi-distribucion-pastel.inte
 import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
 import { KpiRiesgoDistribucion } from './interfaces/kpi-distribucion-riesgo.interface';
 import { KpiDetalleRiesgo } from './interfaces/kpi-detalle-riesgo.interface';
+import {  SemaforoService } from '@domain/semaforo/semaforo.service';
+import { EstadosSemaforo } from '@domain/semaforo/estados-semaforo-enum';
 
 export class CalculadoraKpiService {
   public static generarDistribucionEstados(
@@ -43,15 +45,56 @@ export class CalculadoraKpiService {
   //Firma de métodos que necesitan la clase del semáforo
   public static generarDistribucionPorRiesgo(
     subActividades: SubactividadEntity[],
-    semaforoService: any, //Camibar por semáforo Service una vez se implemente
   ): KpiRiesgoDistribucion[] {
-    throw new Error('Método No Implementado Aún');
+    if (subActividades.length === 0) {
+      return [];
+    }
+
+    const total = subActividades.length;
+
+    //Agrupamos y contamos
+    const conteo = new Map<EstadosSemaforo, number>();
+
+    for (const sub of subActividades) {
+      const color = SemaforoService.calcularSemaforo(sub);
+      conteo.set(color, (conteo.get(color) || 0) + 1);
+    }
+
+    // Mapeamos el formato de vector estructurado
+    const resultado: KpiRiesgoDistribucion[] = [];
+
+    conteo.forEach((cantidad, color) => {
+      const porcentajeRaw = (cantidad / total) * 100;
+      resultado.push({
+        color: color,
+        cantidad: cantidad,
+        porcentaje: Math.round(porcentajeRaw * 100) / 100,
+      });
+    });
+
+    return resultado;
   }
+   
 
   public static obtenerRadarRiesgos(
     subActividades: SubactividadEntity[],
-    semaforoService: any, //Cambiar a Semáforo Service una vez se implemente
+    semaforoService: SemaforoService, //Cambiar a Semáforo Service una vez se implemente
   ): KpiDetalleRiesgo[] {
-    throw new Error('Método no Implementado Aún');
+    if (subActividades.length === 0) {
+      return [];
+    }
+    
+    const resultado: KpiDetalleRiesgo[] = subActividades
+    .map(sub => ({
+      folio: sub.getNumeroOrden(),
+      descripcion: sub.getDescripcion(),
+      subActividadId: sub.getId(),
+      tipoSubActividad: sub.getTipo(),
+      fechaLimite: sub.getFechaConclusionEstimada(),
+      estadoSemaforo: SemaforoService.calcularSemaforo(sub),
+      etiquetaAlerta: SemaforoService.obtenerEtiquetaVencimiento(sub)
+    }));
+
+    return resultado;
   }
 }

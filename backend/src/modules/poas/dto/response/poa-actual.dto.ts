@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { ActividadesResumenDto } from "./poa-actual-actividades.dto";
-import { EstadosActividades } from "@domain/actividad/estados-actividades.enum";
+import { EstadosPoa } from "@domain/poa/estados-poa.enum";
 
 export class PoaActualDto{
 
@@ -20,9 +20,9 @@ export class PoaActualDto{
 
     @ApiProperty({
         description: "Estado de la actividad(enum)",
-        example:    EstadosActividades.EN_PROGRESO
+        example:    EstadosPoa.BORRADOR
     })
-    estado: EstadosActividades;
+    estado: EstadosPoa;
 
     @ApiProperty({
         description: "Fecha de inicio de la POA",
@@ -37,13 +37,6 @@ export class PoaActualDto{
         example: "Dic 2026"
     })
     fecha_termino: string;
-
-    @ApiProperty({
-        description: "Le indica al sistema si la POA tiene actividades rezagadas.",
-        type: Boolean,
-        example: false
-    })
-    es_rezagado: boolean;
     
     @ApiProperty({
         description: "Lista de actividades de manera resumida",

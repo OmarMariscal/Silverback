@@ -1,6 +1,7 @@
 import { SubactividadEntity } from '@domain/actividad/subactividad.entity';
 import { EstadosActividades } from './estados-actividades.enum';
-import { BadRequestException } from '@nestjs/common'; //Cambiar por Excepción de Regla de Negocio cuando esté lista
+import { ReglaNegocioException } from '@domain/excepciones/regla-negocio.exception';
+import { CodigoDeViolacion } from '@domain/codigos/codigo-violado.enum';
 
 export class ActividadEntity {
   constructor(
@@ -23,7 +24,7 @@ export class ActividadEntity {
   ) {}
 
   // FUNCIONES AUXILIARES (PRIVADAS)
-  private validarCampos(): string {
+  private validarCampos(): ReglaNegocioException | null{
     const camposVacios: string[] = [];
 
     // Validamos de forma explícita solo lo que es vital para la Ficha Técnica
@@ -46,12 +47,14 @@ export class ActividadEntity {
     });
 
     if (camposVacios.length > 0) {
-      return `Ficha Técnica incompleta. Faltan los siguientes campos: ${camposVacios.join(', ')}`;
+      return new ReglaNegocioException(`Ficha Técnica incompleta. Faltan los siguientes campos: ${camposVacios.join(', ')}`,
+      CodigoDeViolacion.DATOS_INSUFICIENTES
+      )
     }
-    return '';
+    return null;
   }
 
-  private validarFechasTerminoSubActividades(): string {
+  private validarFechasTerminoSubActividades(): ReglaNegocioException | null {
     const subActividadesInvalidas = this.subActividades.filter(
       (subActividad) => {
         const fechaTerminoSub = subActividad.getFechaConclusionEstimada();
@@ -64,9 +67,12 @@ export class ActividadEntity {
 
     if (subActividadesInvalidas.length > 0) {
       const ids = subActividadesInvalidas.map((sub) => sub.getId()).join(', ');
-      return `Las siguientes sub-actividades superan la fecha de término del proyecto: [${ids}]`;
+      return new ReglaNegocioException(
+        `Las siguientes sub-actividades superan la fecha de término del proyecto: [${ids}]`,
+        CodigoDeViolacion.FECHA_INVALIDA
+      );
     }
-    return '';
+    return null;
   }
 
   // Getter's
@@ -134,8 +140,9 @@ export class ActividadEntity {
       (sub) => sub.getId() === subActividad.getId(),
     );
     if (repetida) {
-      throw new BadRequestException(
+      throw new ReglaNegocioException(
         `La sub-actividad de ID ${subActividad.getId()} ya pertenece a esta actividad`,
+        CodigoDeViolacion.ENTIDAD_REPETIDA
       );
     }
     this.subActividades.push(subActividad);
@@ -150,7 +157,10 @@ export class ActividadEntity {
   public asignarAuditor(auditorId: string): void {
     // No permitimos IDs vacíos
     if (!auditorId || auditorId.trim() === '') {
-      throw new BadRequestException(`El ID de auditor está vacío`);
+      throw new ReglaNegocioException(
+        `El ID de auditor está vacío`,
+        CodigoDeViolacion.DATOS_INSUFICIENTES
+      );
     }
     if (!this.auditoresIds.includes(auditorId)) {
       this.auditoresIds.push(auditorId);
@@ -163,8 +173,8 @@ export class ActividadEntity {
 
   // REGLAS DE NEGOCIO E INTEGRIDAD
 
-  public validarIntegridad(): string[] {
-    const errores: string[] = [];
+  public validarIntegridad(): ReglaNegocioException[] {
+    const errores: ReglaNegocioException[] = [];
 
     // Regla 1: Campos obligatorios
     const errorCampos = this.validarCampos();
@@ -173,7 +183,11 @@ export class ActividadEntity {
     // Regla 2: Mínimo 1 sub-actividad
     if (this.subActividades.length === 0) {
       errores.push(
-        'La Actividad Principal debe tener al menos 1 sub-actividad.',
+        new ReglaNegocioException (
+          'La Actividad Principal debe tener al menos 1 sub-actividad.',
+          CodigoDeViolacion.DATOS_INSUFICIENTES
+        )
+        
       );
     }
 
