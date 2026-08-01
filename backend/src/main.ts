@@ -7,6 +7,7 @@ import * as path from 'path';
 import { ActividadesDirectorioAsignacionJefa } from './modules/actividades/dto/response/actividades-directorio-asignacion-jefa.dto';
 import { ActividadesDirectorioAsignacionContralor } from './modules/actividades/dto/response/actividades-directorio-asignacion-contralor.dto';
 import { PrismaClientExceptionFilter } from '@core/filters/prisma-client-exception.filter';
+import { DominioExceptionFilter } from '@core/filters/dominio-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -26,6 +27,11 @@ async function bootstrap() {
   //Configurar elo filtro de excepciones global de prisma
   const { httpAdapter } = app.get<HttpAdapterHost>(HttpAdapterHost);
   app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
+
+  //Configurar el filtro de excepciones global de dominio
+  app.useGlobalFilters(new DominioExceptionFilter());
+  await app.listen(3000);
+
 
   // Configuración de la Especificación de Swagger
   const config = new DocumentBuilder()
