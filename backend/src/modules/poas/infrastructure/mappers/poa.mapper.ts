@@ -3,7 +3,7 @@ import { PoaEntity } from '@domain/poa/poa.entity';
 import { EstadosPoa } from '@domain/poa/estados-poa.enum';
 import { Mapper } from '@core/interfaces/mapper.interface';
 import { PrismaPoaPayload } from '../types/poa-payload.type';
-import { ActividadMapper } from '@modules/actividades/mappers/actividad.mapper';
+import { ActividadMapper } from '@modules/actividades/infrastructure/mappers/actividad.mapper';
 
 export class PoaMapper implements Mapper<PoaEntity, PrismaPoaPayload> {
   // Diccionarios Estáticos

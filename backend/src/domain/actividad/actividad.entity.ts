@@ -1,4 +1,4 @@
-import { SubactividadEntity } from '@domain/subactividades/subactividad.entity';
+import { SubactividadEntity } from '@domain/actividad/subactividad.entity';
 import { EstadosActividades } from './estados-actividades.enum';
 import { ReglaNegocioException } from '@domain/excepciones/regla-negocio.exception';
 import { CodigoDeViolacion } from '@domain/codigos/codigo-violado.enum';
@@ -7,20 +7,20 @@ export class ActividadEntity {
   constructor(
     private readonly id: string,
     private readonly folio: string,
-    private readonly titulo: string, // CORREGIDO: Empata con Prisma
-    private readonly justificacion: string,
-    private readonly objetivoGeneral: string, // CamelCase
-    private readonly objetivosParticulares: string, // CamelCase
-    private readonly metaDelProyecto: string, // CamelCase
-    private readonly indicadores: string,
-    private readonly fechaInicio: Date, // CamelCase
-    private readonly fechaTermino: Date, // CamelCase
-    private readonly esRezago: boolean, // NUEVO: Vital para reglas de negocio
+    private readonly titulo: string,
+    private readonly justificacion: string | null,
+    private readonly objetivoGeneral: string | null,
+    private readonly objetivosParticulares: string | null,
+    private readonly metaDelProyecto: string | null,
+    private readonly indicadores: string | null,
+    private readonly fechaInicio: Date | null,
+    private readonly fechaTermino: Date | null,
+    private readonly esRezago: boolean,
 
     private auditoresIds: string[],
     private subActividades: SubactividadEntity[],
 
-    private readonly bancoActividadId: string | null = null, // NUEVO: Opcional, por si viene de plantilla
+    private readonly bancoActividadId: string | null = null,
   ) {}
 
   // FUNCIONES AUXILIARES (PRIVADAS)
@@ -59,6 +59,7 @@ export class ActividadEntity {
       (subActividad) => {
         const fechaTerminoSub = subActividad.getFechaConclusionEstimada();
         if (!fechaTerminoSub) return false;
+        if (!this.fechaTermino) return false;
 
         return fechaTerminoSub.getTime() > this.fechaTermino.getTime();
       },
@@ -87,31 +88,31 @@ export class ActividadEntity {
     return this.titulo;
   }
 
-  public getJustificacion(): string {
+  public getJustificacion(): string | null {
     return this.justificacion;
   }
 
-  public getObjetivoGeneral(): string {
+  public getObjetivoGeneral(): string | null {
     return this.objetivoGeneral;
   }
 
-  public getObjetivosParticulares(): string {
+  public getObjetivosParticulares(): string | null {
     return this.objetivosParticulares;
   }
 
-  public getMetaDelProyecto(): string {
+  public getMetaDelProyecto(): string | null {
     return this.metaDelProyecto;
   }
 
-  public getIndicadores(): string {
+  public getIndicadores(): string | null {
     return this.indicadores;
   }
 
-  public getFechaInicio(): Date {
+  public getFechaInicio(): Date | null {
     return this.fechaInicio;
   }
 
-  public getFechaTermino(): Date {
+  public getFechaTermino(): Date | null {
     return this.fechaTermino;
   }
 

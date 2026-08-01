@@ -1382,7 +1382,7 @@
             "description": "Título de la sub-actividad"
           },
           "rango_fechas": {
-            "default": "Rango de fechas en registro de la sub-actividad",
+            "description": "Rango de fechas en registro de la sub-actividad",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ActividadesGetRangoFechas"
