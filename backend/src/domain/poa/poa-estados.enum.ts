@@ -1,6 +1,0 @@
-export enum EstadosPoa{
-    BORRADOR = 'BORRADOR',
-    EN_REVISION = 'EN REVISION',
-    DEVUELTA = 'DEVUELTA',
-    ACEPTADA = 'ACEPTADA'
-}

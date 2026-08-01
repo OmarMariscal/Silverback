@@ -30,8 +30,6 @@ async function bootstrap() {
 
   //Configurar el filtro de excepciones global de dominio
   app.useGlobalFilters(new DominioExceptionFilter());
-  await app.listen(3000);
-
 
   // Configuración de la Especificación de Swagger
   const config = new DocumentBuilder()
