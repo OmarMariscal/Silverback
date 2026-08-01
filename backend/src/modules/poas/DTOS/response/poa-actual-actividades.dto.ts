@@ -36,4 +36,11 @@ export class ActividadesResumenDto{
         example: ["Lic. Auditor Auxiliar", "Mtro. Titular"]
     })
     auditores_nombres: string[];
+
+    @ApiProperty({
+        description: "Le indica al sistema si la actividad es rezagada.",
+        type: Boolean,
+        example: false
+    })
+    es_rezagado: boolean;
 }

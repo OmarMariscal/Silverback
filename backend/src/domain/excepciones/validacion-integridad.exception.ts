@@ -1,4 +1,3 @@
-import { ExceptionFilter } from "@nestjs/common";
 import { ReglaNegocioException } from "./regla-negocio.exception";
 
 export class ValidacionIntegridadException extends Error{
