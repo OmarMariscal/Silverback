@@ -1,6 +1,5 @@
 import { EstadosSemaforo } from "./estados-semaforo-enum";
-import { SubactividadEntity } from "@domain/subactividades/subactividad.entity";
-
+import { SubactividadEntity } from "@domain/actividad/subactividad.entity";
 export class SemaforoService{
 
     private static calcularDiasHabiles(fechaInicio: Date, fechaActual: Date = new Date()): number{
