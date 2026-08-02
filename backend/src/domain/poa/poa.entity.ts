@@ -136,14 +136,22 @@ export class PoaEntity {
 
     // Regla 3: Revisar la integridad de cada actividad
     for (const actividad of this.actividades) {
-      erroresPoa.push(...actividad.mensajesValidacion);
+      const excepcionesActividad = actividad.mensajesValidacion.map(
+        (mensaje) =>
+          new ReglaNegocioException(
+            mensaje,
+            CodigoDeViolacion.DATOS_INSUFICIENTES,
+          ),
+      );
+
+      erroresPoa.push(...excepcionesActividad);
     }
 
     // Verificamos si se captó algún log de error
     if (erroresPoa.length > 0) {
       throw new ValidacionIntegridadException(
-        `La POA de ID ${this.id} no cumple con los requisitos para ser enviada a revisión \n
-        - ${erroresPoa.map((e) => e.message).join('\n- ')}`,
+        `La POA de ID ${this.id} no cumple con los requisitos para ser enviada a revisión:
+- ${erroresPoa.map((e) => e.message).join('\n- ')}`,
         erroresPoa,
       );
     }
