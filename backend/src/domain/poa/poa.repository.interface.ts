@@ -13,7 +13,7 @@ export interface IPoaRepository {
    * @param id Identificador único del POA
    * @returns La entidad hidratada o null si no existe
    */
-  obtenerPorId(id: string): Promise<PoaEntity | null>;
+  obtenerPorId(id: string, tx?: TransactionHandle): Promise<PoaEntity | null>;
 
   /**
    * Persiste el estado actual del Agregado Raíz POA.

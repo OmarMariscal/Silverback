@@ -35,7 +35,11 @@ export interface IActividadRepository {
    *
    * @param actividad La entidad con las reglas de negocio ya validadas
    */
-  guardar(actividad: ActividadEntity, tx?: TransactionHandle): Promise<void>;
+  guardar(
+    actividad: ActividadEntity,
+    poaId: string,
+    tx?: TransactionHandle,
+  ): Promise<void>;
 
   /**
    * Ejecuta la eliminación (física o lógica, según lo decida la infraestructura)

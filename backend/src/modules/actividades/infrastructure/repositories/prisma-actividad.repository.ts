@@ -39,6 +39,7 @@ export class PrismaActividadRepository implements IActividadRepository {
 
   async guardar(
     actividad: ActividadEntity,
+    poaId: string,
     tx?: TransactionHandle,
   ): Promise<void> {
     const actividadid = actividad.getId();
@@ -57,9 +58,15 @@ export class PrismaActividadRepository implements IActividadRepository {
       clientePrisma: Prisma.TransactionClient,
     ) => {
       // A. Actualizar el agregado raíz (actividad)
-      await clientePrisma.actividad.update({
+      await clientePrisma.actividad.upsert({
         where: { id: actividadid },
-        data: dataPadre,
+        create: {
+          ...dataPadre,
+          poa_id: poaId,
+        },
+        update: {
+          ...dataPadre,
+        },
       });
 
       // B. Sincronizar subactividades (Relación 1:N)

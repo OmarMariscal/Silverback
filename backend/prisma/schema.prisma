@@ -142,6 +142,7 @@ model Poa {
   centro       CentroUniversitario @relation(fields: [centro_id], references: [id])
 
   actividades  Actividad[]
+  ultima_secuencia_actividad Int         @default(0) 
 
   @@unique([contralor_id, anio_fiscal]) 
 }

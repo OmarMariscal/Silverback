@@ -25,13 +25,16 @@ import { PresentarPoasDto } from '../../dto/request/poas-presentar.dto';
 import { CrearActividadesResponseDto } from '../../dto/response/poa-actividades.response.dto';
 import { PoaActualDto } from '../../dto/response/poa-actual.dto';
 import { PresentarPoasResponseErrorDto } from '../../dto/response/poas-presentar-response.dto';
+import { PermisosGuard } from '@core/guards/roles.guard';
+import { RequirePermissions } from '@core/decorators/roles.decorador';
+import { Permisos } from '@domain/roles/permisos.enum';
 
 @ApiTags('POAs')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermisosGuard)
 @Controller('poas')
 export class PoasController {
-  constructor(private readonly poasService: PoasService) {}
+  constructor(private readonly poaService: PoasService) {}
 
   @ApiOperation({
     summary: 'Devuelve la POA en la que se esta trabajando',
@@ -39,30 +42,38 @@ export class PoasController {
       'Entrega los datos necesarios para armar la POA vigente del anio fiscal',
   })
   @ApiResponse({
-    status: 201,
+    status: 200,
     type: PoaActualDto,
   })
+  @RequirePermissions(Permisos.LEER_POA)
   @Get('/mi-poa-actual')
-  getPoaActual(@UsuarioActual() usuario: SesionUsuario): PoaActualDto {
-    return new PoaActualDto();
+  async getPoaActual(
+    @UsuarioActual() usuario: SesionUsuario,
+  ): Promise<PoaActualDto> {
+    return await this.poaService.getPoaActual(usuario);
   }
 
   @ApiOperation({
     summary: 'Agregar actividades',
     description: 'Recibe los datos para crear actividades dentro de la POA',
   })
-  @Post(':poaid/actividades')
   @ApiResponse({
     status: 201,
     description: 'Actividad agregada exitosamente',
     type: CrearActividadesResponseDto,
   })
-  agregarActividades(
+  @RequirePermissions(Permisos.CREAR_POA)
+  @Post(':poaid/actividades')
+  async agregarActividades(
     @Param('poaid') id: string,
     @Body() crearActividadesDto: CrearActividadesDto,
-    @Res() response,
-  ): CrearActividadesResponseDto {
-    throw new NotImplementedException('Pendiente de Implementar');
+    @UsuarioActual() usuario: SesionUsuario,
+  ): Promise<CrearActividadesResponseDto> {
+    return await this.poaService.agregarActividad(
+      id,
+      usuario,
+      crearActividadesDto,
+    );
   }
 
   @ApiOperation({

@@ -837,7 +837,7 @@
         "operationId": "PoasController_getPoaActual",
         "parameters": [],
         "responses": {
-          "201": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {

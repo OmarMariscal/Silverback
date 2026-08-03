@@ -7,5 +7,5 @@ export class JwtPayloadDto {
   rol: Roles;
   centro_id?: string | null;
   perfil_id: string;
-  permisos_especiales?: Permisos[];
+  permisos?: Permisos[];
 }

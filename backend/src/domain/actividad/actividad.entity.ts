@@ -27,10 +27,8 @@ export class ActividadEntity {
   ) {}
 
   // FUNCIONES AUXILIARES (PRIVADAS)
-  private validarCampos(): ReglaNegocioException | null {
+  private validarCamposTextuales(): ReglaNegocioException | null {
     const camposVacios: string[] = [];
-
-    // Validamos de forma explícita solo lo que es vital para la Ficha Técnica
     const camposRequeridos = [
       { nombre: 'Titulo', valor: this.titulo },
       { nombre: 'Justificación', valor: this.justificacion },
@@ -38,11 +36,8 @@ export class ActividadEntity {
       { nombre: 'Objetivos Particulares', valor: this.objetivosParticulares },
       { nombre: 'Meta del Proyecto', valor: this.metaDelProyecto },
       { nombre: 'Indicadores', valor: this.indicadores },
-      { nombre: 'Fecha de Inicio', valor: this.fechaInicio ? 'ok' : null }, // Validación de fechas
-      { nombre: 'Fecha de Término', valor: this.fechaTermino ? 'ok' : null },
     ];
 
-    // Buscamos si alguno de ellos está vacío
     camposRequeridos.forEach((campo) => {
       if (
         !campo.valor ||
@@ -54,7 +49,17 @@ export class ActividadEntity {
 
     if (camposVacios.length > 0) {
       return new ReglaNegocioException(
-        `Ficha Técnica incompleta. Faltan los siguientes campos: ${camposVacios.join(', ')}`,
+        `Textos incompletos. Faltan los siguientes campos: ${camposVacios.join(', ')}`,
+        CodigoDeViolacion.DATOS_INSUFICIENTES,
+      );
+    }
+    return null;
+  }
+
+  private validarFechas(): ReglaNegocioException | null {
+    if (!this.fechaInicio || !this.fechaTermino) {
+      return new ReglaNegocioException(
+        `Faltan fechas asignadas. Se requiere Fecha de Inicio y Fecha de Término.`,
         CodigoDeViolacion.DATOS_INSUFICIENTES,
       );
     }
@@ -195,12 +200,25 @@ export class ActividadEntity {
 
   // REGLAS DE NEGOCIO E INTEGRIDAD
 
+  public validarCreacionBorrador(): void {
+    const erroresTextos = this.validarCamposTextuales();
+    if (erroresTextos) {
+      throw erroresTextos;
+    }
+  }
+
   public validarIntegridad(): ReglaNegocioException[] {
     const errores: ReglaNegocioException[] = [];
 
-    const errorCampos = this.validarCampos();
+    // Validar Textos
+    const errorCampos = this.validarCamposTextuales();
     if (errorCampos) errores.push(errorCampos);
 
+    // Validar Fechas
+    const erroresFechas = this.validarFechas();
+    if (erroresFechas) errores.push(erroresFechas);
+
+    // Se tiene que tener al menos una actividad
     if (this.subActividades.length === 0) {
       errores.push(
         new ReglaNegocioException(

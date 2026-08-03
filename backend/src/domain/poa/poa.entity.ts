@@ -19,6 +19,7 @@ export class PoaEntity {
     private actividades: ActividadSnapshot[] = [],
 
     private fechaAprobado: Date | null = null,
+    private ultimaSecuenciaActividad: number = 0,
   ) {}
 
   // Funciones Auxiliares
@@ -68,9 +69,31 @@ export class PoaEntity {
     this.actividades = snapshots;
   }
 
+  public getUltimaSecuenciaActividad(): number {
+    return this.ultimaSecuenciaActividad;
+  }
+
+  public generarFolioNuevaActividad(): string {
+    this.ultimaSecuenciaActividad += 1;
+    return this.ultimaSecuenciaActividad.toString().padStart(2, '0');
+  }
+
   /**
    * Permiso Necesario: Permisos.GESTIONAR_TRABAJO_POA
    */
+
+  public validarEdicion(actorActual: Actor): void {
+    // Solo se puede editar si está en BORRADOR o en DEVUELTA
+    this.validarEstadoInicial([EstadosPoa.BORRADOR, EstadosPoa.DEVUELTA]);
+
+    //Solo el permiso de GestioanrPoa
+    const logAccion = 'Agregar o modificar actividades en la POA';
+    validarPermisoDeDominio(
+      actorActual,
+      Permisos.GESTIONAR_TRABAJO_POA,
+      logAccion,
+    );
+  }
 
   public enviarARevision(
     actorActual: Actor,
