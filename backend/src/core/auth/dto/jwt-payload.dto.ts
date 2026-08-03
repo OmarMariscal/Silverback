@@ -1,9 +1,11 @@
+// src/core/auth/dto/jwt-payload.dto.ts
 import { Roles } from '@domain/roles/roles.enum';
+import { Permisos } from '@domain/roles/permisos.enum';
 
 export class JwtPayloadDto {
   usuario_id: string;
   rol: Roles;
   centro_id?: string | null;
   perfil_id: string;
-  permisos_especiales?: boolean;
+  permisos_especiales?: Permisos[];
 }

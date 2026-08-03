@@ -6,6 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Roles } from '@domain/roles/roles.enum';
+import { Permisos } from '@domain/roles/permisos.enum';
 import { JwtPayloadDto } from '../auth/dto/jwt-payload.dto';
 
 @Injectable()
@@ -24,14 +25,20 @@ export class JwtAuthGuard implements CanActivate {
       const mockCentro =
         request.headers['x-mock-centro'] || 'uuid-centro-cucei';
 
+      // Transformamos el header en un arreglo de Permisos
       const mockPermisosHeader = request.headers['x-mock-permisos'];
-      const mockPermisos =
-        mockPermisosHeader !== undefined
-          ? mockPermisosHeader.toString() === 'true'
-          : true;
+      let mockPermisos: Permisos[] = [];
+
+      if (mockPermisosHeader) {
+        const headerValue = mockPermisosHeader.toString();
+        // Evitamos romper si por inercia se envía 'true' o 'false' en las pruebas
+        if (headerValue !== 'true' && headerValue !== 'false') {
+          // Si envían "PRESENTAR_POA,CREAR_POA", lo dividimos en un array
+          mockPermisos = headerValue.split(',') as Permisos[];
+        }
+      }
 
       // Creamos el Payload Falso simulando lo que tendría un JWT
-      // Dentro de tu JwtAuthGuard...
       const mockPayload: JwtPayloadDto = {
         usuario_id: `mock-user-${rolStr.toLowerCase()}`,
         rol: rolStr,
