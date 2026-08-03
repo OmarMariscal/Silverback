@@ -1,13 +1,17 @@
-import { Controller, Get } from '@nestjs/common';
-import { DashboardService } from './dashboard.service';
-import { ApiTags, ApiResponse, ApiOperation } from '@nestjs/swagger';
-import { DashboardDto } from './DTOS/response/dashboard.dto';
-import { DashboardJefaDto } from './DTOS/response/dashboard-jefa.dto';
-import { RezagoDataDto
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiResponse, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { DashboardService } from '../../application/dashboard.service';
+import { DashboardDto } from '../../dto/response/dashboard.dto';
+import { DashboardJefaDto } from '../../dto/response/dashboard-jefa.dto';
+import { RezagoDataDto } from '../../dto/response/dashboard-rezago-data.dto';
+import { JwtAuthGuard } from '@core/guards/jwt.guard';
+import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
+import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
 
- } from './DTOS/response/dashboard-rezago-data.dto';
 @ApiTags('Dashboard')
-@Controller('dashboard')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('api/v1/dashboard')
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
@@ -21,8 +25,10 @@ export class DashboardController {
     type: DashboardDto,
   })
   @Get('contralor/kpis')
-  getDashboardContralor(dashboardDto: DashboardDto) {
-    return dashboardDto;
+  public async getDashboardContralor(
+    @UsuarioActual() sesion: SesionUsuario
+  ): Promise<DashboardDto> {
+    return await this.dashboardService.getDashboardContralor(sesion.usuario_id);
   }
 
   @ApiOperation({
@@ -35,8 +41,8 @@ export class DashboardController {
     type: DashboardJefaDto
   })
   @Get('jefatura/kpis')
-  async getDashboardJefa(dashboardDto: DashboardJefaDto): Promise<DashboardJefaDto>{
-    return dashboardDto;
+  public async getDashboardJefa(): Promise<DashboardJefaDto> {
+    return await this.dashboardService.getDashboardJefa();
   }
 
   @ApiOperation({
@@ -49,8 +55,7 @@ export class DashboardController {
     type: RezagoDataDto
   })
   @Get('jefatura/rezago-centros')
-  getRezagoCentros(rezagoDto: RezagoDataDto){
-    return rezagoDto;
-
+  public async getCentrosConRezago(): Promise<RezagoDataDto> {
+    return await this.dashboardService.getRezagoCentros();
   }
 }

@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { CatalogoService } from './catalogo.service';
+import { CatalogoService } from './application/catalogo.service';
 import { ApiTags, ApiResponse, ApiQuery, ApiOperation } from '@nestjs/swagger';
 import { BancoActividadesDataDto } from './DTOS/response/catalogo-banco-data.dto';
 import { BancoIdDto } from './DTOS/response/catalogo-banco-id.dto';

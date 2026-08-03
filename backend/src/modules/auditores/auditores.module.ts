@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AuditoresService } from './auditores.service';
+import { AuditoresService } from './application/auditores.service';
 import { AuditoresController } from './auditores.controller';
 
 @Module({
