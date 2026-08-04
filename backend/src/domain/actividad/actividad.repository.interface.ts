@@ -12,7 +12,10 @@ export interface IActividadRepository {
    * @param id IIdentificador único de la Actividad
    * @returns La entidad hidratada o null si no existe
    */
-  obtenerPorId(id: string): Promise<ActividadEntity | null>;
+  obtenerPorId(
+    id: string,
+    tx?: TransactionHandle,
+  ): Promise<ActividadEntity | null>;
 
   /**
    * Recupera el Agregado Raíz completo (Actividad Padre + Subactividades Hijas)
@@ -37,7 +40,7 @@ export interface IActividadRepository {
    */
   guardar(
     actividad: ActividadEntity,
-    poaId: string,
+    poaId?: string,
     tx?: TransactionHandle,
   ): Promise<void>;
 

@@ -10,6 +10,8 @@ import { PrismaSubActividadQueryRepository } from './infrastructure/repositories
 import { PrismaActividadRepository } from './infrastructure/repositories/prisma-actividad.repository';
 import { ACTIVIDAD_REPOSITORY_TOKEN } from '@domain/actividad/actividad.repository.interface';
 import { SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN } from './application/ports/subactividaeds-query.repository.interface';
+import { ACTIVIDADES_QUERY_REPOSITORY_TOKEN } from './application/ports/actividades-query.repository.interface';
+import { PrismaActividadQueryRepository } from './infrastructure/repositories/prisma-actividad-query.repository';
 
 @Module({
   imports: [PrismaModule],
@@ -27,6 +29,10 @@ import { SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN } from './application/ports/subac
     {
       provide: ACTIVIDAD_REPOSITORY_TOKEN,
       useClass: PrismaActividadRepository,
+    },
+    {
+      provide: ACTIVIDADES_QUERY_REPOSITORY_TOKEN,
+      useClass: PrismaActividadQueryRepository,
     },
     {
       provide: SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN,

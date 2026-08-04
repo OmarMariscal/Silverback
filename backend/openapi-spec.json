@@ -554,7 +554,7 @@
     "/api/v1/actividades/{actividadId}/sub-actividades-poa": {
       "get": {
         "description": "Endpoint para obtener el listado de las sub-actividades de una actividad principal.",
-        "operationId": "SubactividadesController_getSubActividadePoas",
+        "operationId": "SubactividadesController_getSubActividadePoa",
         "parameters": [
           {
             "name": "actividadId",
@@ -2161,13 +2161,19 @@
                 "$ref": "#/components/schemas/TipoSubActividad"
               }
             ]
+          },
+          "banco_sub_actividad_id": {
+            "type": "string",
+            "description": "Atributo opcional para enlistar de qué banco de actividad viene",
+            "example": "banco_sub_actividad_uuid-1"
           }
         },
         "required": [
           "descripcion_tarea",
           "fecha_inicio",
           "fecha_termino",
-          "tipo"
+          "tipo",
+          "banco_sub_actividad_id"
         ]
       },
       "SubActividadesBulkRequest": {
@@ -2258,6 +2264,11 @@
               }
             ]
           },
+          "banco_sub_actividad_id": {
+            "type": "string",
+            "description": "Atributo opcional para enlistar de qué banco de actividad viene",
+            "example": "banco_sub_actividad_uuid-1"
+          },
           "id": {
             "type": "string",
             "description": "UUID de la sub-actividad: \nSi se incluye, el sistema la actualizará. \nSi se omite, el sistema creará una nueva.",
@@ -2268,7 +2279,8 @@
           "descripcion_tarea",
           "fecha_inicio",
           "fecha_termino",
-          "tipo"
+          "tipo",
+          "banco_sub_actividad_id"
         ]
       },
       "SubActividadesSyncRequest": {

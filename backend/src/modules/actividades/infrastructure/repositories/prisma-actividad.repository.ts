@@ -15,8 +15,13 @@ export class PrismaActividadRepository implements IActividadRepository {
     private readonly subActividadMapper: SubActividadMapper,
   ) {}
 
-  async obtenerPorId(id: string): Promise<ActividadEntity | null> {
-    const raw = await this.prisma.actividad.findUnique({
+  async obtenerPorId(
+    id: string,
+    tx?: TransactionHandle,
+  ): Promise<ActividadEntity | null> {
+    const client = (tx as Prisma.TransactionClient | undefined) ?? this.prisma;
+
+    const raw = await client.actividad.findUnique({
       where: { id },
       include: { sub_actividades: true, auditores: true },
     });
@@ -39,7 +44,7 @@ export class PrismaActividadRepository implements IActividadRepository {
 
   async guardar(
     actividad: ActividadEntity,
-    poaId: string,
+    poaId?: string,
     tx?: TransactionHandle,
   ): Promise<void> {
     const actividadid = actividad.getId();
@@ -58,16 +63,25 @@ export class PrismaActividadRepository implements IActividadRepository {
       clientePrisma: Prisma.TransactionClient,
     ) => {
       // A. Actualizar el agregado raíz (actividad)
-      await clientePrisma.actividad.upsert({
-        where: { id: actividadid },
-        create: {
-          ...dataPadre,
-          poa_id: poaId,
-        },
-        update: {
-          ...dataPadre,
-        },
-      });
+      if (poaId) {
+        // MODO CREACIÓN: Viene desde PoasService.
+        // Tenemos el poaId, así que usamos upsert de forma segura.
+        await clientePrisma.actividad.upsert({
+          where: { id: actividadid },
+          create: {
+            ...dataPadre,
+            poa_id: poaId,
+          },
+          update: dataPadre,
+        });
+      } else {
+        // MODO ACTUALIZACIÓN: Viene desde ActividadesService (ej. subactividades).
+        // La actividad YA EXISTE y no necesitamos el poaId para actualizarla.
+        await clientePrisma.actividad.update({
+          where: { id: actividadid },
+          data: dataPadre,
+        });
+      }
 
       // B. Sincronizar subactividades (Relación 1:N)
       await clientePrisma.subActividad.deleteMany({

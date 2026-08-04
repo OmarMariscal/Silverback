@@ -1,8 +1,10 @@
 import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
 import { HttpErrorDto } from '@core/common/dto/response/http-error.dto';
+import { RequirePermissions } from '@core/decorators/roles.decorador';
 import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
 import { JwtAuthGuard } from '@core/guards/jwt.guard';
 import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
+import { Permisos } from '@domain/roles/permisos.enum';
 import { ActividadesService } from '@modules/actividades/application/actividades.service';
 import { ActividadesPatchFichaTecnicaRequest } from '@modules/actividades/dto/request/actividades-path-ficha-tecnica.request.dto';
 import { ActividadesFichaTecnicaResponse } from '@modules/actividades/dto/response/actividades-ficha-tecnica.response.dto';
@@ -83,13 +85,14 @@ export class ActividadesController {
     type: HttpErrorDto,
     description: 'Actividad no encontrada',
   })
+  @RequirePermissions(Permisos.LEER_POA)
   @Get(':actividadId/ficha-tecnica')
-  getFichaTecnica(
+  async getFichaTecnica(
     @Param('actividadId') actUuid: string,
     @UsuarioActual() usuarioActual: SesionUsuario,
-  ): ActividadesFichaTecnicaResponse {
-    return this.actividadesService.getFichaTecnica(
-      usuarioActual.actor,
+  ): Promise<ActividadesFichaTecnicaResponse> {
+    return await this.actividadesService.getFichaTecnica(
+      usuarioActual,
       actUuid,
     );
   }

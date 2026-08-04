@@ -16,8 +16,8 @@ export class ActividadEntity {
     private readonly objetivosParticulares: string | null,
     private readonly metaDelProyecto: string | null,
     private readonly indicadores: string | null,
-    private readonly fechaInicio: Date | null,
-    private readonly fechaTermino: Date | null,
+    private fechaInicio: Date | null,
+    private fechaTermino: Date | null,
     private readonly esRezago: boolean,
 
     private auditoresIds: string[],
@@ -87,6 +87,32 @@ export class ActividadEntity {
     return null;
   }
 
+  private recalcularFechasBounds(): void {
+    if (this.subActividades.length === 0) {
+      // Si no hay sub-actividades, el proyecto vuelve a no tener fechas
+      this.fechaInicio = null;
+      this.fechaTermino = null;
+      return;
+    }
+
+    // Usamos la primera sub-actividad como punto de partida
+    let minFecha = this.subActividades[0].getFechaInicio();
+    let maxFecha = this.subActividades[0].getFechaConclusionEstimada();
+
+    // Iteramos para encontrar la fecha más antigua y la más lejana
+    for (const sub of this.subActividades) {
+      if (sub.getFechaInicio().getTime() < minFecha.getTime()) {
+        minFecha = sub.getFechaInicio();
+      }
+      if (sub.getFechaConclusionEstimada().getTime() > maxFecha.getTime()) {
+        maxFecha = sub.getFechaConclusionEstimada();
+      }
+    }
+
+    this.fechaInicio = minFecha;
+    this.fechaTermino = maxFecha;
+  }
+
   // Getter's
   public getId(): string {
     return this.id;
@@ -152,7 +178,11 @@ export class ActividadEntity {
         CodigoDeViolacion.ENTIDAD_REPETIDA,
       );
     }
+
+    //Agregar SubActividad
     this.subActividades.push(subActividad);
+    //Actualizar Fechas de INicio/Término
+    this.recalcularFechasBounds();
   }
 
   public eliminarSubActividad(
@@ -168,6 +198,8 @@ export class ActividadEntity {
     this.subActividades = this.subActividades.filter(
       (sub) => sub.getId() != subActividadId,
     );
+    //actualizar fechas
+    this.recalcularFechasBounds();
   }
 
   public asignarAuditor(actorActual: Actor, auditorId: string): void {
@@ -243,5 +275,12 @@ export class ActividadEntity {
 
     const avance = (actividadesConcluidas * 100) / this.subActividades.length;
     return Math.round(avance * 100) / 100;
+  }
+
+  public generarNumeroOrdenSubactividad(): string {
+    const siguienteIndice = this.subActividades.length + 1;
+    const folioNumerico = parseInt(this.folio, 10); // Convierte "03" a 3
+
+    return `${folioNumerico}.${siguienteIndice}`;
   }
 }

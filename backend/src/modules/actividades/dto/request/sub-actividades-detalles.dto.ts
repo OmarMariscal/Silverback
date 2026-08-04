@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsDateString, IsNotEmpty, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsDateString,
+  IsNotEmpty,
+  IsEnum,
+  IsOptional,
+  IsUUID,
+} from 'class-validator';
 import { TipoSubActividad } from '@domain/actividad/tipos-de-actividades.enum';
 
 export class SubActividadDetalles {
@@ -38,4 +45,13 @@ export class SubActividadDetalles {
     message: `El tipo debe ser una de los siguientes: ${Object.values(TipoSubActividad).join(', ')}`,
   })
   tipo!: TipoSubActividad;
+
+  @ApiProperty({
+    description:
+      'Atributo opcional para enlistar de qué banco de actividad viene',
+    example: 'banco_sub_actividad_uuid-1',
+  })
+  @IsOptional()
+  @IsUUID('4')
+  banco_sub_actividad_id?: string;
 }

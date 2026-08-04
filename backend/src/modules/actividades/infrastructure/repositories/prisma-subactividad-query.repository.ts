@@ -397,6 +397,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
         tipo: true,
         fecha_inicio: true,
         fecha_termino: true,
+        semanas_totales: true,
       },
     });
 
@@ -407,6 +408,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       tipo: traducirTipoSubActividadADominio(sub.tipo),
       fecha_inicio: sub.fecha_inicio,
       fecha_termino: sub.fecha_termino,
+      semanas: sub.semanas_totales,
     }));
   }
 

@@ -33,10 +33,15 @@ import { SubActividadesSupervicionGetResponse } from '@modules/actividades/dto/r
 import { PaginacionQueryDto } from '@core/common/dto/request/paginacion.query.dto';
 import { SubActividadesDirectorioResponse } from '@modules/actividades/dto/response/actividades-directorio.response.dto';
 import { SubActividadesDirectorioQuery } from '@modules/actividades/dto/request/actividades-directorio.query.dto';
+import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
+import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
+import { PermisosGuard } from '@core/guards/roles.guard';
+import { Permisos } from '@domain/roles/permisos.enum';
+import { RequirePermissions } from '@core/decorators/roles.decorador';
 
 @ApiTags('Subactividades')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermisosGuard)
 @Controller('actividades') // UUsa el mismo destino de endpoints al ser considerado un 'hijo' de las actividades principales
 export class SubactividadesController {
   constructor(private readonly subactividadesService: SubactividadesService) {}
@@ -135,11 +140,16 @@ export class SubactividadesController {
     description: 'Actividad no encontrada',
     type: HttpErrorDto,
   })
+  @RequirePermissions(Permisos.LEER_POA)
   @Get(':actividadId/sub-actividades-poa')
-  getSubActividadePoas(
+  async getSubActividadePoa(
+    @UsuarioActual() usuarioActual: SesionUsuario,
     @Param('actividadId') actividadId: string,
-  ): SubActividadesPoaResponse {
-    return this.subactividadesService.getSubActividadesPoa(actividadId);
+  ): Promise<SubActividadesPoaResponse> {
+    return await this.subactividadesService.getSubActividadesPoa(
+      usuarioActual,
+      actividadId,
+    );
   }
 
   @ApiOperation({
@@ -217,12 +227,15 @@ export class SubactividadesController {
     description: 'Rol no autorizado para esta operación',
     type: HttpErrorDto,
   })
+  @RequirePermissions(Permisos.GESTIONAR_TRABAJO_POA)
   @Post(':actividadId/sub-actividades/bulk')
-  postSubActividadesBulk(
+  async postSubActividadesBulk(
+    @UsuarioActual() usuarioActual: SesionUsuario,
     @Param('actividadId') actUuid: string,
     @Body() bulkRequest: SubActividadesBulkRequest,
-  ): Promise<SubActividadesBulkResponse> | SubActividadesBulkResponse {
-    return this.subactividadesService.postSubActividadesBulk(
+  ): Promise<SubActividadesBulkResponse> {
+    return await this.subactividadesService.postSubActividadesBulk(
+      usuarioActual,
       actUuid,
       bulkRequest,
     );

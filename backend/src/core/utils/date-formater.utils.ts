@@ -15,4 +15,9 @@ export class DateFormatterUtil {
 
     return formato.charAt(0).toUpperCase() + formato.slice(1);
   }
+
+  static toAnioMesDia(fecha: Date | null | undefined): string {
+    if (!fecha) return '-';
+    return fecha.toISOString().split('T')[0];
+  }
 }

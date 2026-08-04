@@ -7,7 +7,6 @@ import {
   Controller,
   Get,
   HttpStatus,
-  NotImplementedException,
   Param,
   Post,
   Res,
