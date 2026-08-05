@@ -1,20 +1,22 @@
-import { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
 import type { IUnitOfWork } from '@core/interfaces/unit-of-work.interface';
 import { UNIT_OF_WORK_TOKEN } from '@core/interfaces/unit-of-work.interface';
+import { ActividadEntity } from '@domain/actividad/actividad.entity';
 import type { IActividadRepository } from '@domain/actividad/actividad.repository.interface';
 import { ACTIVIDAD_REPOSITORY_TOKEN } from '@domain/actividad/actividad.repository.interface';
+import { RecursoNoEncontradoException } from '@domain/excepciones/recurso-no-encontrado.exception';
 import type { IPoaRepository } from '@domain/poa/poa.repository.interface';
 import { POA_REPOSITORY_TOKEN } from '@domain/poa/poa.repository.interface';
-import { Inject, Injectable } from '@nestjs/common';
-import { CrearActividadesDto } from '../dto/request/poa-actividades.dto';
+import { TransactionHandle } from '@domain/shared/transaction.interface';
+import { Inject, Injectable, NotImplementedException } from '@nestjs/common';
 import { CrearActividadesResponseDto } from '../dto/response/poa-actividades.response.dto';
 import { PoaActualDto } from '../dto/response/poa-actual.dto';
 import { PoaResponseMapper } from '../infrastructure/mappers/poa-response.mapper';
+import { AgregarActividadCommand } from './ports/commands/agregar-actividad.command';
+import { CancelarEnvioCommand } from './ports/commands/cancelar-envio.command';
+import { PresentarPoaCommand } from './ports/commands/presentar-poa.command';
 import type { IPoaQueryRepository } from './ports/poa-query.repository.interface';
 import { POA_QUERY_REPOSITORY_TOKEN } from './ports/poa-query.repository.interface';
-import { ActividadEntity } from '@domain/actividad/actividad.entity';
-import { TransactionHandle } from '@domain/shared/transaction.interface';
-import { RecursoNoEncontradoException } from '@domain/excepciones/recurso-no-encontrado.exception';
+import { GetPoaActualQuery } from './ports/queries/get-poa-actual.query';
 
 @Injectable()
 export class PoasService {
@@ -29,10 +31,12 @@ export class PoasService {
     private readonly unitOfWork: IUnitOfWork,
   ) {}
 
-  async getPoaActual(usuario: SesionUsuario): Promise<PoaActualDto> {
+  async getPoaActual(query: GetPoaActualQuery): Promise<PoaActualDto> {
+    //Deconstrucción del Query
+    const { usuarioActual } = query;
     //Obtener del repositorio de querys la información de la base de datos
     const poaActual = await this.poaQueryRepository.obtenerMiPoaActual({
-      usuarioUuid: usuario.usuario_id,
+      usuarioUuid: usuarioActual.usuario_id,
     });
 
     //Si no se encuentra
@@ -40,7 +44,7 @@ export class PoasService {
       throw new RecursoNoEncontradoException(
         'POA',
         'Única',
-        usuario.usuario_id,
+        usuarioActual.usuario_id,
       );
     }
     // Retorno del DTO vía el mapper
@@ -48,15 +52,16 @@ export class PoasService {
   }
 
   async agregarActividad(
-    poaId: string,
-    usuario: SesionUsuario,
-    dto: CrearActividadesDto,
+    command: AgregarActividadCommand,
   ): Promise<CrearActividadesResponseDto> {
+    //Deconstruir el Command
+    const { poaId, usuario, dto } = command;
+
     // Iniciaqmos la transacci'on con la Unit of Wortk
     return this.unitOfWork.ejecutarTransaccion(
       async (tx: TransactionHandle) => {
         // 1. Obtener y autorizar desde el agregado Raíz (PoaEntity)
-        const poa = await this.poaRepository.obtenerPorId(poaId);
+        const poa = await this.poaRepository.obtenerPorId(poaId, tx);
 
         if (!poa)
           throw new RecursoNoEncontradoException(
@@ -101,5 +106,19 @@ export class PoasService {
         return PoaResponseMapper.toPostActividadPoa(nuevaActividad);
       },
     );
+  }
+
+  presentarPoa(command: PresentarPoaCommand) {
+    // Deconstrucción del command
+    const { usuarioActual, poaId } = command;
+
+    throw new NotImplementedException();
+  }
+
+  cancelarEnvio(command: CancelarEnvioCommand) {
+    // Deconstrucción del command
+    const { usuarioActual, poaId } = command;
+
+    throw new NotImplementedException();
   }
 }

@@ -2,7 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class SubActividadesProximasAVencerQuery {
+export class SubActividadesProximasAVencerQueryDto {
   @ApiPropertyOptional({
     example: 4,
     description: 'Cantidad máxima de actividades a retornar para la interfaz',

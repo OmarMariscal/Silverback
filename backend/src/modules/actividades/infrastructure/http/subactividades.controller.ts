@@ -1,3 +1,16 @@
+import { PaginacionQueryDto } from '@core/common/dto/request/paginacion.query.dto';
+import { HttpErrorDto } from '@core/common/dto/response/http-error.dto';
+import { RequirePermissions } from '@core/decorators/roles.decorador';
+import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
+import { JwtAuthGuard } from '@core/guards/jwt.guard';
+import { PermisosGuard } from '@core/guards/roles.guard';
+import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
+import { Permisos } from '@domain/roles/permisos.enum';
+import { SubActividadesDirectorioQuery } from '@modules/actividades/dto/request/actividades-directorio.query.dto';
+import { SubActividadesGetQueryDto } from '@modules/actividades/dto/request/actividades-get.query.dto';
+import { SubActividadesDirectorioResponse } from '@modules/actividades/dto/response/actividades-directorio.response.dto';
+import { SubActividadesGetResponse } from '@modules/actividades/dto/response/actividades-get.response.dto';
+import { SubActividadesSupervicionGetResponse } from '@modules/actividades/dto/response/actividades-supervision-get.response.dto';
 import {
   Body,
   Controller,
@@ -16,28 +29,15 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@core/guards/jwt.guard';
 import { SubactividadesService } from '../../application/subactividades.service';
 import { SubActividadesBulkRequest } from '../../dto/request/sub-actividadedes-bulk.request.dto';
-import { SubActividadesProximasAVencerQuery } from '../../dto/request/sub-actividades-proximas-a-vencer.query.dto';
+import { SubActividadesProximasAVencerQueryDto } from '../../dto/request/sub-actividades-proximas-a-vencer.query.dto';
 import { SubActividadesSyncRequest } from '../../dto/request/sub-actividades-sync.request.dto';
 import { SubActividadesBulkResponse } from '../../dto/response/sub-actividades-bulk.response.dto';
 import { SubActividadesPoaResponse } from '../../dto/response/sub-actividades-poa.response.dto';
 import { SubActividadesProximasVencerResponse } from '../../dto/response/sub-actividades-proximas-a-vencer-get.response.dto';
 import { SubActividadesSelectResponse } from '../../dto/response/sub-actividades-select.response.dto';
 import { SubActividadesSyncResponse } from '../../dto/response/sub-actividades-sync.response.dto';
-import { HttpErrorDto } from '@core/common/dto/response/http-error.dto';
-import { SubActividadesGetResponse } from '@modules/actividades/dto/response/actividades-get.response.dto';
-import { SubActividadesGetQuery } from '@modules/actividades/dto/request/actividades-get.query.dto';
-import { SubActividadesSupervicionGetResponse } from '@modules/actividades/dto/response/actividades-supervision-get.response.dto';
-import { PaginacionQueryDto } from '@core/common/dto/request/paginacion.query.dto';
-import { SubActividadesDirectorioResponse } from '@modules/actividades/dto/response/actividades-directorio.response.dto';
-import { SubActividadesDirectorioQuery } from '@modules/actividades/dto/request/actividades-directorio.query.dto';
-import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
-import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
-import { PermisosGuard } from '@core/guards/roles.guard';
-import { Permisos } from '@domain/roles/permisos.enum';
-import { RequirePermissions } from '@core/decorators/roles.decorador';
 
 @ApiTags('Subactividades')
 @ApiBearerAuth()
@@ -62,10 +62,11 @@ export class SubactividadesController {
     description: 'Rol no autorizado',
   })
   @Get()
-  getActividades(
-    @Query() queryActividades: SubActividadesGetQuery,
+  getSubActividades(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Query() dto: SubActividadesGetQueryDto,
   ): SubActividadesGetResponse {
-    return this.subactividadesService.getSubActividades(queryActividades);
+    return this.subactividadesService.getSubActividades({ usuarioActual, dto });
   }
 
   @ApiOperation({
@@ -85,13 +86,15 @@ export class SubactividadesController {
   })
   @Get('supervision')
   getActividadesSupervision(
-    @Query() queryPaginacion: PaginacionQueryDto,
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Query() paginacionDto: PaginacionQueryDto,
   ):
     | Promise<SubActividadesSupervicionGetResponse>
     | SubActividadesSupervicionGetResponse {
-    return this.subactividadesService.getSubActividadesSupervicion(
-      queryPaginacion,
-    );
+    return this.subactividadesService.getSubActividadesSupervicion({
+      usuarioActual,
+      paginacionDto,
+    });
   }
 
   @ApiOperation({
@@ -146,10 +149,10 @@ export class SubactividadesController {
     @UsuarioActual() usuarioActual: SesionUsuario,
     @Param('actividadId') actividadId: string,
   ): Promise<SubActividadesPoaResponse> {
-    return await this.subactividadesService.getSubActividadesPoa(
+    return await this.subactividadesService.getSubActividadesPoa({
       usuarioActual,
       actividadId,
-    );
+    });
   }
 
   @ApiOperation({
@@ -176,9 +179,13 @@ export class SubactividadesController {
   })
   @Get(':actividadId/sub-actividades-select')
   getSubActividadesSelect(
+    @UsuarioActual() usuarioActual: SesionUsuario,
     @Param('actividadId') actividadId: string,
   ): SubActividadesSelectResponse {
-    return this.subactividadesService.getSubActividadesSelect(actividadId);
+    return this.subactividadesService.getSubActividadesSelect({
+      usuarioActual,
+      actividadId,
+    });
   }
 
   @ApiOperation({
@@ -198,11 +205,15 @@ export class SubactividadesController {
   })
   @Get('proximas-vencer')
   getSubActividadesProximasAVencer(
-    @Query() query: SubActividadesProximasAVencerQuery,
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Query() dto: SubActividadesProximasAVencerQueryDto,
   ):
     | Promise<SubActividadesProximasVencerResponse>
     | SubActividadesProximasVencerResponse {
-    return this.subactividadesService.getSubActividadesProximasAVencer(query);
+    return this.subactividadesService.getSubActividadesProximasAVencer({
+      usuarioActual,
+      dto,
+    });
   }
 
   @ApiOperation({
@@ -231,14 +242,14 @@ export class SubactividadesController {
   @Post(':actividadId/sub-actividades/bulk')
   async postSubActividadesBulk(
     @UsuarioActual() usuarioActual: SesionUsuario,
-    @Param('actividadId') actUuid: string,
-    @Body() bulkRequest: SubActividadesBulkRequest,
+    @Param('actividadId') actividadId: string,
+    @Body() dto: SubActividadesBulkRequest,
   ): Promise<SubActividadesBulkResponse> {
-    return await this.subactividadesService.postSubActividadesBulk(
+    return await this.subactividadesService.postSubActividadesBulk({
       usuarioActual,
-      actUuid,
-      bulkRequest,
-    );
+      actividadId,
+      dto,
+    });
   }
 
   @ApiOperation({
@@ -270,12 +281,14 @@ export class SubactividadesController {
   })
   @Put(':actividadId/sub-actividades/sync')
   putSubActividadesSync(
-    @Param('actividadId') actUuid: string,
-    @Body() subActividades: SubActividadesSyncRequest,
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('actividadId') actividadId: string,
+    @Body() dto: SubActividadesSyncRequest,
   ): SubActividadesSyncResponse {
-    return this.subactividadesService.putSubActividadesSync(
-      actUuid,
-      subActividades,
-    );
+    return this.subactividadesService.putSubActividadesSync({
+      usuarioActual,
+      actividadId,
+      dto,
+    });
   }
 }

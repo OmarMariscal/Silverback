@@ -1,6 +1,9 @@
+import { RequirePermissions } from '@core/decorators/roles.decorador';
 import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
 import { JwtAuthGuard } from '@core/guards/jwt.guard';
+import { PermisosGuard } from '@core/guards/roles.guard';
 import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
+import { Permisos } from '@domain/roles/permisos.enum';
 import { PoasService } from '@modules/poas/application/poas.service';
 import {
   Body,
@@ -24,9 +27,6 @@ import { PresentarPoasDto } from '../../dto/request/poas-presentar.dto';
 import { CrearActividadesResponseDto } from '../../dto/response/poa-actividades.response.dto';
 import { PoaActualDto } from '../../dto/response/poa-actual.dto';
 import { PresentarPoasResponseErrorDto } from '../../dto/response/poas-presentar-response.dto';
-import { PermisosGuard } from '@core/guards/roles.guard';
-import { RequirePermissions } from '@core/decorators/roles.decorador';
-import { Permisos } from '@domain/roles/permisos.enum';
 
 @ApiTags('POAs')
 @ApiBearerAuth()
@@ -47,9 +47,9 @@ export class PoasController {
   @RequirePermissions(Permisos.LEER_POA)
   @Get('/mi-poa-actual')
   async getPoaActual(
-    @UsuarioActual() usuario: SesionUsuario,
+    @UsuarioActual() usuarioActual: SesionUsuario,
   ): Promise<PoaActualDto> {
-    return await this.poaService.getPoaActual(usuario);
+    return await this.poaService.getPoaActual({ usuarioActual });
   }
 
   @ApiOperation({
@@ -64,15 +64,15 @@ export class PoasController {
   @RequirePermissions(Permisos.CREAR_POA)
   @Post(':poaid/actividades')
   async agregarActividades(
-    @Param('poaid') id: string,
-    @Body() crearActividadesDto: CrearActividadesDto,
+    @Param('poaid') poaId: string,
+    @Body() dto: CrearActividadesDto,
     @UsuarioActual() usuario: SesionUsuario,
   ): Promise<CrearActividadesResponseDto> {
-    return await this.poaService.agregarActividad(
-      id,
+    return await this.poaService.agregarActividad({
+      poaId,
       usuario,
-      crearActividadesDto,
-    );
+      dto,
+    });
   }
 
   @ApiOperation({
@@ -89,7 +89,13 @@ export class PoasController {
     status: HttpStatus.OK,
     type: PresentarPoasDto,
   })
-  presentarPoa(@Param('poaid') id: string, @Res() response) {}
+  presentarPoa(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('poaid') poaId: string,
+    @Res() response,
+  ) {
+    return this.poaService.presentarPoa({ usuarioActual, poaId });
+  }
 
   @ApiOperation({
     summary: 'Cancela el envio de la POA',
@@ -101,5 +107,10 @@ export class PoasController {
     type: CancelarPoaDataDto,
   })
   @Post(':poaid/cancelar-envio')
-  cancelarEnvio(@Param('poaid') id: string) {}
+  cancelarEnvio(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('poaid') poaId: string,
+  ) {
+    return this.poaService.cancelarEnvio({ usuarioActual, poaId });
+  }
 }

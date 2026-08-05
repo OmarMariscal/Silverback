@@ -58,9 +58,10 @@ export class ActividadesController {
   })
   @Get(':actividadId/resumen')
   getResumen(
-    @Param('actividadId') actUuid: string,
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('actividadId') actividadId: string,
   ): Promise<ActividadesResumenResponse> | ActividadesResumenResponse {
-    return this.actividadesService.getResumen(actUuid);
+    return this.actividadesService.getResumen({ usuarioActual, actividadId });
   }
 
   @ApiOperation({
@@ -88,13 +89,13 @@ export class ActividadesController {
   @RequirePermissions(Permisos.LEER_POA)
   @Get(':actividadId/ficha-tecnica')
   async getFichaTecnica(
-    @Param('actividadId') actUuid: string,
+    @Param('actividadId') actividadId: string,
     @UsuarioActual() usuarioActual: SesionUsuario,
   ): Promise<ActividadesFichaTecnicaResponse> {
-    return await this.actividadesService.getFichaTecnica(
+    return await this.actividadesService.getFichaTecnica({
       usuarioActual,
-      actUuid,
-    );
+      actividadId,
+    });
   }
 
   @ApiOperation({
@@ -126,10 +127,15 @@ export class ActividadesController {
   })
   @Patch(':actividadId/ficha-tecnica')
   patchFichaTecnica(
-    @Param('actividadId') actUuid: string,
-    @Body() fichaTecnica: ActividadesPatchFichaTecnicaRequest,
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('actividadId') actividadId: string,
+    @Body() dto: ActividadesPatchFichaTecnicaRequest,
   ): ActividadesResumenResponse {
-    return this.actividadesService.patchFichaTecnica(actUuid, fichaTecnica);
+    return this.actividadesService.patchFichaTecnica({
+      usuarioActual,
+      actividadId,
+      dto,
+    });
   }
 
   @ApiOperation({
@@ -156,8 +162,12 @@ export class ActividadesController {
   })
   @Delete(':actividadId')
   deleteActividad(
+    @UsuarioActual() usuarioActual: SesionUsuario,
     @Param('actividadId') actividadId: string,
   ): EliminacionCorrecta {
-    return this.actividadesService.deleteActividad(actividadId);
+    return this.actividadesService.deleteActividad({
+      usuarioActual,
+      actividadId,
+    });
   }
 }

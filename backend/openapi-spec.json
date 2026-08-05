@@ -279,7 +279,7 @@
     "/api/v1/actividades": {
       "get": {
         "description": "Obtener un array con el data de las sub-actividades con la posibilidad para ciertos roles para filtrar por auditorID",
-        "operationId": "SubactividadesController_getActividades",
+        "operationId": "SubactividadesController_getSubActividades",
         "parameters": [
           {
             "name": "auditor_id",
