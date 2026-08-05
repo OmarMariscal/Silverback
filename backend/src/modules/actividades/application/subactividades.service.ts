@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { SubActividadesBulkResponse } from '../dto/response/sub-actividades-bulk.response.dto';
 import { SubActividadesBulkRequest } from '../dto/request/sub-actividadedes-bulk.request.dto';
 import { SubActividadesSyncResponse } from '../dto/response/sub-actividades-sync.response.dto';
@@ -23,6 +23,7 @@ import { TransactionHandle } from '@domain/shared/transaction.interface';
 import { SubActividadResponseMapper } from '../infrastructure/mappers/subactividad-response.mapper';
 import { SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN } from './ports/subactividaeds-query.repository.interface';
 import type { ISubactividadesQueryRepository } from './ports/subactividaeds-query.repository.interface';
+import { RecursoNoEncontradoException } from '@domain/excepciones/recurso-no-encontrado.exception';
 
 @Injectable()
 export class SubactividadesService {
@@ -66,8 +67,10 @@ export class SubactividadesService {
 
     // Validar que se encontró
     if (!actividadQuery) {
-      throw new NotFoundException(
-        `Actividad con ID ${actividadId} para el usuario ${usuarioActual.usuario_id} no encontrada`,
+      throw new RecursoNoEncontradoException(
+        'Actividad',
+        actividadId,
+        usuarioActual.usuario_id,
       );
     }
 
@@ -92,8 +95,10 @@ export class SubactividadesService {
           tx,
         );
         if (!actividad)
-          throw new NotFoundException(
-            `La actividad con ID ${actUuid} no existe`,
+          throw new RecursoNoEncontradoException(
+            'Actividad',
+            actUuid,
+            usuarioActual.usuario_id,
           );
 
         const nuevasSubActividades: SubactividadEntity[] = [];

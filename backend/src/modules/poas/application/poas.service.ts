@@ -5,7 +5,7 @@ import type { IActividadRepository } from '@domain/actividad/actividad.repositor
 import { ACTIVIDAD_REPOSITORY_TOKEN } from '@domain/actividad/actividad.repository.interface';
 import type { IPoaRepository } from '@domain/poa/poa.repository.interface';
 import { POA_REPOSITORY_TOKEN } from '@domain/poa/poa.repository.interface';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CrearActividadesDto } from '../dto/request/poa-actividades.dto';
 import { CrearActividadesResponseDto } from '../dto/response/poa-actividades.response.dto';
 import { PoaActualDto } from '../dto/response/poa-actual.dto';
@@ -14,6 +14,7 @@ import type { IPoaQueryRepository } from './ports/poa-query.repository.interface
 import { POA_QUERY_REPOSITORY_TOKEN } from './ports/poa-query.repository.interface';
 import { ActividadEntity } from '@domain/actividad/actividad.entity';
 import { TransactionHandle } from '@domain/shared/transaction.interface';
+import { RecursoNoEncontradoException } from '@domain/excepciones/recurso-no-encontrado.exception';
 
 @Injectable()
 export class PoasService {
@@ -36,8 +37,10 @@ export class PoasService {
 
     //Si no se encuentra
     if (!poaActual) {
-      throw new NotFoundException(
-        `No se pudo encontrar un POA activo o en progreso para el actual año fiscal`,
+      throw new RecursoNoEncontradoException(
+        'POA',
+        'Única',
+        usuario.usuario_id,
       );
     }
     // Retorno del DTO vía el mapper
@@ -56,7 +59,11 @@ export class PoasService {
         const poa = await this.poaRepository.obtenerPorId(poaId);
 
         if (!poa)
-          throw new NotFoundException(`El POA con ID ${poaId} no existe`);
+          throw new RecursoNoEncontradoException(
+            'POA',
+            poaId,
+            usuario.usuario_id,
+          );
 
         poa.validarEdicion(usuario.actor);
 

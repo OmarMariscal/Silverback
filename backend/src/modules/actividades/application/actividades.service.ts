@@ -1,7 +1,7 @@
 import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
 import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
 import { PrismaService } from '@database/prisma.service';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ActividadesPatchFichaTecnicaRequest } from '../dto/request/actividades-path-ficha-tecnica.request.dto';
 import { ActividadesFichaTecnicaResponse } from '../dto/response/actividades-ficha-tecnica.response.dto';
 import { ActividadesResumenResponse } from '../dto/response/actividades-resumen.response.dto';
@@ -10,6 +10,7 @@ import type { IActividadesQueryRepository } from './ports/actividades-query.repo
 import { ACTIVIDADES_QUERY_REPOSITORY_TOKEN } from './ports/actividades-query.repository.interface';
 import { RequirePermissions } from '@core/decorators/roles.decorador';
 import { Permisos } from '@domain/roles/permisos.enum';
+import { RecursoNoEncontradoException } from '@domain/excepciones/recurso-no-encontrado.exception';
 
 @Injectable()
 export class ActividadesService {
@@ -37,8 +38,10 @@ export class ActividadesService {
 
     // Si no se encuentra
     if (!actividadActual) {
-      throw new NotFoundException(
-        `No se pudo encontrar la Actividad con ID ${actUuid} del usuario con ID ${usuarioActual.usuario_id}`,
+      throw new RecursoNoEncontradoException(
+        'Actividad',
+        actUuid,
+        usuarioActual.usuario_id,
       );
     }
 
