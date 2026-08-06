@@ -1,4 +1,10 @@
 import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
+<<<<<<< HEAD
+=======
+import { KpiRiesgoDistribucion } from './interfaces/kpi-distribucion-riesgo.interface';
+import { KpiDetalleRiesgo } from './interfaces/kpi-detalle-riesgo.interface';
+import { SemaforoService } from '@domain/semaforo/semaforo-service';
+>>>>>>> 1f9c507 (fix(backend): Adaptación del KPI y Semáforo Service para que trabajen con datos puros y no con entidades por eficiencia)
 import { EstadosSemaforo } from '@domain/semaforo/estados-semaforo-enum';
 import { SemaforoService } from '@domain/semaforo/semaforo-service';
 import { KpiSubActividadPayLoad } from './interfaces/kpi-actividad-payload.interface';
@@ -42,6 +48,7 @@ export class CalculadoraKpiService {
     return flujo;
   }
 
+<<<<<<< HEAD
   // -- 2. Métricas del Semáforo (Riesgo) --
   public static calcularSemaforos(
     subActividades: KpiSubActividadPayLoad[],
@@ -64,10 +71,29 @@ export class CalculadoraKpiService {
       if (color === EstadosSemaforo.A_TIEMPO) semaforos.aTiempo++;
       else if (color === EstadosSemaforo.PRECAUCION) semaforos.alerta++;
       else if (color === EstadosSemaforo.CRITICO) semaforos.critico++;
+=======
+  public static generarDistribucionPorRiesgo(
+    subActividades: SubactividadEntity[],
+  ): KpiRiesgoDistribucion[] {
+    if (subActividades.length === 0) {
+      return [];
+    }
+
+    const total = subActividades.length;
+
+    //Agrupamos y contamos
+    const conteo = new Map<EstadosSemaforo, number>();
+
+    for (const sub of subActividades) {
+      // ✔️ CORRECCIÓN: Pasamos sub.getFechaInicio() en lugar de 'sub'
+      const color = SemaforoService.calcularSemaforo(sub.getFechaInicio());
+      conteo.set(color, (conteo.get(color) || 0) + 1);
+>>>>>>> 1f9c507 (fix(backend): Adaptación del KPI y Semáforo Service para que trabajen con datos puros y no con entidades por eficiencia)
     }
     return semaforos;
   }
 
+<<<<<<< HEAD
   // -- 3. Taqrjetas: BANDEJA CONTRALOR --
   public static calcularBandejaContralor(
     subActividades: KpiSubActividadPayLoad[],
@@ -81,6 +107,29 @@ export class CalculadoraKpiService {
     }
     return { devueltas, listasEmpezar };
   }
+=======
+  // ✔️ LIMPIEZA: Quitamos semaforoService de los parámetros, ya que sus métodos son estáticos
+  public static obtenerRadarRiesgos(
+    subActividades: SubactividadEntity[],
+  ): KpiDetalleRiesgo[] {
+    if (subActividades.length === 0) {
+      return [];
+    }
+
+    const resultado: KpiDetalleRiesgo[] = subActividades.map((sub) => ({
+      folio: sub.getNumeroOrden(),
+      descripcion: sub.getDescripcion(), // Asumo que el getter se llama así o getDescripcionTarea()
+      subActividadId: sub.getId(),
+      tipoSubActividad: sub.getTipo(),
+      fechaLimite: sub.getFechaConclusionEstimada(),
+
+      // ✔️ CORRECCIÓN: Extraemos las fechas específicas para cada cálculo
+      estadoSemaforo: SemaforoService.calcularSemaforo(sub.getFechaInicio()),
+      etiquetaAlerta: SemaforoService.obtenerEtiquetaVencimiento(
+        sub.getFechaConclusionEstimada(),
+      ),
+    }));
+>>>>>>> 1f9c507 (fix(backend): Adaptación del KPI y Semáforo Service para que trabajen con datos puros y no con entidades por eficiencia)
 
   // -- 4. Tarjetas: PENDIENTES JEFATURA --
   public static calcularPendientesJefatura(
