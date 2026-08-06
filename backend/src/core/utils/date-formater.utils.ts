@@ -18,6 +18,11 @@ export class DateFormatterUtil {
 
   static toAnioMesDia(fecha: Date | null | undefined): string {
     if (!fecha) return '-';
-    return fecha.toISOString().split('T')[0];
+
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+
+    return `${anio}-${mes}-${dia}`;
   }
 }

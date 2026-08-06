@@ -2172,8 +2172,7 @@
           "descripcion_tarea",
           "fecha_inicio",
           "fecha_termino",
-          "tipo",
-          "banco_sub_actividad_id"
+          "tipo"
         ]
       },
       "SubActividadesBulkRequest": {
@@ -2279,8 +2278,7 @@
           "descripcion_tarea",
           "fecha_inicio",
           "fecha_termino",
-          "tipo",
-          "banco_sub_actividad_id"
+          "tipo"
         ]
       },
       "SubActividadesSyncRequest": {

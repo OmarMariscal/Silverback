@@ -6,7 +6,7 @@ import { JwtAuthGuard } from '@core/guards/jwt.guard';
 import { PermisosGuard } from '@core/guards/roles.guard';
 import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
 import { Permisos } from '@domain/roles/permisos.enum';
-import { SubActividadesDirectorioQuery } from '@modules/actividades/dto/request/actividades-directorio.query.dto';
+import { SubActividadesDirectorioQueryDto } from '@modules/actividades/dto/request/actividades-directorio.query.dto';
 import { SubActividadesGetQueryDto } from '@modules/actividades/dto/request/actividades-get.query.dto';
 import { SubActividadesDirectorioResponse } from '@modules/actividades/dto/response/actividades-directorio.response.dto';
 import { SubActividadesGetResponse } from '@modules/actividades/dto/response/actividades-get.response.dto';
@@ -85,13 +85,11 @@ export class SubactividadesController {
     description: 'Rol no autorizado',
   })
   @Get('supervision')
-  getActividadesSupervision(
+  async getActividadesSupervision(
     @UsuarioActual() usuarioActual: SesionUsuario,
     @Query() paginacionDto: PaginacionQueryDto,
-  ):
-    | Promise<SubActividadesSupervicionGetResponse>
-    | SubActividadesSupervicionGetResponse {
-    return this.subactividadesService.getSubActividadesSupervicion({
+  ): Promise<SubActividadesSupervicionGetResponse> {
+    return await this.subactividadesService.getSubActividadesSupervision({
       usuarioActual,
       paginacionDto,
     });
@@ -112,13 +110,20 @@ export class SubactividadesController {
     type: HttpErrorDto,
     description: 'Rol no autorizado',
   })
+  @RequirePermissions(
+    Permisos.VER_DASHBOARD_JEFATURA,
+    Permisos.VER_DASHBOARD_CONTRALOR,
+    Permisos.VER_DASHBOARD_AUDITOR,
+  )
   @Get('directorio')
-  getActividadesDirectorio(
-    @Query() queryParam: SubActividadesDirectorioQuery,
-  ):
-    | Promise<SubActividadesDirectorioResponse>
-    | SubActividadesDirectorioResponse {
-    return this.subactividadesService.getSubActividadesDirectorio(queryParam);
+  async getActividadesDirectorio(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Query() dto: SubActividadesDirectorioQueryDto,
+  ): Promise<SubActividadesDirectorioResponse> {
+    return await this.subactividadesService.getSubActividadesDirectorio({
+      usuarioActual,
+      dto,
+    });
   }
 
   @ApiOperation({
@@ -177,12 +182,13 @@ export class SubactividadesController {
     description: 'Actividad no encontrada',
     type: HttpErrorDto,
   })
+  @RequirePermissions(Permisos.CREAR_POA)
   @Get(':actividadId/sub-actividades-select')
-  getSubActividadesSelect(
+  async getSubActividadesSelect(
     @UsuarioActual() usuarioActual: SesionUsuario,
     @Param('actividadId') actividadId: string,
-  ): SubActividadesSelectResponse {
-    return this.subactividadesService.getSubActividadesSelect({
+  ): Promise<SubActividadesSelectResponse> {
+    return await this.subactividadesService.getSubActividadesSelect({
       usuarioActual,
       actividadId,
     });
@@ -204,13 +210,11 @@ export class SubactividadesController {
     type: HttpErrorDto,
   })
   @Get('proximas-vencer')
-  getSubActividadesProximasAVencer(
+  async getSubActividadesProximasAVencer(
     @UsuarioActual() usuarioActual: SesionUsuario,
     @Query() dto: SubActividadesProximasAVencerQueryDto,
-  ):
-    | Promise<SubActividadesProximasVencerResponse>
-    | SubActividadesProximasVencerResponse {
-    return this.subactividadesService.getSubActividadesProximasAVencer({
+  ): Promise<SubActividadesProximasVencerResponse> {
+    return await this.subactividadesService.getSubActividadesProximasAVencer({
       usuarioActual,
       dto,
     });
@@ -279,13 +283,14 @@ export class SubactividadesController {
     description: 'UUID no coincide con una sub-actividad',
     type: HttpErrorDto,
   })
+  @RequirePermissions(Permisos.CREAR_POA)
   @Put(':actividadId/sub-actividades/sync')
-  putSubActividadesSync(
+  async putSubActividadesSync(
     @UsuarioActual() usuarioActual: SesionUsuario,
     @Param('actividadId') actividadId: string,
     @Body() dto: SubActividadesSyncRequest,
-  ): SubActividadesSyncResponse {
-    return this.subactividadesService.putSubActividadesSync({
+  ): Promise<SubActividadesSyncResponse> {
+    return await this.subactividadesService.putSubActividadesSync({
       usuarioActual,
       actividadId,
       dto,

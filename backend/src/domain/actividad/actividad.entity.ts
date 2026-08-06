@@ -283,4 +283,27 @@ export class ActividadEntity {
 
     return `${folioNumerico}.${siguienteIndice}`;
   }
+
+  public reemplazarSubActividades(
+    actorActual: Actor,
+    nuevasSubActividades: SubactividadEntity[],
+  ): void {
+    // Validar permisos
+    validarPermisoDeDominio(
+      actorActual,
+      Permisos.CREAR_POA,
+      `Sincronizar sub-actividades`,
+    );
+
+    // Asignar la nueva colección que el Service ya procesó
+    this.subActividades = nuevasSubActividades;
+
+    // Invariante: Forzamos el recálculo de fechas de inicio/término del proyecto principal
+    this.recalcularFechasBounds();
+  }
+
+  public formatearNumeroOrdenPorIndice(indice: number): string {
+    const folioNumerico = parseInt(this.folio, 10);
+    return `${folioNumerico}.${indice}`;
+  }
 }

@@ -13,5 +13,5 @@ export class SubActividadesProximasAVencerQueryDto {
   @IsInt({ message: 'El límite debe ser un entero' })
   @Min(1, { message: 'El límite mínimo es 1' })
   @Max(20, { message: 'El límite máximo es 20' })
-  limit?: number = 5;
+  limit: number = 4;
 }

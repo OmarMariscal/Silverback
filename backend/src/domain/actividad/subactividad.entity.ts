@@ -9,22 +9,22 @@ import { validarPermisoDeDominio } from '@domain/shared/utils/autorizacion.utils
 export class SubactividadEntity {
   constructor(
     private readonly id: string,
-    private readonly numeroOrden: string,
-    private readonly descripcion: string,
+    private numeroOrden: string,
+    private descripcion: string,
 
     // Estado y Tipo
     private estado: EstadosActividades,
-    private readonly tipo: TipoSubActividad,
+    private tipo: TipoSubActividad,
 
     // Fechas planeadas (Fijas desde la creación)
-    private readonly fechaInicio: Date,
-    private readonly fechaTermino: Date,
+    private fechaInicio: Date,
+    private fechaTermino: Date,
 
     // Mutables (Cambian con las transiciones)
     private fechaEnvio: Date | null = null,
     private mensajeResolucion: string | null = null,
 
-    private readonly bancoSubActividadId: string | null = null,
+    private bancoSubActividadId: string | null = null,
   ) {}
 
   private validarEstadoInicial(estadoInicial: EstadosActividades[]): void {
@@ -193,5 +193,22 @@ export class SubactividadEntity {
 
     // Actualizar el estado
     this.estado = EstadosActividades.CONCLUIDA;
+  }
+
+  // src/domain/actividad/subactividad.entity.ts
+  public actualizarDatosBase(
+    numeroOrden: string,
+    descripcion: string,
+    fechaInicio: Date,
+    fechaTermino: Date,
+    tipo: TipoSubActividad,
+    bancoActividadId: string | null,
+  ): void {
+    this.numeroOrden = numeroOrden;
+    this.descripcion = descripcion;
+    this.fechaInicio = fechaInicio;
+    this.fechaTermino = fechaTermino;
+    this.tipo = tipo;
+    this.bancoSubActividadId = bancoActividadId;
   }
 }

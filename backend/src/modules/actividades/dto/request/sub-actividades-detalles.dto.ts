@@ -50,8 +50,9 @@ export class SubActividadDetalles {
     description:
       'Atributo opcional para enlistar de qué banco de actividad viene',
     example: 'banco_sub_actividad_uuid-1',
+    required: false,
   })
   @IsOptional()
-  @IsUUID('4')
+  @IsUUID('4', { message: 'El ID proporcionado debe ser un UUID válido' })
   banco_sub_actividad_id?: string;
 }

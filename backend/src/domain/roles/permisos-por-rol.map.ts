@@ -21,5 +21,5 @@ export const PERMISOS_POR_DEFECTO: Record<Roles, Permisos[]> = {
     Permisos.VER_DASHBOARD_CONTRALOR,
     Permisos.GESTIONAR_TRABAJO_SUBACTIVIDADES,
   ],
-  [Roles.AUDITOR]: [Permisos.LEER_POA],
+  [Roles.AUDITOR]: [Permisos.LEER_POA, Permisos.VER_DASHBOARD_AUDITOR],
 };

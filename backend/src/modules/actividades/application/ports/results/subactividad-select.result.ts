@@ -10,4 +10,5 @@ export interface SubActividadSelectResult {
   seleccionada: boolean;
   fecha_inicio?: Date;
   fecha_termino?: Date;
+  semanas?: number;
 }

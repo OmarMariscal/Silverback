@@ -22,6 +22,8 @@ export class ActividadesService {
     private readonly actividadQueryRepository: IActividadesQueryRepository,
   ) {}
 
+
+  // El endpoint de get resumen 
   getResumen(query: ActividadGetResumenQuery): ActividadesResumenResponse {
     // Deconstrucción del query
     const { usuarioActual, actividadId } = query;
