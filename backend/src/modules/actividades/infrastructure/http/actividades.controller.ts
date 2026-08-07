@@ -3,6 +3,7 @@ import { HttpErrorDto } from '@core/common/dto/response/http-error.dto';
 import { RequirePermissions } from '@core/decorators/roles.decorador';
 import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
 import { JwtAuthGuard } from '@core/guards/jwt.guard';
+import { PermisosGuard } from '@core/guards/roles.guard';
 import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
 import { Permisos } from '@domain/roles/permisos.enum';
 import { ActividadesService } from '@modules/actividades/application/actividades.service';
@@ -29,7 +30,7 @@ import {
 
 @ApiTags('Actividades')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermisosGuard)
 @Controller('actividades')
 export class ActividadesController {
   constructor(private readonly actividadesService: ActividadesService) {}

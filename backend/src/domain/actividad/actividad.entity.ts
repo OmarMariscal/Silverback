@@ -165,7 +165,7 @@ export class ActividadEntity {
   ): void {
     validarPermisoDeDominio(
       actorActual,
-      Permisos.CREAR_POA,
+      Permisos.GESTIONAR_CONTENIDO_POA,
       `agregar una sub-actividad a la Ficha Técnica`,
     );
 
@@ -191,7 +191,7 @@ export class ActividadEntity {
   ): void {
     validarPermisoDeDominio(
       actorActual,
-      Permisos.CREAR_POA,
+      Permisos.GESTIONAR_CONTENIDO_POA,
       `eliminar una sub-actividad de la Ficha Técnica`,
     );
 
@@ -205,7 +205,7 @@ export class ActividadEntity {
   public asignarAuditor(actorActual: Actor, auditorId: string): void {
     validarPermisoDeDominio(
       actorActual,
-      Permisos.CREAR_POA,
+      Permisos.GESTIONAR_CONTENIDO_POA,
       `asignar un auditor a la actividad`,
     );
 
@@ -223,7 +223,7 @@ export class ActividadEntity {
   public removerAuditor(actorActual: Actor, auditorId: string): void {
     validarPermisoDeDominio(
       actorActual,
-      Permisos.CREAR_POA,
+      Permisos.GESTIONAR_CONTENIDO_POA,
       `remover un auditor de la actividad`,
     );
 
@@ -291,7 +291,7 @@ export class ActividadEntity {
     // Validar permisos
     validarPermisoDeDominio(
       actorActual,
-      Permisos.CREAR_POA,
+      Permisos.GESTIONAR_CONTENIDO_POA,
       `Sincronizar sub-actividades`,
     );
 

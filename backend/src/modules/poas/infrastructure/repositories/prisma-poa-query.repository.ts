@@ -16,6 +16,7 @@ export class PoaQueryRepository implements IPoaQueryRepository {
     const poaData = await this.prisma.poa.findFirst({
       where: {
         contralor: { usuario_id: filtros.usuarioUuid },
+        anio_fiscal: new Date().getFullYear(), //Obtener la POA del año actual
       },
       orderBy: { anio_fiscal: 'desc' },
       select: {

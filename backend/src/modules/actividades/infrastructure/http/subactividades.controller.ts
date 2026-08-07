@@ -182,7 +182,7 @@ export class SubactividadesController {
     description: 'Actividad no encontrada',
     type: HttpErrorDto,
   })
-  @RequirePermissions(Permisos.CREAR_POA)
+  @RequirePermissions(Permisos.GESTIONAR_CONTENIDO_POA)
   @Get(':actividadId/sub-actividades-select')
   async getSubActividadesSelect(
     @UsuarioActual() usuarioActual: SesionUsuario,
@@ -242,7 +242,7 @@ export class SubactividadesController {
     description: 'Rol no autorizado para esta operación',
     type: HttpErrorDto,
   })
-  @RequirePermissions(Permisos.GESTIONAR_TRABAJO_POA)
+  @RequirePermissions(Permisos.GESTIONAR_CONTENIDO_POA)
   @Post(':actividadId/sub-actividades/bulk')
   async postSubActividadesBulk(
     @UsuarioActual() usuarioActual: SesionUsuario,
@@ -283,7 +283,7 @@ export class SubactividadesController {
     description: 'UUID no coincide con una sub-actividad',
     type: HttpErrorDto,
   })
-  @RequirePermissions(Permisos.CREAR_POA)
+  @RequirePermissions(Permisos.GESTIONAR_CONTENIDO_POA)
   @Put(':actividadId/sub-actividades/sync')
   async putSubActividadesSync(
     @UsuarioActual() usuarioActual: SesionUsuario,

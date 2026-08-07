@@ -12,7 +12,6 @@ import {
   HttpStatus,
   Param,
   Post,
-  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -61,7 +60,7 @@ export class PoasController {
     description: 'Actividad agregada exitosamente',
     type: CrearActividadesResponseDto,
   })
-  @RequirePermissions(Permisos.CREAR_POA)
+  @RequirePermissions(Permisos.GESTIONAR_CONTENIDO_POA)
   @Post(':poaid/actividades')
   async agregarActividades(
     @Param('poaid') poaId: string,
@@ -92,7 +91,6 @@ export class PoasController {
   presentarPoa(
     @UsuarioActual() usuarioActual: SesionUsuario,
     @Param('poaid') poaId: string,
-    @Res() response,
   ) {
     return this.poaService.presentarPoa({ usuarioActual, poaId });
   }

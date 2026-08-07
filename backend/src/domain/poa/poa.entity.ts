@@ -88,11 +88,7 @@ export class PoaEntity {
 
     //Solo el permiso de GestioanrPoa
     const logAccion = 'Agregar o modificar actividades en la POA';
-    validarPermisoDeDominio(
-      actorActual,
-      Permisos.GESTIONAR_TRABAJO_POA,
-      logAccion,
-    );
+    validarPermisoDeDominio(actorActual, Permisos.GESTIONAR_CONTENIDO_POA, logAccion);
   }
 
   public enviarARevision(

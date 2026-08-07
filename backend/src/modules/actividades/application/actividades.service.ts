@@ -22,8 +22,7 @@ export class ActividadesService {
     private readonly actividadQueryRepository: IActividadesQueryRepository,
   ) {}
 
-
-  // El endpoint de get resumen 
+  // El endpoint de get resumen
   getResumen(query: ActividadGetResumenQuery): ActividadesResumenResponse {
     // Deconstrucción del query
     const { usuarioActual, actividadId } = query;
@@ -31,7 +30,6 @@ export class ActividadesService {
     return new ActividadesResumenResponse();
   }
 
-  @RequirePermissions(Permisos.LEER_POA)
   async getFichaTecnica(
     query: ActividadGetFichaTecnicaQuery,
   ): Promise<ActividadesFichaTecnicaResponse> {

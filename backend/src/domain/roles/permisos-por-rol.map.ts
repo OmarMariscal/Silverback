@@ -5,6 +5,7 @@ export const PERMISOS_POR_DEFECTO: Record<Roles, Permisos[]> = {
   [Roles.JEFA]: [
     // POA
     Permisos.LEER_POA,
+    Permisos.GESTIONAR_SUPERVISION_POA,
 
     Permisos.VER_DASHBOARD_JEFATURA,
 
@@ -14,7 +15,7 @@ export const PERMISOS_POR_DEFECTO: Record<Roles, Permisos[]> = {
   [Roles.CONTRALOR]: [
     // POA
     Permisos.LEER_POA,
-    Permisos.CREAR_POA,
+    Permisos.GESTIONAR_CONTENIDO_POA,
     Permisos.GESTIONAR_TRABAJO_POA,
 
     //SubActividades
