@@ -1,3 +1,3 @@
 export interface FiltrosMiPoa {
-  contralorUuid: string;
+  usuarioUuid: string;
 }

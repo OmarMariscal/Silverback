@@ -134,6 +134,7 @@ CREATE TABLE "SubActividad" (
     "semanas_totales" INTEGER NOT NULL,
     "tipo" "TipoActividad" NOT NULL,
     "actividad_id" TEXT NOT NULL,
+    "banco_sub_actividad_id" TEXT,
 
     CONSTRAINT "SubActividad_pkey" PRIMARY KEY ("id")
 );
@@ -184,6 +185,9 @@ ALTER TABLE "BancoSubActividad" ADD CONSTRAINT "BancoSubActividad_banco_activida
 ALTER TABLE "Poa" ADD CONSTRAINT "Poa_contralor_id_fkey" FOREIGN KEY ("contralor_id") REFERENCES "Contralor"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Poa" ADD CONSTRAINT "Poa_centro_id_fkey" FOREIGN KEY ("centro_id") REFERENCES "CentroUniversitario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Actividad" ADD CONSTRAINT "Actividad_poa_id_fkey" FOREIGN KEY ("poa_id") REFERENCES "Poa"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -197,3 +201,6 @@ ALTER TABLE "ActividadAuditor" ADD CONSTRAINT "ActividadAuditor_auditor_id_fkey"
 
 -- AddForeignKey
 ALTER TABLE "SubActividad" ADD CONSTRAINT "SubActividad_actividad_id_fkey" FOREIGN KEY ("actividad_id") REFERENCES "Actividad"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SubActividad" ADD CONSTRAINT "SubActividad_banco_sub_actividad_id_fkey" FOREIGN KEY ("banco_sub_actividad_id") REFERENCES "BancoSubActividad"("id") ON DELETE SET NULL ON UPDATE CASCADE;

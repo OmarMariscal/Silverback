@@ -36,6 +36,7 @@ async function main() {
   await prisma.actividadAuditor.deleteMany();
   await prisma.actividad.deleteMany();
   await prisma.poa.deleteMany();
+  await prisma.bancoSubActividad.deleteMany(); // Aseguramos purgar subactividades del banco
   await prisma.bancoActividad.deleteMany();
   await prisma.auditor.deleteMany();
   await prisma.contralor.deleteMany();
@@ -76,17 +77,6 @@ async function main() {
       password_encriptada: passwordHash,
       rol: 'CONTRALOR',
       contralor: { create: { centro_id: cucei.id, jefa_id: jefa.jefa!.id } },
-    },
-    include: { contralor: true },
-  });
-
-  const contralorCuvalles = await prisma.usuario.create({
-    data: {
-      nombre_completo: 'Lic. Contralora CUVALLES',
-      correo: 'contralor.cuvalles@udg.mx',
-      password_encriptada: passwordHash,
-      rol: 'CONTRALOR',
-      contralor: { create: { centro_id: cuvalles.id, jefa_id: jefa.jefa!.id } },
     },
     include: { contralor: true },
   });
@@ -153,41 +143,6 @@ async function main() {
         ],
       },
     },
-    {
-      titulo: 'Desincorporación de bienes muebles',
-      justificacion_plantilla: 'Atender el rezago físico y contable...',
-      objetivo_gen_plantilla: 'Verificar física y documentalmente el estado...',
-      objetivos_part_plantilla: '- Clasificar bienes...',
-      metas_plantilla: 'Desincorporar los equipos...',
-      sub_actividades_sugeridas: {
-        create: [
-          {
-            descripcion: 'Levantamiento de inventario',
-            tipo_sugerido: TipoActividad.REVISION,
-          },
-        ],
-      },
-    },
-    {
-      titulo: 'Auditoría a Ingresos Autogenerados',
-      justificacion_plantilla: 'Evaluar la captación de recursos propios...',
-      objetivo_gen_plantilla:
-        'Transparentar el uso de recursos autogenerados...',
-      objetivos_part_plantilla: '- Revisión de recibos...',
-      metas_plantilla: '1 Dictamen financiero...',
-      sub_actividades_sugeridas: {
-        create: [
-          {
-            descripcion: 'Auditoría de cuentas bancarias',
-            tipo_sugerido: TipoActividad.AUDITORIA,
-          },
-          {
-            descripcion: 'Revisión de recibos de ingresos',
-            tipo_sugerido: TipoActividad.REVISION,
-          },
-        ],
-      },
-    },
   ];
 
   type BancoActividadConSugerencias = Prisma.BancoActividadGetPayload<{
@@ -203,7 +158,7 @@ async function main() {
     ),
   );
 
-  console.log('🏭 Fabricando POA y 15 Actividades aleatorias para CUCEI...');
+  console.log('🏭 Fabricando POA y 15 Actividades mixtas para CUCEI...');
   const faprobado = getRandomDate(
     new Date('2026-01-02'),
     new Date('2026-01-31'),
@@ -220,22 +175,25 @@ async function main() {
     },
   });
 
-  const estadosOperativos: EstadoSubActividad[] = [
-    EstadoSubActividad.SIN_EMPEZAR,
-    EstadoSubActividad.SOLICITADO,
-    EstadoSubActividad.EN_PROGRESO,
-    EstadoSubActividad.EN_REVISION,
-    EstadoSubActividad.DEVUELTA,
-    EstadoSubActividad.CONCLUIDA,
-  ];
-
+  const estadosOperativos = Object.values(EstadoSubActividad);
   const auditoresDisponibles = [
     auditorAuxiliar.auditor!.id,
     auditorTitular.auditor!.id,
   ];
 
+  // Data mock para actividades personalizadas (No banco)
+  const titulosPropios = [
+    'Auditoría a Caja Chica',
+    'Revisión de Viáticos Extraordinarios',
+    'Inspección de Equipo de Cómputo',
+  ];
+  const subTareasPropias = [
+    'Entrevista con el responsable',
+    'Levantamiento fotográfico',
+    'Elaboración de acta circunstanciada',
+  ];
+
   for (let i = 1; i <= 15; i++) {
-    const plantilla = getRandomElement(catalogo);
     const fInicio = getRandomDate(
       new Date('2026-01-01'),
       new Date('2026-06-01'),
@@ -243,23 +201,128 @@ async function main() {
     const fFin = getRandomDate(new Date('2026-06-02'), new Date('2026-12-31'));
     const folioStr = String(i).padStart(3, '0');
 
-    const nuevaActividad = await prisma.actividad.create({
-      data: {
-        poa_id: poaCucei2026.id,
-        banco_actividad_id: plantilla.id,
-        folio: folioStr,
-        titulo: plantilla.titulo,
-        justificacion:
-          (plantilla.justificacion_plantilla || '') + ` (Adaptación #${i})`,
-        objetivo_general: plantilla.objetivo_gen_plantilla || '',
-        objetivos_part: plantilla.objetivos_part_plantilla || '',
-        fecha_inicio: fInicio,
-        fecha_termino: fFin,
-        porcentaje_global: Math.floor(Math.random() * 100),
-        es_rezago: false,
-      },
-    });
+    // 70% de probabilidad de venir del banco, 30% propia
+    const vieneDelBanco = Math.random() < 0.7;
 
+    let nuevaActividad;
+    let subIndex = 1;
+
+    if (vieneDelBanco) {
+      // -------------------------------------------------------------
+      // CASO A: ACTIVIDAD DESDE EL BANCO
+      // -------------------------------------------------------------
+      const plantilla = getRandomElement(catalogo);
+      nuevaActividad = await prisma.actividad.create({
+        data: {
+          poa_id: poaCucei2026.id,
+          banco_actividad_id: plantilla.id, // Enlazada al catálogo
+          folio: folioStr,
+          titulo: plantilla.titulo,
+          justificacion:
+            (plantilla.justificacion_plantilla || '') + ` (Adaptación #${i})`,
+          objetivo_general: plantilla.objetivo_gen_plantilla || '',
+          objetivos_part: plantilla.objetivos_part_plantilla || '',
+          fecha_inicio: fInicio,
+          fecha_termino: fFin,
+          porcentaje_global: Math.floor(Math.random() * 100),
+          es_rezago: false,
+        },
+      });
+
+      // 1. Instanciar Sub-actividades del Banco
+      for (const subSugerida of plantilla.sub_actividades_sugeridas) {
+        const subInicio = getRandomDate(
+          fInicio,
+          new Date(
+            fInicio.getTime() + (fFin.getTime() - fInicio.getTime()) / 2,
+          ),
+        );
+        const subFin = getRandomDate(subInicio, fFin);
+
+        await prisma.subActividad.create({
+          data: {
+            actividad_id: nuevaActividad.id,
+            banco_sub_actividad_id: subSugerida.id, // 🚀 TRAZABILIDAD: Guardamos el ADN
+            numero_orden: `1.${subIndex++}`,
+            descripcion_tarea: subSugerida.descripcion,
+            estado_operativo: getRandomElement(estadosOperativos),
+            fecha_inicio: subInicio,
+            fecha_termino: subFin,
+            semanas_totales: diffWeeks(subInicio, subFin),
+            tipo: subSugerida.tipo_sugerido,
+          },
+        });
+      }
+
+      // 2. Simulamos que el auditor agregó una sub-actividad extra a esta plantilla (50% de probabilidad)
+      if (Math.random() > 0.5) {
+        const subInicio = getRandomDate(fInicio, fFin);
+        const subFin = getRandomDate(subInicio, fFin);
+        await prisma.subActividad.create({
+          data: {
+            actividad_id: nuevaActividad.id,
+            banco_sub_actividad_id: null, // 🚀 PROPIA: No viene del banco
+            numero_orden: `1.${subIndex++}`,
+            descripcion_tarea: getRandomElement(subTareasPropias),
+            estado_operativo: getRandomElement(estadosOperativos),
+            fecha_inicio: subInicio,
+            fecha_termino: subFin,
+            semanas_totales: diffWeeks(subInicio, subFin),
+            tipo: TipoActividad.REVISION,
+          },
+        });
+      }
+    } else {
+      // -------------------------------------------------------------
+      // CASO B: ACTIVIDAD 100% PROPIA (CREADA DESDE CERO)
+      // -------------------------------------------------------------
+      nuevaActividad = await prisma.actividad.create({
+        data: {
+          poa_id: poaCucei2026.id,
+          banco_actividad_id: null, // 🚀 NO ENLAZADA
+          folio: folioStr,
+          titulo: getRandomElement(titulosPropios) + ` #${i}`,
+          justificacion:
+            'Justificación elaborada manualmente por el auditor en turno.',
+          objetivo_general:
+            'Objetivo general específico detectado en la auditoría.',
+          fecha_inicio: fInicio,
+          fecha_termino: fFin,
+          porcentaje_global: Math.floor(Math.random() * 100),
+          es_rezago: false,
+        },
+      });
+
+      // Creamos 2 sub-actividades totalmente libres
+      for (let j = 0; j < 2; j++) {
+        const subInicio = getRandomDate(
+          fInicio,
+          new Date(
+            fInicio.getTime() + (fFin.getTime() - fInicio.getTime()) / 2,
+          ),
+        );
+        const subFin = getRandomDate(subInicio, fFin);
+
+        await prisma.subActividad.create({
+          data: {
+            actividad_id: nuevaActividad.id,
+            banco_sub_actividad_id: null,
+            numero_orden: `1.${subIndex++}`,
+            descripcion_tarea: getRandomElement(subTareasPropias),
+            estado_operativo: getRandomElement(estadosOperativos),
+            fecha_inicio: subInicio,
+            fecha_termino: subFin,
+            semanas_totales: diffWeeks(subInicio, subFin),
+            tipo: getRandomElement([
+              TipoActividad.AUDITORIA,
+              TipoActividad.REVISION,
+            ]),
+          },
+        });
+      }
+    }
+
+    // Asignar Auditores a la actividad
     const cantidadAuditores =
       Math.floor(Math.random() * auditoresDisponibles.length) + 1;
     const auditoresAsignados = [...auditoresDisponibles]
@@ -273,34 +336,6 @@ async function main() {
           auditor_id: auditorId,
         },
       });
-    }
-
-    if (plantilla.sub_actividades_sugeridas) {
-      let subIndex = 1;
-      for (const subSugerida of plantilla.sub_actividades_sugeridas) {
-        const subInicio = getRandomDate(
-          fInicio,
-          new Date(
-            fInicio.getTime() + (fFin.getTime() - fInicio.getTime()) / 2,
-          ),
-        );
-        const subFin = getRandomDate(subInicio, fFin);
-        const semanas = diffWeeks(subInicio, subFin);
-
-        await prisma.subActividad.create({
-          data: {
-            actividad_id: nuevaActividad.id,
-            numero_orden: `1.${subIndex++}`,
-            descripcion_tarea: subSugerida.descripcion,
-            estado_operativo: getRandomElement(estadosOperativos),
-            mensaje_observacion: null,
-            fecha_inicio: subInicio,
-            fecha_termino: subFin,
-            semanas_totales: semanas,
-            tipo: subSugerida.tipo_sugerido,
-          },
-        });
-      }
     }
   }
 

@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsUUID } from 'class-validator';
 
-export class ActividadesGetQuery {
+export class SubActividadesGetQuery {
   @ApiPropertyOptional({
     example: 'auditor-uuid-1',
     description: 'Identificador único (UUID) del auditor buscado',

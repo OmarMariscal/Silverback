@@ -103,6 +103,8 @@ model BancoSubActividad {
   
   banco_actividad_id String
   banco_actividad    BancoActividad @relation(fields: [banco_actividad_id], references: [id], onDelete: Cascade)
+
+  subactividades_creadas     SubActividad[]
 }
 
 // ==========================================
@@ -183,19 +185,20 @@ model ActividadAuditor {
 }
 
 model SubActividad {
-  id                     String        @id @default(uuid())
-  numero_orden           String        // Ej. "1.1"
-  descripcion_tarea      String        @db.Text
-  // La sub-actividad es la dueña del flujo operativo
-  estado_operativo       EstadoSubActividad        @default(SIN_EMPEZAR)
-  mensaje_observacion    String?       @db.Text
+  id                    String        @id @default(uuid())
+  numero_orden          String        
+  descripcion_tarea     String        @db.Text
+  estado_operativo      EstadoSubActividad @default(SIN_EMPEZAR)
+  mensaje_observacion   String?       @db.Text
+  fecha_inicio          DateTime
+  fecha_termino         DateTime
+  fecha_envio           DateTime?
+  semanas_totales       Int           
+  tipo                  TipoActividad
   
-  fecha_inicio      DateTime
-  fecha_termino     DateTime
-  fecha_envio       DateTime?
-  semanas_totales   Int           // Calculado por Backend
-  tipo              TipoActividad
-  
-  actividad_id      String
-  actividad         Actividad     @relation(fields: [actividad_id], references: [id], onDelete: Cascade)
+  actividad_id          String
+  actividad             Actividad     @relation(fields: [actividad_id], references: [id], onDelete: Cascade)
+
+  banco_sub_actividad_id String?
+  banco_sub_actividad    BancoSubActividad? @relation(fields: [banco_sub_actividad_id], references: [id])
 }

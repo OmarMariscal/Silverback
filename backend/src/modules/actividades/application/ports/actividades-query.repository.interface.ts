@@ -1,22 +1,22 @@
-import { ActividadesFichaTecnicaResponse } from '@modules/actividades/dto/response/actividades-ficha-tecnica.response.dto';
-import { ActividadesGetData } from '@modules/actividades/dto/response/actividades-get-data.dto';
-import { ActividadesResumenResponse } from '@modules/actividades/dto/response/actividades-resumen.response.dto';
-import { FiltroActividades } from './filtros/get-actividades.filtro.interface';
+//import { ActividadesGetData } from '@modules/actividades/dto/response/actividades-get-data.dto';
+import { ActividadResumenResult } from './results/actividad-resumen.result';
+import { ActividadFichaTecnicaResult } from './results/actividad-ficha-tecnica.result';
+import { FiltroActividadResumen } from './filtros/actividad-resumen.filtro';
+import { FiltroActividadFichaTecnica } from './filtros/actividad-ficha-tecnica.filtro';
+
+export const ACTIVIDADES_QUERY_REPOSITORY_TOKEN = Symbol(
+  'ACTIVIDADES_QUERY_REPOSITORY_TOKEN',
+);
 
 export interface IActividadesQueryRepository {
-  /**
-   * Endpoint: GET /api/v1/actividades
-   * Propósito: Construir la tabla de las actividades completas para las vistas de la Jefa y Contralor
-   * Reglas: Debe devolvar un arrays con las actividades filtradas
-   */
-  obtenerActividades(filtros: FiltroActividades): Promise<ActividadesGetData[]>;
-
   /**
    * Endpoint: GET /api/v1/actividades/{actividadId}/resumen
    * Propósito: Construir las vistas de las fichas técnicas
    * Reglas: Debe devolver toda la lista formateada lista para pintar la pantalla
    */
-  obtenerResumenPorId(actividadId: string): Promise<ActividadesResumenResponse>;
+  obtenerResumenPorId(
+    filtro: FiltroActividadResumen,
+  ): Promise<ActividadResumenResult | null>;
 
   /**
    * Endpoint: GET /api/v1/actividades/{actividadId}/ficha-tecnica
@@ -24,6 +24,6 @@ export interface IActividadesQueryRepository {
    * Reglas: Devolver una instancia con todos los datos de una actividad
    */
   obtenerPorIdFichaTecnica(
-    actividadId: string,
-  ): Promise<ActividadesFichaTecnicaResponse>;
+    filtro: FiltroActividadFichaTecnica,
+  ): Promise<ActividadFichaTecnicaResult | null>;
 }

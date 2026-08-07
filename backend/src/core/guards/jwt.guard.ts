@@ -61,14 +61,10 @@ export class JwtAuthGuard implements CanActivate {
       }
     */
 
-    // Por ahora, si no mandan header mock, cargamos un default para que no truene:
-    request.user = {
-      usuario_id: 'default-user-uuid',
-      rol: Roles.CONTRALOR,
-      centro_id: 'uuid-centro-cucei',
-      perfil_id: 'default-perfil-uuid',
-    };
-
-    return true;
+    // Si no hay mock y la estrategia real aún no está implementada,
+    // debemos fallar de forma segura y no otorgar acceso por defecto.
+    throw new UnauthorizedException(
+      'No se proporcionó un método de autenticación válido.',
+    );
   }
 }

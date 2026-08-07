@@ -3,7 +3,9 @@ import { Actividad as PrismaActividad } from '@prisma/client';
 import { ActividadEntity } from '@domain/actividad/actividad.entity';
 import { PrismaActividadPayload } from '../types/actividad-payload.type';
 import { SubActividadMapper } from './subactividad.mapper';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class ActividadMapper implements Mapper<
   ActividadEntity,
   PrismaActividadPayload
