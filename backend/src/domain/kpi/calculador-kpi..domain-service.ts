@@ -1,100 +1,168 @@
-import { SubactividadEntity } from '@domain/actividad/subactividad.entity';
-import { KpiDistribucionPastel } from './interfaces/kpi-distribucion-pastel.interface';
 import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
-import { KpiRiesgoDistribucion } from './interfaces/kpi-distribucion-riesgo.interface';
-import { KpiDetalleRiesgo } from './interfaces/kpi-detalle-riesgo.interface';
-import {  SemaforoService } from '@domain/semaforo/semaforo.service';
 import { EstadosSemaforo } from '@domain/semaforo/estados-semaforo-enum';
+import { SemaforoService } from '@domain/semaforo/semaforo-service';
+import { KpiSubActividadPayLoad } from './interfaces/kpi-actividad-payload.interface';
+import { KpiBandejaContralorResult } from './interfaces/kpi-bandeja-contralor-result.interface';
+import { KpiFlujoResult } from './interfaces/kpi-flujo-result.interface';
+import { KpiPendientesJefaturaResult } from './interfaces/kpi-pendientes-jefatura-result.interface';
+import { KpiCentroRezagoResult } from './interfaces/kpi-rezago-centro-result.interface';
+import { KpiSemaforosResult } from './interfaces/kpi-semaforos-result.interface';
 
 export class CalculadoraKpiService {
-  public static generarDistribucionEstados(
-    subActividades: SubactividadEntity[],
-  ): KpiDistribucionPastel[] {
-    //KPI 1: Gráfica de Pastel
-
-    //Evitar división entre 0
-    if (subActividades.length === 0) {
-      return [];
-    }
-
-    const total = subActividades.length;
-
-    //Agrupamos y contamos
-    const conteo = new Map<EstadosActividades, number>();
+  // -- 1. Métricas de Flujo General (Gráfica Distribución) --
+  public static calcularFlujo(
+    subActividades: KpiSubActividadPayLoad[],
+  ): KpiFlujoResult {
+    const flujo: KpiFlujoResult = {
+      sinEmpezar: 0,
+      enProgreso: 0,
+      porRevisar: 0,
+      concluidas: 0,
+      total: subActividades.length,
+    };
 
     for (const sub of subActividades) {
-      const estado = sub.getEstado();
-      conteo.set(estado, (conteo.get(estado) || 0) + 1);
+      switch (sub.estado) {
+        case EstadosActividades.SIN_EMPEZAR:
+        case EstadosActividades.SOLICITADO:
+          flujo.sinEmpezar++;
+          break;
+        case EstadosActividades.EN_PROGRESO:
+        case EstadosActividades.DEVUELTA:
+          flujo.enProgreso++;
+          break;
+        case EstadosActividades.EN_REVISION:
+          flujo.porRevisar++;
+          break;
+        case EstadosActividades.CONCLUIDA:
+          flujo.concluidas++;
+          break;
+      }
     }
-
-    // Mapeamos el formato de vector estructurado
-    const resultado: KpiDistribucionPastel[] = [];
-
-    conteo.forEach((cantidad, estado) => {
-      const porcentajeRaw = (cantidad / total) * 100;
-      resultado.push({
-        estado: estado,
-        cantidad: cantidad,
-        porcentaje: Math.round(porcentajeRaw * 100) / 100,
-      });
-    });
-
-    return resultado;
+    return flujo;
   }
 
-  //Firma de métodos que necesitan la clase del semáforo
-  public static generarDistribucionPorRiesgo(
-    subActividades: SubactividadEntity[],
-  ): KpiRiesgoDistribucion[] {
-    if (subActividades.length === 0) {
-      return [];
-    }
-
-    const total = subActividades.length;
-
-    //Agrupamos y contamos
-    const conteo = new Map<EstadosSemaforo, number>();
+  // -- 2. Métricas del Semáforo (Riesgo) --
+  public static calcularSemaforos(
+    subActividades: KpiSubActividadPayLoad[],
+  ): KpiSemaforosResult {
+    const semaforos: KpiSemaforosResult = {
+      aTiempo: 0,
+      alerta: 0,
+      critico: 0,
+      total: subActividades.length,
+    };
 
     for (const sub of subActividades) {
-      const color = SemaforoService.calcularSemaforo(sub);
-      conteo.set(color, (conteo.get(color) || 0) + 1);
+      if (!sub.fechaTermino) continue;
+
+      // Uso del método auxiliar en lo que se resuelve la lógica de negocio del semáforo
+      const color = SemaforoService.calcularSemaforoVencimiento(
+        sub.fechaTermino,
+      );
+
+      if (color === EstadosSemaforo.A_TIEMPO) semaforos.aTiempo++;
+      else if (color === EstadosSemaforo.PRECAUCION) semaforos.alerta++;
+      else if (color === EstadosSemaforo.CRITICO) semaforos.critico++;
     }
-
-    // Mapeamos el formato de vector estructurado
-    const resultado: KpiRiesgoDistribucion[] = [];
-
-    conteo.forEach((cantidad, color) => {
-      const porcentajeRaw = (cantidad / total) * 100;
-      resultado.push({
-        color: color,
-        cantidad: cantidad,
-        porcentaje: Math.round(porcentajeRaw * 100) / 100,
-      });
-    });
-
-    return resultado;
+    return semaforos;
   }
-   
 
-  public static obtenerRadarRiesgos(
-    subActividades: SubactividadEntity[],
-    semaforoService: SemaforoService, //Cambiar a Semáforo Service una vez se implemente
-  ): KpiDetalleRiesgo[] {
-    if (subActividades.length === 0) {
-      return [];
+  // -- 3. Taqrjetas: BANDEJA CONTRALOR --
+  public static calcularBandejaContralor(
+    subActividades: KpiSubActividadPayLoad[],
+  ): KpiBandejaContralorResult {
+    let devueltas = 0;
+    let listasEmpezar = 0;
+
+    for (const sub of subActividades) {
+      if (sub.estado === EstadosActividades.DEVUELTA) devueltas++;
+      if (sub.estado === EstadosActividades.SIN_EMPEZAR) listasEmpezar++;
     }
-    
-    const resultado: KpiDetalleRiesgo[] = subActividades
-    .map(sub => ({
-      folio: sub.getNumeroOrden(),
-      descripcion: sub.getDescripcion(),
-      subActividadId: sub.getId(),
-      tipoSubActividad: sub.getTipo(),
-      fechaLimite: sub.getFechaConclusionEstimada(),
-      estadoSemaforo: SemaforoService.calcularSemaforo(sub),
-      etiquetaAlerta: SemaforoService.obtenerEtiquetaVencimiento(sub)
-    }));
+    return { devueltas, listasEmpezar };
+  }
 
-    return resultado;
+  // -- 4. Tarjetas: PENDIENTES JEFATURA --
+  public static calcularPendientesJefatura(
+    subActividades: KpiSubActividadPayLoad[],
+  ): KpiPendientesJefaturaResult {
+    let porRevisar = 0;
+    let solicitadas = 0;
+
+    for (const sub of subActividades) {
+      if (sub.estado === EstadosActividades.EN_REVISION) porRevisar++;
+      if (sub.estado === EstadosActividades.SOLICITADO) solicitadas++;
+    }
+    return {
+      actividadesPorRevisar: porRevisar,
+      actividadesSolicitadas: solicitadas,
+    };
+  }
+
+  // -- 5. Tasa de Solventación --
+  public static calcularTasaSolventacion(
+    subActividades: KpiSubActividadPayLoad[],
+  ): number {
+    if (subActividades.length === 0) return 0;
+
+    let concluidas = 0;
+    for (const sub of subActividades) {
+      if (sub.estado === EstadosActividades.CONCLUIDA) concluidas++;
+    }
+
+    return Math.round((concluidas / subActividades.length) * 100);
+  }
+
+  // -- 6. Rexago por centros --
+  public static calcularRezagoCentros(
+    subActividades: KpiSubActividadPayLoad[],
+  ): KpiCentroRezagoResult[] {
+    const mapaCentros = new Map<string, KpiCentroRezagoResult>();
+
+    for (const sub of subActividades) {
+      if (!sub.centroUniversitario) continue;
+
+      const { id, clave, nombre } = sub.centroUniversitario;
+
+      if (!mapaCentros.has(id)) {
+        mapaCentros.set(id, {
+          centro_id: id,
+          centro_clave: clave,
+          centro_nombre: nombre,
+          distribucion: {
+            actividades_criticas: 0,
+            actividades_precaucion: 0,
+            total: 0,
+          },
+        });
+      }
+
+      const centro = mapaCentros.get(id)!;
+      centro.distribucion.total++;
+
+      if (sub.fechaTermino) {
+        const color = SemaforoService.calcularSemaforoVencimiento(
+          sub.fechaTermino,
+        );
+        if (color === EstadosSemaforo.CRITICO) {
+          centro.distribucion.actividades_criticas++;
+        } else if (color === EstadosSemaforo.PRECAUCION) {
+          centro.distribucion.actividades_precaucion++;
+        }
+      }
+    }
+
+    return Array.from(mapaCentros.values());
+  }
+
+  public static calcularTendenciaMensual(
+    tasaActual: number,
+    tasaMesAnterior: number,
+  ): string {
+    const diferencia = tasaActual - tasaMesAnterior;
+
+    if (diferencia > 0) return `+${diferencia}%`;
+    if (diferencia < 0) return `${diferencia}%`;
+    return '0%';
   }
 }
