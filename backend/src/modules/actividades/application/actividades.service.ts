@@ -98,6 +98,13 @@ export class ActividadesService {
           );
         }
 
+        if (!actividad.esElegibleParaModificacion()) {
+          throw new ReglaNegocioException(
+            `La actividad de ID ${actividadId} no puede ser modificada, dado que su POA de origen ya fue Presentada`,
+            CodigoDeViolacion.ESTADO_INVALIDO,
+          );
+        }
+
         //3. Regla de Autorización Multitenat (HTTP403)
         if (
           !actividad.puedeSerModificadaPor(
@@ -166,7 +173,7 @@ export class ActividadesService {
         }
 
         // Regla de Estado de Ciclo de Vida (HTTP 409)
-        if (!actividad.esElegibleParaModificación()) {
+        if (!actividad.esElegibleParaModificacion()) {
           throw new ReglaNegocioException(
             `No se puede eliminar la actividad porque su POA ya fue presentado y no está en estado ${EstadoPoa.BORRADOR} o ${EstadoPoa.DEVUELTA}`,
             CodigoDeViolacion.DATOS_INSUFICIENTES,

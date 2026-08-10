@@ -31,6 +31,7 @@ export class ActividadEntity {
     private poaEstado?: EstadosPoa,
     private idUsuarioDuenoPoa?: string,
     private idUsuarioJefaAsignada?: string,
+    private contextoSeguridadCargado: boolean = false,
   ) {}
 
   // FUNCIONES AUXILIARES (PRIVADAS)
@@ -173,6 +174,10 @@ export class ActividadEntity {
 
   public getUsuarioJefaAsignada(): string | undefined {
     return this.idUsuarioJefaAsignada;
+  }
+
+  public getContextoSeguridadCargado(): boolean {
+    return this.contextoSeguridadCargado;
   }
 
   // MANEJO DE COLECCIONES (FAIL-FAST) CON SEGURIDAD AÑADIDA
@@ -354,9 +359,10 @@ export class ActividadEntity {
     this.poaEstado = estadoPoa;
     this.idUsuarioDuenoPoa = idContralor ?? undefined;
     this.idUsuarioJefaAsignada = idJefa ?? undefined;
+    this.contextoSeguridadCargado = true;
   }
 
-  public esElegibleParaModificación(): boolean {
+  public esElegibleParaModificacion(): boolean {
     // Solo se te permite modificar  si el POA principal está en BORRADOR o DEVUELVA
     return (
       this.poaEstado === EstadosPoa.BORRADOR ||
@@ -368,6 +374,11 @@ export class ActividadEntity {
     rolUsuario: Roles,
     idUsuarioActual: string,
   ): boolean {
+    if (!this.contextoSeguridadCargado) {
+      throw new Error(
+        'Se intentó evaluar autorización sin haber inyectado el contexto de seguridad primero.',
+      );
+    }
     //1. La Jefa tiene el poder abosluto del contenido
     if (rolUsuario === Roles.JEFA) {
       return this.idUsuarioJefaAsignada === idUsuarioActual;
