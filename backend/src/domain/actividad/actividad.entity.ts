@@ -5,17 +5,20 @@ import { CodigoDeViolacion } from '@domain/codigos/codigo-violado.enum';
 import { Actor } from '@domain/roles/actor.interface';
 import { Permisos } from '@domain/roles/permisos.enum';
 import { validarPermisoDeDominio } from '@domain/shared/utils/autorizacion.utils';
+import { ActualizacionFichaTecnica } from './interfaces/actualizacion-ficha-tecnica.interface';
+import { EstadosPoa } from '@domain/poa/estados-poa.enum';
+import { Roles } from '@domain/roles/roles.enum';
 
 export class ActividadEntity {
   constructor(
     private readonly id: string,
-    private readonly folio: string,
-    private readonly titulo: string,
-    private readonly justificacion: string | null,
-    private readonly objetivoGeneral: string | null,
-    private readonly objetivosParticulares: string | null,
-    private readonly metaDelProyecto: string | null,
-    private readonly indicadores: string | null,
+    private folio: string,
+    private titulo: string,
+    private justificacion: string | null,
+    private objetivoGeneral: string | null,
+    private objetivosParticulares: string | null,
+    private metaDelProyecto: string | null,
+    private indicadores: string | null,
     private fechaInicio: Date | null,
     private fechaTermino: Date | null,
     private readonly esRezago: boolean,
@@ -24,6 +27,10 @@ export class ActividadEntity {
     private subActividades: SubactividadEntity[],
 
     private readonly bancoActividadId: string | null = null,
+
+    private poaEstado?: EstadosPoa,
+    private idUsuarioDuenoPoa?: string,
+    private idUsuarioJefaAsignada?: string,
   ) {}
 
   // FUNCIONES AUXILIARES (PRIVADAS)
@@ -155,6 +162,17 @@ export class ActividadEntity {
   }
   public getSubActividades(): SubactividadEntity[] {
     return [...this.subActividades];
+  }
+  public getPoaEstado(): EstadosPoa | undefined {
+    return this.poaEstado;
+  }
+
+  public getIdsUsuarioDuenoPoa(): string | undefined {
+    return this.idUsuarioDuenoPoa;
+  }
+
+  public getUsuarioJefaAsignada(): string | undefined {
+    return this.idUsuarioJefaAsignada;
   }
 
   // MANEJO DE COLECCIONES (FAIL-FAST) CON SEGURIDAD AÑADIDA
@@ -305,5 +323,66 @@ export class ActividadEntity {
   public formatearNumeroOrdenPorIndice(indice: number): string {
     const folioNumerico = parseInt(this.folio, 10);
     return `${folioNumerico}.${indice}`;
+  }
+
+  public actualizarFichaTecnica(datos: ActualizacionFichaTecnica) {
+    if (datos.titulo !== undefined) this.titulo = datos.titulo;
+    if (datos.justificacion !== undefined)
+      this.justificacion = datos.justificacion;
+    if (datos.objetivo_general !== undefined)
+      this.objetivoGeneral = datos.objetivo_general;
+    if (datos.objetivos_particulares !== undefined)
+      this.objetivosParticulares = datos.objetivos_particulares;
+    if (datos.meta_del_proyecto !== undefined)
+      this.metaDelProyecto = datos.meta_del_proyecto;
+    if (datos.indicadores !== undefined) this.indicadores = datos.indicadores;
+
+    if (datos.auditores_ids !== undefined) {
+      this.auditoresIds = [...datos.auditores_ids];
+    }
+  }
+
+  /**
+   * INYECTOR DE DEPENDENCIA DE DOMINIO
+   * Hidrata a la entidad con el contexto externo necesario para tomar decisiones.
+   */
+  public inyectarContextoDeSeguridad(
+    estadoPoa: EstadosPoa,
+    idContralor: string | null,
+    idJefa: string | null,
+  ): void {
+    this.poaEstado = estadoPoa;
+    this.idUsuarioDuenoPoa = idContralor ?? undefined;
+    this.idUsuarioJefaAsignada = idJefa ?? undefined;
+  }
+
+  public esElegibleParaModificación(): boolean {
+    // Solo se te permite modificar  si el POA principal está en BORRADOR o DEVUELVA
+    return (
+      this.poaEstado === EstadosPoa.BORRADOR ||
+      this.poaEstado === EstadosPoa.DEVUELTA
+    );
+  }
+
+  public puedeSerModificadaPor(
+    rolUsuario: Roles,
+    idUsuarioActual: string,
+  ): boolean {
+    //1. La Jefa tiene el poder abosluto del contenido
+    if (rolUsuario === Roles.JEFA) {
+      return this.idUsuarioJefaAsignada === idUsuarioActual;
+    }
+
+    //2. El Contralor solo puede modificarla si él es el dueño del POA padre
+    if (rolUsuario === Roles.CONTRALOR) {
+      return this.idUsuarioDuenoPoa === idUsuarioActual;
+    }
+
+    // 3. Un Auditor solo podría tocarla si está asginado a ella
+    if (rolUsuario === Roles.AUDITOR) {
+      return this.auditoresIds.includes(idUsuarioActual);
+    }
+
+    return false;
   }
 }

@@ -50,5 +50,5 @@ export interface IActividadRepository {
    *
    * @param id Identificador único de la Actividad
    */
-  eliminar(id: string): Promise<void>;
+  eliminar(id: string, tx?: TransactionHandle): Promise<void>;
 }
