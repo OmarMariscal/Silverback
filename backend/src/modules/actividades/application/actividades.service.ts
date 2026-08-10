@@ -1,9 +1,14 @@
 import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
-import { RequirePermissions } from '@core/decorators/roles.decorador';
-import { PrismaService } from '@database/prisma.service';
+import type { IUnitOfWork } from '@core/interfaces/unit-of-work.interface';
+import { UNIT_OF_WORK_TOKEN } from '@core/interfaces/unit-of-work.interface';
+import type { IActividadRepository } from '@domain/actividad/actividad.repository.interface';
+import { ACTIVIDAD_REPOSITORY_TOKEN } from '@domain/actividad/actividad.repository.interface';
+import { CodigoDeViolacion } from '@domain/codigos/codigo-violado.enum';
 import { RecursoNoEncontradoException } from '@domain/excepciones/recurso-no-encontrado.exception';
-import { Permisos } from '@domain/roles/permisos.enum';
+import { ReglaNegocioException } from '@domain/excepciones/regla-negocio.exception';
+import { TransactionHandle } from '@domain/shared/transaction.interface';
 import { Inject, Injectable } from '@nestjs/common';
+import { EstadoPoa } from '@prisma/client';
 import { ActividadesFichaTecnicaResponse } from '../dto/response/actividades-ficha-tecnica.response.dto';
 import { ActividadesResumenResponse } from '../dto/response/actividades-resumen.response.dto';
 import { ActividadResponseMapper } from '../infrastructure/mappers/actividad-response.mapper';
@@ -17,17 +22,33 @@ import { ActividadGetResumenQuery } from './ports/queries/actividad-get-resumen.
 @Injectable()
 export class ActividadesService {
   constructor(
-    private readonly prismaService: PrismaService,
+    @Inject(ACTIVIDAD_REPOSITORY_TOKEN)
+    private readonly actividadRepository: IActividadRepository,
     @Inject(ACTIVIDADES_QUERY_REPOSITORY_TOKEN)
     private readonly actividadQueryRepository: IActividadesQueryRepository,
+    @Inject(UNIT_OF_WORK_TOKEN)
+    private readonly unitOfWork: IUnitOfWork,
   ) {}
 
   // El endpoint de get resumen
-  getResumen(query: ActividadGetResumenQuery): ActividadesResumenResponse {
+  async getResumen(
+    query: ActividadGetResumenQuery,
+  ): Promise<ActividadesResumenResponse> {
     // Deconstrucción del query
     const { usuarioActual, actividadId } = query;
+    const actividad = await this.actividadQueryRepository.obtenerResumenPorId({
+      usuarioUuid: usuarioActual.usuario_id,
+      actividadId: actividadId,
+    });
 
-    return new ActividadesResumenResponse();
+    if (!actividad) {
+      throw new RecursoNoEncontradoException(
+        'Actividad',
+        actividadId,
+        usuarioActual.usuario_id,
+      );
+    }
+    return ActividadResponseMapper.toGetResumen(actividad);
   }
 
   async getFichaTecnica(
@@ -54,20 +75,110 @@ export class ActividadesService {
     return ActividadResponseMapper.toFichaTecnica(actividadActual);
   }
 
-  patchFichaTecnica(
+  async patchFichaTecnica(
     command: ActividadPatchFichaTecnicaCommand,
-  ): ActividadesFichaTecnicaResponse {
+  ): Promise<ActividadesResumenResponse> {
     //Deconstrucción del command
     const { usuarioActual, actividadId, dto } = command;
-    return new ActividadesFichaTecnicaResponse();
+
+    return this.unitOfWork.ejecutarTransaccion(
+      async (tx: TransactionHandle) => {
+        // 1. Obtenemos el agregado Raíz Vivo (Hidratado con el contexto del POA)
+        const actividad = await this.actividadRepository.obtenerPorId(
+          actividadId,
+          tx,
+        );
+
+        //2. Fail First
+        if (!actividad) {
+          throw new RecursoNoEncontradoException(
+            'Actividad',
+            actividadId,
+            usuarioActual.usuario_id,
+          );
+        }
+
+        //3. Regla de Autorización Multitenat (HTTP403)
+        if (
+          !actividad.puedeSerModificadaPor(
+            usuarioActual.rol,
+            usuarioActual.usuario_id,
+          )
+        ) {
+          throw new ReglaNegocioException(
+            `El usuario ${usuarioActual.rol} de ID ${usuarioActual.usuario_id} no tiene los permisos necesarios sobre el POA al que pertenece esta actividad`,
+            CodigoDeViolacion.ROL_INVALIDO,
+          );
+        }
+
+        //5. Mutación de Dominio
+        actividad.actualizarFichaTecnica({
+          titulo: dto.titulo,
+          justificacion: dto.justificacion,
+          objetivo_general: dto.objetivo_general,
+          objetivos_particulares: dto.objetivos_particulares,
+          meta_del_proyecto: dto.meta_del_proyecto,
+          indicadores: dto.indicadores,
+          auditores_ids: dto.auditores_ids,
+        });
+
+        //6. Persistencia Atómica
+        await this.actividadRepository.guardar(actividad, undefined, tx);
+
+        //7. Respuesta
+        return ActividadResponseMapper.toPatchFichaTecnica(actividad);
+      },
+    );
   }
 
-  deleteActividad(
+  async deleteActividad(
     command: ActividadDeleteActividadCommand,
-  ): EliminacionCorrecta {
+  ): Promise<EliminacionCorrecta> {
     // Deconstrucción del Command
     const { usuarioActual, actividadId } = command;
+    return this.unitOfWork.ejecutarTransaccion(
+      async (tx: TransactionHandle) => {
+        const actividad = await this.actividadRepository.obtenerPorId(
+          actividadId,
+          tx,
+        );
 
-    return new EliminacionCorrecta();
+        // Fail first
+        if (!actividad) {
+          throw new RecursoNoEncontradoException(
+            'Actividad',
+            actividadId,
+            usuarioActual.usuario_id,
+          );
+        }
+
+        // Regla de autorización Miltitenat (HTTP 403)
+        if (
+          !actividad.puedeSerModificadaPor(
+            usuarioActual.rol,
+            usuarioActual.usuario_id,
+          )
+        ) {
+          throw new ReglaNegocioException(
+            `El usuario ${usuarioActual.usuario_id} con el ID ${usuarioActual.usuario_id} no tiene permitido eliminar actividad de este POA`,
+            CodigoDeViolacion.ROL_INVALIDO,
+          );
+        }
+
+        // Regla de Estado de Ciclo de Vida (HTTP 409)
+        if (!actividad.esElegibleParaModificación()) {
+          throw new ReglaNegocioException(
+            `No se puede eliminar la actividad porque su POA ya fue presentado y no está en estado ${EstadoPoa.BORRADOR} o ${EstadoPoa.DEVUELTA}`,
+            CodigoDeViolacion.DATOS_INSUFICIENTES,
+          );
+        }
+
+        // Persistencia
+        await this.actividadRepository.eliminar(actividadId, tx);
+
+        // Respuesta
+        return ActividadResponseMapper.toDeleteActividad();
+      },
+    );
   }
 }

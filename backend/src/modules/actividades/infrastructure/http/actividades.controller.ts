@@ -57,6 +57,7 @@ export class ActividadesController {
     description: 'UUID no identificado',
     type: HttpErrorDto,
   })
+  @RequirePermissions(Permisos.LEER_POA)
   @Get(':actividadId/resumen')
   getResumen(
     @UsuarioActual() usuarioActual: SesionUsuario,
@@ -126,13 +127,14 @@ export class ActividadesController {
     type: HttpErrorDto,
     description: 'Mal cuerpo  en su request',
   })
+  @RequirePermissions(Permisos.GESTIONAR_CONTENIDO_POA)
   @Patch(':actividadId/ficha-tecnica')
-  patchFichaTecnica(
+  async patchFichaTecnica(
     @UsuarioActual() usuarioActual: SesionUsuario,
     @Param('actividadId') actividadId: string,
     @Body() dto: ActividadesPatchFichaTecnicaRequest,
-  ): ActividadesResumenResponse {
-    return this.actividadesService.patchFichaTecnica({
+  ): Promise<ActividadesResumenResponse> {
+    return await this.actividadesService.patchFichaTecnica({
       usuarioActual,
       actividadId,
       dto,
@@ -161,12 +163,13 @@ export class ActividadesController {
     description: 'Actividad no encontrada',
     type: HttpErrorDto,
   })
+  @RequirePermissions(Permisos.GESTIONAR_CONTENIDO_POA)
   @Delete(':actividadId')
-  deleteActividad(
+  async deleteActividad(
     @UsuarioActual() usuarioActual: SesionUsuario,
     @Param('actividadId') actividadId: string,
-  ): EliminacionCorrecta {
-    return this.actividadesService.deleteActividad({
+  ): Promise<EliminacionCorrecta> {
+    return await this.actividadesService.deleteActividad({
       usuarioActual,
       actividadId,
     });

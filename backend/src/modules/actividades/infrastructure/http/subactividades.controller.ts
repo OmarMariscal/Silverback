@@ -61,6 +61,7 @@ export class SubactividadesController {
     type: HttpErrorDto,
     description: 'Rol no autorizado',
   })
+  @RequirePermissions(Permisos.LEER_POA)
   @Get()
   getSubActividades(
     @UsuarioActual() usuarioActual: SesionUsuario,
@@ -84,6 +85,10 @@ export class SubactividadesController {
     type: HttpErrorDto,
     description: 'Rol no autorizado',
   })
+  @RequirePermissions(
+    Permisos.VER_DASHBOARD_CONTRALOR,
+    Permisos.VER_DASHBOARD_AUDITOR,
+  )
   @Get('supervision')
   async getActividadesSupervision(
     @UsuarioActual() usuarioActual: SesionUsuario,
@@ -209,6 +214,11 @@ export class SubactividadesController {
     description: 'Rol no autorizado',
     type: HttpErrorDto,
   })
+  @RequirePermissions(
+    Permisos.VER_DASHBOARD_AUDITOR,
+    Permisos.VER_DASHBOARD_CONTRALOR,
+    Permisos.VER_DASHBOARD_JEFATURA,
+  )
   @Get('proximas-vencer')
   async getSubActividadesProximasAVencer(
     @UsuarioActual() usuarioActual: SesionUsuario,

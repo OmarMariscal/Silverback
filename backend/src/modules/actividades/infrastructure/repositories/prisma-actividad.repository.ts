@@ -6,6 +6,8 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { ActividadMapper } from '../mappers/actividad.mapper';
 import { SubActividadMapper } from '../mappers/subactividad.mapper';
+import { ActividadFullInclude } from '../types/actividad-full-include';
+import { PrismaActividadPayload } from '../types/actividad-payload.type';
 
 @Injectable()
 export class PrismaActividadRepository implements IActividadRepository {
@@ -23,12 +25,10 @@ export class PrismaActividadRepository implements IActividadRepository {
 
     const raw = await client.actividad.findUnique({
       where: { id },
-      include: { sub_actividades: true, auditores: true },
+      include: ActividadFullInclude,
     });
 
-    if (!raw) {
-      return null;
-    }
+    if (!raw) return null;
 
     return this.actividadMapper.toDomain(raw);
   }
@@ -39,7 +39,9 @@ export class PrismaActividadRepository implements IActividadRepository {
       include: { sub_actividades: true, auditores: true },
     });
 
-    return rawList.map((raw) => this.actividadMapper.toDomain(raw));
+    return rawList.map((raw) =>
+      this.actividadMapper.toDomain(raw as PrismaActividadPayload),
+    );
   }
 
   async guardar(
@@ -139,9 +141,11 @@ export class PrismaActividadRepository implements IActividadRepository {
     }
   }
 
-  async eliminar(id: string): Promise<void> {
+  async eliminar(id: string, tx?: TransactionHandle): Promise<void> {
+    const client = (tx as Prisma.TransactionClient | undefined) ?? this.prisma;
+
     // Gracias al 'onDelete: Cascade'' borrar al padre destruye automáticamente a las hijas y las tablas puente
-    await this.prisma.actividad.delete({
+    await client.actividad.delete({
       where: { id },
     });
   }

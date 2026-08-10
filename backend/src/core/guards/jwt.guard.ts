@@ -55,9 +55,6 @@ export class JwtAuthGuard implements CanActivate {
         perfil_id: `mock-perfil-${rolStr.toLowerCase()}`,
       };
 
-      console.log(mockPayload);
-
-      console.log(mockPayload);
       request.user = mockPayload;
       return true;
     }
