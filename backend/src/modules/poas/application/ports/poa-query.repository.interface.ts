@@ -1,5 +1,5 @@
-import { PoaActualDto } from '@modules/poas/dto/response/poa-actual.dto';
 import { FiltrosMiPoa } from './filtros/mi-poa.filter.interface';
+import { PoaActualResult } from './results/poa-actual.result';
 
 export const POA_QUERY_REPOSITORY_TOKEN = Symbol('POA_QUERY_REPOSITORY_TOKEN');
 
@@ -12,5 +12,5 @@ export interface IPoaQueryRepository {
    *
    * @returns El DTO con los datos del POA o null si el usuario aún no tiene uno activo.
    */
-  obtenerMiPoaActual(filtros: FiltrosMiPoa): Promise<PoaActualDto | null>;
+  obtenerMiPoaActual(filtros: FiltrosMiPoa): Promise<PoaActualResult | null>;
 }

@@ -31,7 +31,6 @@ async function bootstrap() {
   //Configurar el filtro de excepciones global de dominio
   app.useGlobalFilters(new DominioExceptionFilter());
 
-
   // Configuración de la Especificación de Swagger
   const config = new DocumentBuilder()
     .setTitle('API Silverback <3')

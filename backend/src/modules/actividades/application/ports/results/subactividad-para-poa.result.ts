@@ -7,4 +7,5 @@ export interface SubActividadPoaResult {
   tipo: TipoSubActividad;
   fecha_inicio: Date;
   fecha_termino: Date;
+  semanas: number;
 }

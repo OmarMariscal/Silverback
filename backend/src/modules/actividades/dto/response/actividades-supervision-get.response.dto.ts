@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { PaginacionMetadata } from '@core/common/dto/response/paginacion-metadata';
 import { ActividadesSupervisionSubActividadInfo } from './actividades-supervision-sub-actividad-info.dto';
 
-export class ActividadesSupervicionGetResponse {
+export class SubActividadesSupervicionGetResponse {
   @ApiProperty({
     description: 'Metadatos de la paginación',
     type: PaginacionMetadata,

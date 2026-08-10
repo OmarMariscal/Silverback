@@ -1,26 +1,15 @@
-import { PaginacionQueryDto } from '@core/common/dto/request/paginacion.query.dto';
 import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
 import { HttpErrorDto } from '@core/common/dto/response/http-error.dto';
+import { RequirePermissions } from '@core/decorators/roles.decorador';
 import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
 import { JwtAuthGuard } from '@core/guards/jwt.guard';
+import { PermisosGuard } from '@core/guards/roles.guard';
 import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
+import { Permisos } from '@domain/roles/permisos.enum';
 import { ActividadesService } from '@modules/actividades/application/actividades.service';
-import { ActividadesDirectorioQuery } from '@modules/actividades/dto/request/actividades-directorio.query.dto';
-import { ActividadesGetQuery } from '@modules/actividades/dto/request/actividades-get.query.dto';
 import { ActividadesPatchFichaTecnicaRequest } from '@modules/actividades/dto/request/actividades-path-ficha-tecnica.request.dto';
-import { SubActividadesBulkRequest } from '@modules/actividades/dto/request/sub-actividadedes-bulk.request.dto';
-import { SubActividadesProximasAVencerQuery } from '@modules/actividades/dto/request/sub-actividades-proximas-a-vencer.query.dto';
-import { SubActividadesSyncRequest } from '@modules/actividades/dto/request/sub-actividades-sync.request.dto';
-import { ActividadesDirectorioResponse } from '@modules/actividades/dto/response/actividades-directorio.response.dto';
 import { ActividadesFichaTecnicaResponse } from '@modules/actividades/dto/response/actividades-ficha-tecnica.response.dto';
-import { ActividadesGetResponse } from '@modules/actividades/dto/response/actividades-get.response.dto';
 import { ActividadesResumenResponse } from '@modules/actividades/dto/response/actividades-resumen.response.dto';
-import { ActividadesSupervicionGetResponse } from '@modules/actividades/dto/response/actividades-supervision-get.response.dto';
-import { SubActividadesBulkResponse } from '@modules/actividades/dto/response/sub-actividades-bulk.response.dto';
-import { SubActividadesPoaResponse } from '@modules/actividades/dto/response/sub-actividades-poa.response.dto';
-import { SubActividadesProximasVencerResponse } from '@modules/actividades/dto/response/sub-actividades-proximas-a-vencer-get.response.dto';
-import { SubActividadesSelectResponse } from '@modules/actividades/dto/response/sub-actividades-select.response.dto';
-import { SubActividadesSyncResponse } from '@modules/actividades/dto/response/sub-actividades-sync.response.dto';
 import {
   Body,
   Controller,
@@ -29,9 +18,6 @@ import {
   HttpStatus,
   Param,
   Patch,
-  Post,
-  Put,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -44,104 +30,12 @@ import {
 
 @ApiTags('Actividades')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermisosGuard)
 @Controller('actividades')
 export class ActividadesController {
   constructor(private readonly actividadesService: ActividadesService) {}
 
   //Get Estáticos
-  @ApiOperation({
-    summary: 'Obtener actividades',
-    description:
-      'Obtener un array con el data de las sub-actividades con la posibilidad para ciertos roles para filtrar por auditorID',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    type: ActividadesGetResponse,
-    description: 'Operación realizada correctamente',
-  })
-  @ApiResponse({
-    status: HttpStatus.FORBIDDEN,
-    type: HttpErrorDto,
-    description: 'Rol no autorizado',
-  })
-  @Get()
-  getActividades(
-    @Query() queryActividades: ActividadesGetQuery,
-  ): ActividadesGetResponse {
-    return this.actividadesService.getActividades(queryActividades);
-  }
-
-  @ApiOperation({
-    summary: 'Actividades próximas a vencer',
-    description:
-      'Retorna un listado de las actividades cuya fecha de término está más cerca',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Lista recuperada exitosamente',
-    type: SubActividadesProximasVencerResponse,
-  })
-  @ApiResponse({
-    status: HttpStatus.FORBIDDEN,
-    description: 'Rol no autorizado',
-    type: HttpErrorDto,
-  })
-  @Get('proximas-vencer')
-  getSubActividadesProximasAVencer(
-    @Query() query: SubActividadesProximasAVencerQuery,
-  ):
-    | Promise<SubActividadesProximasVencerResponse>
-    | SubActividadesProximasVencerResponse {
-    return this.actividadesService.getSubActividadesProximasAVencer(query);
-  }
-
-  @ApiOperation({
-    summary: 'Obtener actividades devueltas para el dashboard',
-    description:
-      'Datos de las sub-actividades recientemente devueltas para la construcción de la tabla inferior del dashboard del contralor',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    type: ActividadesSupervicionGetResponse,
-    description: 'Operación realizada con éxito',
-  })
-  @ApiResponse({
-    status: HttpStatus.FORBIDDEN,
-    type: HttpErrorDto,
-    description: 'Rol no autorizado',
-  })
-  @Get('supervision')
-  getActividadesSupervision(
-    @Query() queryPaginacion: PaginacionQueryDto,
-  ):
-    | Promise<ActividadesSupervicionGetResponse>
-    | ActividadesSupervicionGetResponse {
-    return this.actividadesService.getActividadesSupervicion(queryPaginacion);
-  }
-
-  @ApiOperation({
-    summary: 'Directorio de Actividades',
-    description:
-      'Listado de las actividades para la construcción de los dashboards',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    type: ActividadesDirectorioResponse,
-    description: 'Operación realizada con éxito',
-  })
-  @ApiResponse({
-    status: HttpStatus.FORBIDDEN,
-    type: HttpErrorDto,
-    description: 'Rol no autorizado',
-  })
-  @Get('directorio')
-  getActividadesDirectorio(
-    @Query() queryParam: ActividadesDirectorioQuery,
-  ): Promise<ActividadesDirectorioResponse> | ActividadesDirectorioResponse {
-    return this.actividadesService.getActividadesDirectorio(queryParam);
-  }
-
   @ApiOperation({
     summary: 'Detalles técnicos',
     description: 'Obtener los detalles técnicos de una actividad principal',
@@ -163,137 +57,13 @@ export class ActividadesController {
     description: 'UUID no identificado',
     type: HttpErrorDto,
   })
+  @RequirePermissions(Permisos.LEER_POA)
   @Get(':actividadId/resumen')
   getResumen(
-    @Param('actividadId') actUuid: string,
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('actividadId') actividadId: string,
   ): Promise<ActividadesResumenResponse> | ActividadesResumenResponse {
-    return this.actividadesService.getResumen(actUuid);
-  }
-
-  @ApiOperation({
-    summary: 'Listado de sub-actividades',
-    description:
-      'Endpoint para obtener el listado de las actividades de la vista completa en la pantalla de la generación de la POA',
-  })
-  @ApiParam({
-    name: 'actividadId',
-    description: 'Identificador único (UUID) de la actividad principal',
-    example: 'act-01-uuid',
-    required: true,
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Actividades recuperadas con éxito',
-    type: SubActividadesPoaResponse,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Actividad no encontrada',
-    type: HttpErrorDto,
-  })
-  @Get(':actividadId/sub-actividades-poa')
-  getSubActividadePoas(
-    @Param('actividadId') actividadId: string,
-  ): SubActividadesPoaResponse {
-    return this.actividadesService.getSubActividadesPoa(actividadId);
-  }
-
-  @ApiOperation({
-    summary: 'Sub-actividades seleccionadas y no seleccionadas',
-    description:
-      'Listado de sub-actividades seleccionadas y proveninetes del banco. Endpoint para el botón de `agregar sub-actividades` de la creación de la POA',
-  })
-  @ApiParam({
-    name: 'actividadId',
-    description: 'Identificador único (UUID) de la actividad principal',
-    example: 'act-01-uuid',
-    required: true,
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Actividades recuperadas con exito',
-    type: SubActividadesSelectResponse,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Actividad no encontrada',
-    type: HttpErrorDto,
-  })
-  @Get(':actividadId/sub-actividades-select')
-  getSubActividadesSelect(
-    @Param('actividadId') actividadId: string,
-  ): SubActividadesSelectResponse {
-    return this.actividadesService.getSubActividadesSelect(actividadId);
-  }
-
-  @ApiOperation({
-    summary: 'Selección de subactividades',
-    description: 'Sincronización de las subactividades seleccionadas',
-  })
-  @ApiParam({
-    name: 'actividadId',
-    description:
-      'El identificador único (UUID) de la actividad a la que van dirigidas las sub-actividades',
-    example: 'act-01-uuid',
-    required: true,
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'Actividades agregadas exitosamente',
-    type: SubActividadesBulkResponse,
-  })
-  @ApiResponse({
-    status: HttpStatus.FORBIDDEN,
-    description: 'Rol no autorizado para esta operación',
-    type: HttpErrorDto,
-  })
-  @Post(':actividadId/sub-actividades/bulk')
-  postSubActividadesBulk(
-    @Param('actividadId') actUuid: string,
-    @Body() bulkRequest: SubActividadesBulkRequest,
-  ): Promise<SubActividadesBulkResponse> | SubActividadesBulkResponse {
-    return this.actividadesService.postSubActividadesBulk(actUuid, bulkRequest);
-  }
-
-  @ApiOperation({
-    summary: 'Edición de múltiples sub-actividades',
-    description:
-      'Endpoint único para sincronizar varios cambios de una actividad principal objetivo',
-  })
-  @ApiParam({
-    name: 'actividadId',
-    description: 'Identificador único (UUID) de la actividad principal',
-    example: 'sub-uuid-1',
-    required: true,
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Sincronización realizada con éxito',
-    type: SubActividadesSyncResponse,
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Error de validación de la estructura JSON',
-    type: HttpErrorDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'UUID no coincide con una sub-actividad',
-    type: HttpErrorDto,
-  })
-  @Put(':actividadId/sub-actividades/sync')
-  putSubActividadesSync(
-    @Param('actividadId') actUuid: string,
-    @Body() subActividades: SubActividadesSyncRequest,
-  ): SubActividadesSyncResponse {
-    return this.actividadesService.putSubActividadesSync(
-      actUuid,
-      subActividades,
-    );
+    return this.actividadesService.getResumen({ usuarioActual, actividadId });
   }
 
   @ApiOperation({
@@ -318,15 +88,16 @@ export class ActividadesController {
     type: HttpErrorDto,
     description: 'Actividad no encontrada',
   })
+  @RequirePermissions(Permisos.LEER_POA)
   @Get(':actividadId/ficha-tecnica')
-  getFichaTecnica(
-    @Param('actividadId') actUuid: string,
+  async getFichaTecnica(
+    @Param('actividadId') actividadId: string,
     @UsuarioActual() usuarioActual: SesionUsuario,
-  ): ActividadesFichaTecnicaResponse {
-    return this.actividadesService.getFichaTecnica(
-      usuarioActual.actor,
-      actUuid,
-    );
+  ): Promise<ActividadesFichaTecnicaResponse> {
+    return await this.actividadesService.getFichaTecnica({
+      usuarioActual,
+      actividadId,
+    });
   }
 
   @ApiOperation({
@@ -343,7 +114,7 @@ export class ActividadesController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: ActividadesFichaTecnicaResponse,
+    type: ActividadesResumenResponse,
     description: 'Operación realizada con éxito',
   })
   @ApiResponse({
@@ -356,12 +127,18 @@ export class ActividadesController {
     type: HttpErrorDto,
     description: 'Mal cuerpo  en su request',
   })
+  @RequirePermissions(Permisos.GESTIONAR_CONTENIDO_POA)
   @Patch(':actividadId/ficha-tecnica')
-  patchFichaTecnica(
-    @Param('actividadId') actUuid: string,
-    @Body() fichaTecnica: ActividadesPatchFichaTecnicaRequest,
-  ): ActividadesFichaTecnicaResponse {
-    return this.actividadesService.patchFichaTecnica(actUuid, fichaTecnica);
+  async patchFichaTecnica(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('actividadId') actividadId: string,
+    @Body() dto: ActividadesPatchFichaTecnicaRequest,
+  ): Promise<ActividadesResumenResponse> {
+    return await this.actividadesService.patchFichaTecnica({
+      usuarioActual,
+      actividadId,
+      dto,
+    });
   }
 
   @ApiOperation({
@@ -386,10 +163,15 @@ export class ActividadesController {
     description: 'Actividad no encontrada',
     type: HttpErrorDto,
   })
+  @RequirePermissions(Permisos.GESTIONAR_CONTENIDO_POA)
   @Delete(':actividadId')
-  deleteActividad(
+  async deleteActividad(
+    @UsuarioActual() usuarioActual: SesionUsuario,
     @Param('actividadId') actividadId: string,
-  ): EliminacionCorrecta {
-    return this.actividadesService.deleteActividad(actividadId);
+  ): Promise<EliminacionCorrecta> {
+    return await this.actividadesService.deleteActividad({
+      usuarioActual,
+      actividadId,
+    });
   }
 }

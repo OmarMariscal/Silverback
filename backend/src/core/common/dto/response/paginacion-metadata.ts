@@ -17,5 +17,12 @@ export class PaginacionMetadata {
     example: 9,
     description: 'Total de páginas en las que se dividió la respuesta',
   })
-  total_páginas!: number;
+  total_paginas!: number;
+
+  @ApiProperty({
+    example: 10,
+    description: 'Límite de registros por página',
+    required: false,
+  })
+  limite?: number;
 }

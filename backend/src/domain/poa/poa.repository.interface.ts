@@ -1,3 +1,4 @@
+import { TransactionHandle } from '@domain/shared/transaction.interface';
 import { PoaEntity } from './poa.entity';
 
 export const POA_REPOSITORY_TOKEN = Symbol('POA_REPOSITORY_TOKEN');
@@ -12,16 +13,19 @@ export interface IPoaRepository {
    * @param id Identificador único del POA
    * @returns La entidad hidratada o null si no existe
    */
-  obtenerPorId(id: string): Promise<PoaEntity | null>;
+  obtenerPorId(id: string, tx?: TransactionHandle): Promise<PoaEntity | null>;
 
   /**
    * Persiste el estado actual del Agregado Raíz POA.
    *
    * Actúa como un "Upsert" a nivel de dominio.
    *
+   * Utiliza como opcional TransactionHandle para que su guardado se haga por medio de una
+   * transacción junto con las validaciones de la entidad de las actividades.
+   * \
    * @param poa La entidad con las reglas de negocio ya validadas
    */
-  guardar(poa: PoaEntity): Promise<void>;
+  guardar(poa: PoaEntity, tx?: TransactionHandle): Promise<void>;
 
   /**
    * Ejecuta la eliminación (física o lógica) del POA.
