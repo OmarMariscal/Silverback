@@ -1,7 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
 import * as dashboardQueryRepositoryInterface from './ports/dashboard-query.repository.interface';
-
-// Importamos los DTOs (Lo que sale al exterior)
 import { DashboardDto } from '../dto/response/dashboard.dto';
 import { DashboardJefaDto } from '../dto/response/dashboard-jefa.dto';
 import { RezagoDataDto } from '../dto/response/dashboard-rezago-data.dto';

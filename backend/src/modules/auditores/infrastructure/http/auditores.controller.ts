@@ -1,7 +1,7 @@
 import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
-import { AuditoresService } from './auditores.service';
+import { AuditoresService } from '../../application/auditores.service';
 import { ApiOperation, ApiProduces, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { AuditoresDataDto } from './DTOS/response/auditores-data.dto';
+import { AuditoresDataDto } from '../../dto/response/auditores-data.dto';
 
 @ApiTags('Auditores')
 @Controller('auditores')
@@ -13,13 +13,13 @@ export class AuditoresController {
     description: 'Entrega a los auditores disponibles para registrar en la actividad'
   }) 
   @ApiResponse({
-    status: HttpStatus.FOUND,
+    status: HttpStatus.OK,
     description: 'Obtiene la lista de auditores',
     type: AuditoresDataDto,
   })
   @Get()
-  getAuditores(auditoresData: AuditoresDataDto): AuditoresDataDto {
-    return auditoresData;
+  public async getAuditores(): Promise<AuditoresDataDto> {
+    return this.auditoresService.getAuditores();
   }
 
 }

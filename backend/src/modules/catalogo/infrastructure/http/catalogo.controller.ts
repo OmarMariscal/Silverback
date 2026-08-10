@@ -1,73 +1,78 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { CatalogoService } from './application/catalogo.service';
-import { ApiTags, ApiResponse, ApiQuery, ApiOperation } from '@nestjs/swagger';
-import { BancoActividadesDataDto } from './DTOS/response/catalogo-banco-data.dto';
-import { BancoIdDto } from './DTOS/response/catalogo-banco-id.dto';
-import { ActividadSugeridaDataDto } from './DTOS/response/catalogo-banco-sugeridas-data.dto';
-import { CentroDataDto } from './DTOS/response/catalogo-centro-data.dto';
+import { Controller, Get, Param, Query, NotFoundException, UseGuards } from '@nestjs/common';
+import { CatalogoService } from '../../application/catalogo.service';
+import { ApiTags, ApiResponse, ApiQuery, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { BancoActividadesDataDto } from '../../dto/response/catalogo-banco-data.dto';
+import { BancoIdDto } from '../../dto/response/catalogo-banco-id.dto';
+import { ActividadSugeridaDataDto } from '../../dto/response/catalogo-banco-sugeridas-data.dto';
+import { CentroDataDto } from '../../dto/response/catalogo-centro-data.dto';
+
+// Importaciones de seguridad
+import { JwtAuthGuard } from '@core/guards/jwt.guard';
+import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
+import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
 
 @ApiTags('Catalogos')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard) // Protegemos los catálogos para extraer la sesión
 @Controller('catalogos')
 export class CatalogoController {
   constructor(private readonly catalogoService: CatalogoService) {}
 
-  @ApiOperation({
-     summary: 'Muestra el catalogo de actividades',
-     description: 'Muestra el banco de actividades para que el usuario pueda seleccionar.'
-   }) 
-  @ApiResponse({
-    status: 200,
-    description: 'Obtiene el catálogo de actividades del banco de actividades',
-    type: BancoActividadesDataDto,
-  })
-  @ApiQuery({
-    name: 'Busqueda',
-    required: false
-  })
+  @ApiOperation({ summary: 'Muestra el catalogo de actividades' }) 
+  @ApiResponse({ status: 200, type: BancoActividadesDataDto })
+  @ApiQuery({ name: 'Busqueda', required: false })
   @Get('/banco-actividades')
-  getBancoActividades( data: BancoActividadesDataDto, @Query() actividad?: string): BancoActividadesDataDto {
-      return data;
+  public async getBancoActividades(
+    @UsuarioActual() sesion: SesionUsuario, // 1. Extraemos el usuario
+    @Query('Busqueda') busqueda?: string
+  ): Promise<BancoActividadesDataDto> {
+      
+      // 2. Empaquetamos en el Query object
+      const query = {
+        usuarioActualId: sesion.usuario_id,
+        busqueda: busqueda
+      };
+
+      return await this.catalogoService.getBancoActividades(query);
   }
 
-  @ApiOperation({
-    summary: 'Buscar actividad por ID',
-    description: 'Se devuelve una actividad asociada al ID registrado'
-  }) 
-  @ApiResponse({
-    status: 200,
-    description: 'Obtiene la actividad con el ID especificado dentro del banco',
-    type: BancoIdDto,
-  })
+  @ApiOperation({ summary: 'Buscar actividad por ID' }) 
+  @ApiResponse({ status: 200, type: BancoIdDto })
   @Get('/banco-actividades/:id')
-  getBancoActividadesById(@Param('id') id: string, data: BancoIdDto): BancoIdDto {
-    return data;
+  public async getBancoActividadesById(
+    @UsuarioActual() sesion: SesionUsuario,
+    @Param('id') id: string
+  ): Promise<BancoIdDto> {
+    
+    const query = { usuarioActualId: sesion.usuario_id, id };
+    const actividad = await this.catalogoService.getBancoActividadPorId(query);
+    
+    if (!actividad) {
+      throw new NotFoundException(`No se encontró ninguna actividad en el banco con el ID: ${id}`);
+    }
+    return actividad as unknown as BancoIdDto;
   }
 
-  @ApiOperation({
-    summary: 'Entrega sub-actividades sugeridas',
-    description: 'Si la actividad vino del banco, en esta se mostraran sub-actividades sugeridas'
-  }) 
-  @ApiResponse({
-    status: 200,
-    description: 'Obtiene las sub-actividades sugeridas para una actividad específica',
-    type: ActividadSugeridaDataDto,
-  })
+  @ApiOperation({ summary: 'Entrega sub-actividades sugeridas' }) 
+  @ApiResponse({ status: 200, type: ActividadSugeridaDataDto })
   @Get('/banco-actividades/:id/sub-actividades-sugeridas')
-  getSubActividadesSugeridas(@Param('id') id: string, data: ActividadSugeridaDataDto): ActividadSugeridaDataDto {
-    return data;
+  public async getSubActividadesSugeridas(
+    @UsuarioActual() sesion: SesionUsuario,
+    @Param('id') id: string
+  ): Promise<ActividadSugeridaDataDto> {
+    
+    const query = { usuarioActualId: sesion.usuario_id, id };
+    return await this.catalogoService.getSubActividadesSugeridas(query);
   }
 
-  @ApiOperation({
-    summary: 'Entrega los centros de trabajo',
-    description: 'Devuelve los centros de trabajo registrados en el sistema.'
-  }) 
-  @ApiResponse({
-    status: 200,
-    description: 'Obtiene el catálogo de centros de trabajo',
-    type: CentroDataDto,
-  })
+  @ApiOperation({ summary: 'Entrega los centros de trabajo' }) 
+  @ApiResponse({ status: 200, type: CentroDataDto })
   @Get('/centros')
-  getCentros(centros: CentroDataDto): CentroDataDto {
-    return centros;
+  public async getCentros(
+    @UsuarioActual() sesion: SesionUsuario
+  ): Promise<CentroDataDto> {
+    
+    const query = { usuarioActualId: sesion.usuario_id };
+    return await this.catalogoService.getCentros(query);
   }
 }
