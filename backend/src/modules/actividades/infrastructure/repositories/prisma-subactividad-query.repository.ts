@@ -3,6 +3,7 @@ import {
   traducirEstadoSubActividadADominio,
   traducirEstadoSubActividadAPrisma,
   traducirTipoSubActividadADominio,
+  traducirTipoSubActividadAPrisma,
 } from '@core/utils/estados-sub-actividades.traslator';
 import { PrismaService } from '@database/prisma.service';
 import { PaginacionParams } from '@modules/actividades/application/ports/filtros/paginacion-params.filtro.interface';
@@ -78,13 +79,15 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
         id: true,
         descripcion_tarea: true,
         fecha_termino: true,
+        fecha_inicio: true,
       },
     });
 
     return rawList.map((raw) => ({
       id: raw.id,
       titulo: raw.descripcion_tarea,
-      fecha_vencimiento: raw.fecha_termino.toISOString().split('T')[0],
+      fecha_vencimiento: raw.fecha_termino,
+      fecha_inicio: raw.fecha_termino,
     }));
   }
 
@@ -148,6 +151,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
         select: {
           id: true,
           descripcion_tarea: true,
+          tipo: true,
           estado_operativo: true,
           fecha_envio: true,
           fecha_termino: true,
@@ -159,12 +163,14 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
     const data: SubActividadSupervisionResult[] = rawList.map((raw) => ({
       id: raw.id,
       titulo: raw.descripcion_tarea,
+      tipo: traducirTipoSubActividadADominio(raw.tipo),
       // Mapeo seguro de Prisma a Dominio
       estado_resolucion: traducirEstadoSubActividadADominio(
         raw.estado_operativo,
       ),
       fecha_envio: raw.fecha_envio!,
       fecha_vencimiento_poa: raw.fecha_termino,
+      conteo_observaciones: 4, // HARDCODE se tiene que cambiar cuando se implemente el tema de las observacioens
     }));
 
     // 6. Construcción de Metadatos
@@ -200,17 +206,14 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
     const skip = (pagina - 1) * limite;
 
     // 1. MOTOR DE FILTROS DINÁMICOS
-    const wherePrisma: Prisma.SubActividadWhereInput = {
-      AND: [
-        {
-          actividad: this.construirFiltroAcceso(filtros.usuarioUuid),
-        },
-      ],
-    };
+    // Creamos el arreglo fuertemente tipado de antemano
+    const andConditions: Prisma.SubActividadWhereInput[] = [
+      { actividad: this.construirFiltroAcceso(filtros.usuarioUuid) },
+    ];
 
     // A. Búsqueda por Texto (search)
     if (filtros.search && filtros.search.trim() !== '') {
-      (wherePrisma.AND as Prisma.SubActividadWhereInput[]).push({
+      andConditions.push({
         OR: [
           {
             descripcion_tarea: {
@@ -233,13 +236,25 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       });
     }
 
-    // B y C. Múltiples Estados Operativos (Consolidado para evitar duplicidad de push)
+    // B. Filtro por Tipo de Actividad (¡EL BLOQUE FALTANTE!)
+    if (filtros.tipoActividad && filtros.tipoActividad.length > 0) {
+      // Asumo que tienes un traductor similar al de estados
+      const tiposPrisma = filtros.tipoActividad.map((tipoDominio) =>
+        traducirTipoSubActividadAPrisma(tipoDominio),
+      );
+
+      andConditions.push({
+        tipo: { in: tiposPrisma },
+      });
+    }
+
+    // C. Múltiples Estados Operativos
     if (filtros.estadoFlujo && filtros.estadoFlujo.length > 0) {
       const estadosPrisma = filtros.estadoFlujo.map((estadoDominio) =>
         traducirEstadoSubActividadAPrisma(estadoDominio),
       );
 
-      (wherePrisma.AND as Prisma.SubActividadWhereInput[]).push({
+      andConditions.push({
         estado_operativo: { in: estadosPrisma },
       });
     }
@@ -250,17 +265,22 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       if (filtros.fechaInicio) rangoFechas.gte = filtros.fechaInicio;
       if (filtros.fechaFin) rangoFechas.lte = filtros.fechaFin;
 
-      (wherePrisma.AND as Prisma.SubActividadWhereInput[]).push({
+      andConditions.push({
         fecha_termino: rangoFechas,
       });
     }
 
     // E. Filtro por Centro Universitario
     if (filtros.centroUuid) {
-      (wherePrisma.AND as Prisma.SubActividadWhereInput[]).push({
+      andConditions.push({
         actividad: { poa: { centro_id: filtros.centroUuid } },
       });
     }
+
+    // Asignamos el arreglo al objeto final de forma 100% segura
+    const wherePrisma: Prisma.SubActividadWhereInput = {
+      AND: andConditions,
+    };
 
     // 2. MAPEO SEGURO DE ORDENAMIENTO
     const orderByPrisma: Prisma.SubActividadOrderByWithRelationInput = {};
@@ -397,6 +417,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
         tipo: true,
         fecha_inicio: true,
         fecha_termino: true,
+        semanas_totales: true,
       },
     });
 
@@ -407,6 +428,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       tipo: traducirTipoSubActividadADominio(sub.tipo),
       fecha_inicio: sub.fecha_inicio,
       fecha_termino: sub.fecha_termino,
+      semanas: sub.semanas_totales,
     }));
   }
 
@@ -427,6 +449,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
           fecha_inicio: true,
           fecha_termino: true,
           banco_sub_actividad_id: true,
+          semanas_totales: true,
         },
         orderBy: { numero_orden: 'asc' },
       },
@@ -463,6 +486,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
         seleccionada: true,
         fecha_inicio: sub.fecha_inicio,
         fecha_termino: sub.fecha_termino,
+        semanas: sub.semanas_totales,
       }));
 
     // 4. MOTOR DE DEDUPLICACIÓN

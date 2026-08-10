@@ -1,17 +1,17 @@
-import { ReglaNegocioException } from "./regla-negocio.exception";
+import { ReglaNegocioException } from './regla-negocio.exception';
 
-export class ValidacionIntegridadException extends Error{
-    private errores: ReglaNegocioException[];
+export class ValidacionIntegridadException extends Error {
+  private errores: ReglaNegocioException[];
 
-    constructor(message: string, errores: ReglaNegocioException[]){
-        super(message);
-        this.name = 'ValidacionIntegridadException'
-        this.errores = errores;
+  constructor(message: string, errores: ReglaNegocioException[]) {
+    super(message);
+    this.name = 'ValidacionIntegridadException';
+    this.errores = errores;
 
-        Object.setPrototypeOf(this, ValidacionIntegridadException.prototype)
-    }
+    Object.setPrototypeOf(this, ValidacionIntegridadException.prototype);
+  }
 
-    get Errores(){
-        return this.errores;
-    }
+  get Errores() {
+    return this.errores;
+  }
 }

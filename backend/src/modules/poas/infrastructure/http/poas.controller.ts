@@ -1,16 +1,17 @@
+import { RequirePermissions } from '@core/decorators/roles.decorador';
 import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
 import { JwtAuthGuard } from '@core/guards/jwt.guard';
+import { PermisosGuard } from '@core/guards/roles.guard';
 import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
+import { Permisos } from '@domain/roles/permisos.enum';
 import { PoasService } from '@modules/poas/application/poas.service';
 import {
   Body,
   Controller,
   Get,
   HttpStatus,
-  NotImplementedException,
   Param,
   Post,
-  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -28,10 +29,10 @@ import { PresentarPoasResponseErrorDto } from '../../dto/response/poas-presentar
 
 @ApiTags('POAs')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermisosGuard)
 @Controller('poas')
 export class PoasController {
-  constructor(private readonly poasService: PoasService) {}
+  constructor(private readonly poaService: PoasService) {}
 
   @ApiOperation({
     summary: 'Devuelve la POA en la que se esta trabajando',
@@ -39,30 +40,38 @@ export class PoasController {
       'Entrega los datos necesarios para armar la POA vigente del anio fiscal',
   })
   @ApiResponse({
-    status: 201,
+    status: 200,
     type: PoaActualDto,
   })
+  @RequirePermissions(Permisos.LEER_POA)
   @Get('/mi-poa-actual')
-  getPoaActual(@UsuarioActual() usuario: SesionUsuario): PoaActualDto {
-    return new PoaActualDto();
+  async getPoaActual(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+  ): Promise<PoaActualDto> {
+    return await this.poaService.getPoaActual({ usuarioActual });
   }
 
   @ApiOperation({
     summary: 'Agregar actividades',
     description: 'Recibe los datos para crear actividades dentro de la POA',
   })
-  @Post(':poaid/actividades')
   @ApiResponse({
     status: 201,
     description: 'Actividad agregada exitosamente',
     type: CrearActividadesResponseDto,
   })
-  agregarActividades(
-    @Param('poaid') id: string,
-    @Body() crearActividadesDto: CrearActividadesDto,
-    @Res() response,
-  ): CrearActividadesResponseDto {
-    throw new NotImplementedException('Pendiente de Implementar');
+  @RequirePermissions(Permisos.GESTIONAR_CONTENIDO_POA)
+  @Post(':poaid/actividades')
+  async agregarActividades(
+    @Param('poaid') poaId: string,
+    @Body() dto: CrearActividadesDto,
+    @UsuarioActual() usuario: SesionUsuario,
+  ): Promise<CrearActividadesResponseDto> {
+    return await this.poaService.agregarActividad({
+      poaId,
+      usuario,
+      dto,
+    });
   }
 
   @ApiOperation({
@@ -79,7 +88,12 @@ export class PoasController {
     status: HttpStatus.OK,
     type: PresentarPoasDto,
   })
-  presentarPoa(@Param('poaid') id: string, @Res() response) {}
+  presentarPoa(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('poaid') poaId: string,
+  ) {
+    return this.poaService.presentarPoa({ usuarioActual, poaId });
+  }
 
   @ApiOperation({
     summary: 'Cancela el envio de la POA',
@@ -91,5 +105,10 @@ export class PoasController {
     type: CancelarPoaDataDto,
   })
   @Post(':poaid/cancelar-envio')
-  cancelarEnvio(@Param('poaid') id: string) {}
+  cancelarEnvio(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('poaid') poaId: string,
+  ) {
+    return this.poaService.cancelarEnvio({ usuarioActual, poaId });
+  }
 }

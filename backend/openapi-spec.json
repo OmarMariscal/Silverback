@@ -279,7 +279,7 @@
     "/api/v1/actividades": {
       "get": {
         "description": "Obtener un array con el data de las sub-actividades con la posibilidad para ciertos roles para filtrar por auditorID",
-        "operationId": "SubactividadesController_getActividades",
+        "operationId": "SubactividadesController_getSubActividades",
         "parameters": [
           {
             "name": "auditor_id",
@@ -554,7 +554,7 @@
     "/api/v1/actividades/{actividadId}/sub-actividades-poa": {
       "get": {
         "description": "Endpoint para obtener el listado de las sub-actividades de una actividad principal.",
-        "operationId": "SubactividadesController_getSubActividadePoas",
+        "operationId": "SubactividadesController_getSubActividadePoa",
         "parameters": [
           {
             "name": "actividadId",
@@ -837,7 +837,7 @@
         "operationId": "PoasController_getPoaActual",
         "parameters": [],
         "responses": {
-          "201": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
@@ -2161,6 +2161,11 @@
                 "$ref": "#/components/schemas/TipoSubActividad"
               }
             ]
+          },
+          "banco_sub_actividad_id": {
+            "type": "string",
+            "description": "Atributo opcional para enlistar de qué banco de actividad viene",
+            "example": "banco_sub_actividad_uuid-1"
           }
         },
         "required": [
@@ -2257,6 +2262,11 @@
                 "$ref": "#/components/schemas/TipoSubActividad"
               }
             ]
+          },
+          "banco_sub_actividad_id": {
+            "type": "string",
+            "description": "Atributo opcional para enlistar de qué banco de actividad viene",
+            "example": "banco_sub_actividad_uuid-1"
           },
           "id": {
             "type": "string",

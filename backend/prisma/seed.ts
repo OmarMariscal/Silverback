@@ -164,6 +164,8 @@ async function main() {
     new Date('2026-01-31'),
   );
 
+  const totalActividades = 15;
+
   const poaCucei2026 = await prisma.poa.create({
     data: {
       anio_fiscal: 2026,
@@ -172,6 +174,7 @@ async function main() {
       centro_id: cucei.id,
       fecha_aprobado: faprobado,
       mensaje_resolucion: 'POA aprobado tras revisión inicial por la Jefatura.',
+      ultima_secuencia_actividad: totalActividades,
     },
   });
 
@@ -193,7 +196,7 @@ async function main() {
     'Elaboración de acta circunstanciada',
   ];
 
-  for (let i = 1; i <= 15; i++) {
+  for (let i = 1; i <= totalActividades; i++) {
     const fInicio = getRandomDate(
       new Date('2026-01-01'),
       new Date('2026-06-01'),

@@ -15,7 +15,7 @@ export const UsuarioActual = createParamDecorator(
     // 1. Construimos el Actor de Dominio usando tu Factory
     const actorDominio = crearActor(
       jwtPayload.rol,
-      jwtPayload.permisos_especiales,
+      jwtPayload.permisos,
     );
 
     // 2. Armamos el objeto rico de Sesión

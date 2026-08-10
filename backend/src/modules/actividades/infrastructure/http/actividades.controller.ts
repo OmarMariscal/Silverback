@@ -1,8 +1,11 @@
 import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
 import { HttpErrorDto } from '@core/common/dto/response/http-error.dto';
+import { RequirePermissions } from '@core/decorators/roles.decorador';
 import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
 import { JwtAuthGuard } from '@core/guards/jwt.guard';
+import { PermisosGuard } from '@core/guards/roles.guard';
 import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
+import { Permisos } from '@domain/roles/permisos.enum';
 import { ActividadesService } from '@modules/actividades/application/actividades.service';
 import { ActividadesPatchFichaTecnicaRequest } from '@modules/actividades/dto/request/actividades-path-ficha-tecnica.request.dto';
 import { ActividadesFichaTecnicaResponse } from '@modules/actividades/dto/response/actividades-ficha-tecnica.response.dto';
@@ -27,7 +30,7 @@ import {
 
 @ApiTags('Actividades')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermisosGuard)
 @Controller('actividades')
 export class ActividadesController {
   constructor(private readonly actividadesService: ActividadesService) {}
@@ -54,11 +57,13 @@ export class ActividadesController {
     description: 'UUID no identificado',
     type: HttpErrorDto,
   })
+  @RequirePermissions(Permisos.LEER_POA)
   @Get(':actividadId/resumen')
   getResumen(
-    @Param('actividadId') actUuid: string,
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('actividadId') actividadId: string,
   ): Promise<ActividadesResumenResponse> | ActividadesResumenResponse {
-    return this.actividadesService.getResumen(actUuid);
+    return this.actividadesService.getResumen({ usuarioActual, actividadId });
   }
 
   @ApiOperation({
@@ -83,15 +88,16 @@ export class ActividadesController {
     type: HttpErrorDto,
     description: 'Actividad no encontrada',
   })
+  @RequirePermissions(Permisos.LEER_POA)
   @Get(':actividadId/ficha-tecnica')
-  getFichaTecnica(
-    @Param('actividadId') actUuid: string,
+  async getFichaTecnica(
+    @Param('actividadId') actividadId: string,
     @UsuarioActual() usuarioActual: SesionUsuario,
-  ): ActividadesFichaTecnicaResponse {
-    return this.actividadesService.getFichaTecnica(
-      usuarioActual.actor,
-      actUuid,
-    );
+  ): Promise<ActividadesFichaTecnicaResponse> {
+    return await this.actividadesService.getFichaTecnica({
+      usuarioActual,
+      actividadId,
+    });
   }
 
   @ApiOperation({
@@ -121,12 +127,18 @@ export class ActividadesController {
     type: HttpErrorDto,
     description: 'Mal cuerpo  en su request',
   })
+  @RequirePermissions(Permisos.GESTIONAR_CONTENIDO_POA)
   @Patch(':actividadId/ficha-tecnica')
-  patchFichaTecnica(
-    @Param('actividadId') actUuid: string,
-    @Body() fichaTecnica: ActividadesPatchFichaTecnicaRequest,
-  ): ActividadesResumenResponse {
-    return this.actividadesService.patchFichaTecnica(actUuid, fichaTecnica);
+  async patchFichaTecnica(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('actividadId') actividadId: string,
+    @Body() dto: ActividadesPatchFichaTecnicaRequest,
+  ): Promise<ActividadesResumenResponse> {
+    return await this.actividadesService.patchFichaTecnica({
+      usuarioActual,
+      actividadId,
+      dto,
+    });
   }
 
   @ApiOperation({
@@ -151,10 +163,15 @@ export class ActividadesController {
     description: 'Actividad no encontrada',
     type: HttpErrorDto,
   })
+  @RequirePermissions(Permisos.GESTIONAR_CONTENIDO_POA)
   @Delete(':actividadId')
-  deleteActividad(
+  async deleteActividad(
+    @UsuarioActual() usuarioActual: SesionUsuario,
     @Param('actividadId') actividadId: string,
-  ): EliminacionCorrecta {
-    return this.actividadesService.deleteActividad(actividadId);
+  ): Promise<EliminacionCorrecta> {
+    return await this.actividadesService.deleteActividad({
+      usuarioActual,
+      actividadId,
+    });
   }
 }

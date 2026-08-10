@@ -12,7 +12,10 @@ export interface IActividadRepository {
    * @param id IIdentificador único de la Actividad
    * @returns La entidad hidratada o null si no existe
    */
-  obtenerPorId(id: string): Promise<ActividadEntity | null>;
+  obtenerPorId(
+    id: string,
+    tx?: TransactionHandle,
+  ): Promise<ActividadEntity | null>;
 
   /**
    * Recupera el Agregado Raíz completo (Actividad Padre + Subactividades Hijas)
@@ -35,7 +38,11 @@ export interface IActividadRepository {
    *
    * @param actividad La entidad con las reglas de negocio ya validadas
    */
-  guardar(actividad: ActividadEntity, tx?: TransactionHandle): Promise<void>;
+  guardar(
+    actividad: ActividadEntity,
+    poaId?: string,
+    tx?: TransactionHandle,
+  ): Promise<void>;
 
   /**
    * Ejecuta la eliminación (física o lógica, según lo decida la infraestructura)
@@ -43,5 +50,5 @@ export interface IActividadRepository {
    *
    * @param id Identificador único de la Actividad
    */
-  eliminar(id: string): Promise<void>;
+  eliminar(id: string, tx?: TransactionHandle): Promise<void>;
 }

@@ -4,6 +4,7 @@ import { ActividadEntity } from '@domain/actividad/actividad.entity';
 import { PrismaActividadPayload } from '../types/actividad-payload.type';
 import { SubActividadMapper } from './subactividad.mapper';
 import { Injectable } from '@nestjs/common';
+import { traducirEstadoPoaADominio } from '@core/utils/estados-poa.traslator';
 
 @Injectable()
 export class ActividadMapper implements Mapper<
@@ -18,16 +19,18 @@ export class ActividadMapper implements Mapper<
   public toDomain(raw: PrismaActividadPayload): ActividadEntity {
     //Limpiamos la tabla puente N:M (Sacamos solo los puros strings de los IDs)
     // DE [{ actividad_id: 'x', auditor_ud: '123' }] pasa a ser ['123']
-    const auditoresIdsLimpio = raw.auditores.map((puente) => puente.auditor_id);
-
+    const auditoresIdsLimpio = raw.auditores
+      ? raw.auditores.map((puente) => puente.auditor_id)
+      : [];
     //2. Hidratamos las sub-actividades usando el mapper hijo
-    const subActividadesHidratadas = raw.sub_actividades.map((subRaw) =>
-      this.subActividadMapper.toDomain(subRaw),
-    );
-
+    const subActividadesHidratadas = raw.sub_actividades
+      ? raw.sub_actividades.map((subRaw) =>
+          this.subActividadMapper.toDomain(subRaw),
+        )
+      : [];
     //3. Construimos la entidad principal
 
-    return new ActividadEntity(
+    const actividad = new ActividadEntity(
       raw.id,
       raw.folio,
       raw.titulo,
@@ -43,6 +46,23 @@ export class ActividadMapper implements Mapper<
       subActividadesHidratadas,
       raw.banco_actividad_id,
     );
+
+    // 4. HIDRATACIÓN DEFENSIVA DE CONTEXTO DE SEGURIDAD
+    // Si la consulta a Prisma incluyó el POA, extraemos e inyectamos los datos.
+    // Esto protege a la Entidad para hacer validaciones de autorización (CQRS).
+    if (raw.poa) {
+      const estadoPoaDominio = traducirEstadoPoaADominio(raw.poa.estado);
+      const idContralor = raw.poa.contralor?.usuario_id || null;
+      const idJefa = raw.poa.contralor?.jefa?.usuario_id || null;
+
+      actividad.inyectarContextoDeSeguridad(
+        estadoPoaDominio,
+        idContralor,
+        idJefa,
+      );
+    }
+
+    return actividad;
   }
 
   //Estrae lo datos del Dominio para guardarlos en Primsa

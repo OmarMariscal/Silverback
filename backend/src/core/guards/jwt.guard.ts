@@ -6,7 +6,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Roles } from '@domain/roles/roles.enum';
+import { Permisos } from '@domain/roles/permisos.enum';
 import { JwtPayloadDto } from '../auth/dto/jwt-payload.dto';
+import { crearActor } from '@domain/roles/actor.factory';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -17,6 +19,7 @@ export class JwtAuthGuard implements CanActivate {
     // ESTRATEGIA MOCK (Solo activa en Desarrollo)
     // ==========================================
     const isDevelopment = process.env.NODE_ENV !== 'production';
+
     const mockRole = request.headers['x-mock-role'];
 
     if (isDevelopment && mockRole) {
@@ -24,25 +27,36 @@ export class JwtAuthGuard implements CanActivate {
       const mockCentro =
         request.headers['x-mock-centro'] || 'uuid-centro-cucei';
 
+      // Transformamos los permisos del header en un arreglo si es que existen
       const mockPermisosHeader = request.headers['x-mock-permisos'];
-      const mockPermisos =
-        mockPermisosHeader !== undefined
-          ? mockPermisosHeader.toString() === 'true'
-          : true;
+      let mockPermisos: Permisos[] = [];
 
-      // Creamos el Payload Falso simulando lo que tendría un JWT
-      // Dentro de tu JwtAuthGuard...
+      if (
+        mockPermisosHeader &&
+        mockPermisosHeader !== 'true' &&
+        mockPermisosHeader !== 'false'
+      ) {
+        mockPermisos = mockPermisosHeader.toString().split(',') as Permisos[];
+      }
+
+      // 2. Utilizamos tu factory para obtener el rol y la lista de permisos unificada
+      const datosActor = crearActor(rolStr, mockPermisos);
+
+      const mockUserIdHeader = request.headers['x-mock-user-id']; // [1]
+
+      // 3. Construimos el Payload Falso usando los datos del factory
       const mockPayload: JwtPayloadDto = {
-        usuario_id: `mock-user-${rolStr.toLowerCase()}`,
-        rol: rolStr,
+        usuario_id: mockUserIdHeader
+          ? mockUserIdHeader.toString()
+          : `mock-user-${rolStr.toLowerCase()}`,
+        rol: datosActor.rol, // Viene del factory
+        permisos: datosActor.permisos, // ¡Viene del factory con los permisos por defecto!
         centro_id: rolStr === 'JEFA' ? null : mockCentro,
         perfil_id: `mock-perfil-${rolStr.toLowerCase()}`,
-        permisos_especiales: mockPermisos,
       };
 
-      // Inyectamos el usuario en la Request de Express
       request.user = mockPayload;
-      return true; // Acceso concedido
+      return true;
     }
 
     // ==========================================

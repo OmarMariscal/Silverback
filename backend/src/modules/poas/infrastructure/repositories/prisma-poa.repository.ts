@@ -1,10 +1,10 @@
 import { PrismaService } from '@database/prisma.service';
 import { PoaEntity } from '@domain/poa/poa.entity';
 import { IPoaRepository } from '@domain/poa/poa.repository.interface';
-import { PoaMapper } from '../mappers/poa.mapper';
+import { TransactionHandle } from '@domain/shared/transaction.interface';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { TransactionHandle } from '@domain/shared/transaction.interface';
+import { PoaMapper } from '../mappers/poa.mapper';
 
 @Injectable()
 export class PrismaPoaRepository implements IPoaRepository {
@@ -13,8 +13,12 @@ export class PrismaPoaRepository implements IPoaRepository {
     private readonly poaMapper: PoaMapper,
   ) {}
 
-  async obtenerPorId(id: string): Promise<PoaEntity | null> {
-    const raw = await this.prisma.poa.findUnique({ where: { id } });
+  async obtenerPorId(
+    id: string,
+    tx?: TransactionHandle,
+  ): Promise<PoaEntity | null> {
+    const client = (tx as Prisma.TransactionClient | undefined) ?? this.prisma;
+    const raw = await client.poa.findUnique({ where: { id } });
 
     if (!raw) {
       return null;
