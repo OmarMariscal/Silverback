@@ -12,6 +12,7 @@ export interface MensajeItem {
   id: string;
   asunto: string;
   remitente: string;
+  leido: boolean;
 }
 
 export interface CabeceraGeneralGlobalProps {
