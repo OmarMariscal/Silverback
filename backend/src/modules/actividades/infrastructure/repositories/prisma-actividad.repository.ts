@@ -33,8 +33,13 @@ export class PrismaActividadRepository implements IActividadRepository {
     return this.actividadMapper.toDomain(raw);
   }
 
-  async obtenerPorPoaId(id: string): Promise<ActividadEntity[]> {
-    const rawList = await this.prisma.actividad.findMany({
+  async obtenerPorPoaId(
+    id: string,
+    tx?: TransactionHandle,
+  ): Promise<ActividadEntity[]> {
+    const client = (tx as Prisma.TransactionClient | undefined) ?? this.prisma;
+
+    const rawList = await client.actividad.findMany({
       where: { poa_id: id },
       include: { sub_actividades: true, auditores: true },
     });

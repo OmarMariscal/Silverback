@@ -7,6 +7,8 @@ import { PrismaPoaRepository } from './infrastructure/repositories/prisma-poa.re
 import { ActividadesModule } from '@modules/actividades/actividades.module';
 import { POA_QUERY_REPOSITORY_TOKEN } from './application/ports/poa-query.repository.interface';
 import { PoaQueryRepository } from './infrastructure/repositories/prisma-poa-query.repository';
+import { ACTIVIDADES_QUERY_REPOSITORY_TOKEN } from '@modules/actividades/application/ports/actividades-query.repository.interface';
+import { PrismaActividadQueryRepository } from '@modules/actividades/infrastructure/repositories/prisma-actividad-query.repository';
 
 @Module({
   imports: [ActividadesModule],
@@ -27,6 +29,11 @@ import { PoaQueryRepository } from './infrastructure/repositories/prisma-poa-que
     {
       provide: POA_QUERY_REPOSITORY_TOKEN,
       useClass: PoaQueryRepository,
+    },
+
+    {
+      provide: ACTIVIDADES_QUERY_REPOSITORY_TOKEN,
+      useClass: PrismaActividadQueryRepository,
     },
   ],
 })

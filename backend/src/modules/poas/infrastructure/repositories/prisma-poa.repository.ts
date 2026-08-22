@@ -5,6 +5,7 @@ import { TransactionHandle } from '@domain/shared/transaction.interface';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PoaMapper } from '../mappers/poa.mapper';
+import { PoaSecurityInclude } from '../mappers/types/poa-security-include';
 
 @Injectable()
 export class PrismaPoaRepository implements IPoaRepository {
@@ -18,7 +19,10 @@ export class PrismaPoaRepository implements IPoaRepository {
     tx?: TransactionHandle,
   ): Promise<PoaEntity | null> {
     const client = (tx as Prisma.TransactionClient | undefined) ?? this.prisma;
-    const raw = await client.poa.findUnique({ where: { id } });
+    const raw = await client.poa.findUnique({
+      where: { id },
+      include: PoaSecurityInclude,
+    });
 
     if (!raw) {
       return null;
