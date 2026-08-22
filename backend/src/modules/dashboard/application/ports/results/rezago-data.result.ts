@@ -1,12 +1,5 @@
-import { DistribucionDto } from "@modules/dashboard/dto/response/dashboard-rezago-distribucion.dto";
-
-export interface RezagoResult {
-  centro_id: string;
-  centro_clave: string;
-  centro_nombre: string;
-  distribucion: DistribucionDto;
-}
+import { KpiSubActividadPayLoad } from '@domain/kpi/interfaces/kpi-actividad-payload.interface';
 
 export interface RezagoDataResult {
-  data: RezagoResult[];
+  payloads: KpiSubActividadPayLoad[];
 }

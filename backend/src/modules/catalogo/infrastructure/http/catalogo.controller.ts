@@ -1,33 +1,33 @@
-import { Controller, Get, Param, Query, NotFoundException, UseGuards } from '@nestjs/common';
-import { CatalogoService } from '../../application/catalogo.service';
+import { Controller, Get, Param, Query, NotFoundException, UseGuards, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiQuery, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { CatalogoService } from '../../application/catalogo.service';
+
+// Importaciones de seguridad del equipo
+import { JwtAuthGuard } from '@core/guards/jwt.guard';
+import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
+import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
+
 import { BancoActividadesDataDto } from '../../dto/response/catalogo-banco-data.dto';
 import { BancoIdDto } from '../../dto/response/catalogo-banco-id.dto';
 import { ActividadSugeridaDataDto } from '../../dto/response/catalogo-banco-sugeridas-data.dto';
 import { CentroDataDto } from '../../dto/response/catalogo-centro-data.dto';
 
-// Importaciones de seguridad
-import { JwtAuthGuard } from '@core/guards/jwt.guard';
-import { UsuarioActual } from '@core/decorators/usuario-actual.decorador';
-import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
-
 @ApiTags('Catalogos')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard) // Protegemos los catálogos para extraer la sesión
+@UseGuards(JwtAuthGuard) // Solo pedimos que el usuario haya iniciado sesión
 @Controller('catalogos')
 export class CatalogoController {
   constructor(private readonly catalogoService: CatalogoService) {}
 
   @ApiOperation({ summary: 'Muestra el catalogo de actividades' }) 
-  @ApiResponse({ status: 200, type: BancoActividadesDataDto })
+  @ApiResponse({ status: HttpStatus.OK, type: BancoActividadesDataDto })
   @ApiQuery({ name: 'Busqueda', required: false })
   @Get('/banco-actividades')
   public async getBancoActividades(
-    @UsuarioActual() sesion: SesionUsuario, // 1. Extraemos el usuario
+    @UsuarioActual() sesion: SesionUsuario, 
     @Query('Busqueda') busqueda?: string
   ): Promise<BancoActividadesDataDto> {
       
-      // 2. Empaquetamos en el Query object
       const query = {
         usuarioActualId: sesion.usuario_id,
         busqueda: busqueda
@@ -37,7 +37,7 @@ export class CatalogoController {
   }
 
   @ApiOperation({ summary: 'Buscar actividad por ID' }) 
-  @ApiResponse({ status: 200, type: BancoIdDto })
+  @ApiResponse({ status: HttpStatus.OK, type: BancoIdDto })
   @Get('/banco-actividades/:id')
   public async getBancoActividadesById(
     @UsuarioActual() sesion: SesionUsuario,
@@ -45,16 +45,17 @@ export class CatalogoController {
   ): Promise<BancoIdDto> {
     
     const query = { usuarioActualId: sesion.usuario_id, id };
+    
     const actividad = await this.catalogoService.getBancoActividadPorId(query);
     
     if (!actividad) {
-      throw new NotFoundException(`No se encontró ninguna actividad en el banco con el ID: ${id}`);
+      throw new NotFoundException(`No se encontró ninguna actividad con el ID: ${id}`);
     }
     return actividad as unknown as BancoIdDto;
   }
 
   @ApiOperation({ summary: 'Entrega sub-actividades sugeridas' }) 
-  @ApiResponse({ status: 200, type: ActividadSugeridaDataDto })
+  @ApiResponse({ status: HttpStatus.OK, type: ActividadSugeridaDataDto })
   @Get('/banco-actividades/:id/sub-actividades-sugeridas')
   public async getSubActividadesSugeridas(
     @UsuarioActual() sesion: SesionUsuario,
@@ -66,7 +67,7 @@ export class CatalogoController {
   }
 
   @ApiOperation({ summary: 'Entrega los centros de trabajo' }) 
-  @ApiResponse({ status: 200, type: CentroDataDto })
+  @ApiResponse({ status: HttpStatus.OK, type: CentroDataDto })
   @Get('/centros')
   public async getCentros(
     @UsuarioActual() sesion: SesionUsuario

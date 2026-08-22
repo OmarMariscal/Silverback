@@ -1,273 +1,156 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../../prisma/prisma.service'; 
-import { EstadoSubActividad, Prisma } from '@prisma/client'; // Importaciones vitales
+import { PrismaService } from '@database/prisma.service'; // Ajusta a tu ruta de Prisma
 import type { 
   IDashboardQueryRepository, 
   GetKpisDashboardQuery 
 } from '../../application/ports/dashboard-query.repository.interface';
-import { DashboardContralorResult } from '../../application/ports/results/dashboard-contralor.result';
-import { DashboardJefaResult } from '../../application/ports/results/dashboard-jefa.result';
-import { RezagoDataResult } from '../../application/ports/results/rezago-data.result';
+
+// 1. Importamos la interfaz exacta que creó tu compañero
+import { KpiSubActividadPayLoad } from '@domain/kpi/interfaces/kpi-actividad-payload.interface';
 
 @Injectable()
 export class PrismaDashboardQueryRepository implements IDashboardQueryRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  // ==========================================
-  // HELPER 1: Filtros de Seguridad RLS
-  // ==========================================
-  
-  // Escudo para consultas que atacan a la tabla SubActividad
-  private construirFiltroSeguridadSubActividad(usuarioUuid: string): Prisma.SubActividadWhereInput {
+  // ========================================================================
+  // 💡 EL MÉTODO PRIVADO DEL SELECT (EL "MOLDE" EXACTO)
+  // ========================================================================
+  /**
+   * 🚀 EL PARCHE CLAVE:
+   * Aquí ajustamos el "include/select" de Prisma para que viaje por las relaciones 
+   * hasta llegar a la tabla del Centro Universitario.
+   * Traemos exactamente los 3 datos que pide la interfaz (id, clave, nombre)[cite: 7].
+   * Esto previene saturar la memoria RAM porque no traemos columnas inútiles.
+   */
+  private get selectKpiPayload() {
     return {
+      id: true,
+      fecha_termino: true, // Vital para calcular el semáforo
+      estado_operativo: true, // Vital para calcular los flujos
+      
+      // Viajamos por las relaciones de Prisma: SubActividad -> Actividad -> POA -> Centro
       actividad: {
-        OR: [
-          { auditores: { some: { auditor: { usuario_id: usuarioUuid } } } },
-          { poa: { contralor: { usuario_id: usuarioUuid } } },
-          { poa: { contralor: { jefa: { usuario_id: usuarioUuid } } } },
-        ],
-      },
-    };
-  }
-
-  // Escudo para consultas que atacan directamente a la tabla POA
-  private construirFiltroSeguridadPoa(usuarioUuid: string): Prisma.PoaWhereInput {
-    return {
-      OR: [
-        { contralor: { usuario_id: usuarioUuid } },
-        { contralor: { jefa: { usuario_id: usuarioUuid } } },
-      ],
-    };
-  }
-
-  // ==========================================
-  // HELPER 2: Cálculo Retroactivo de Fechas
-  // ==========================================
-  private calcularFechaLimiteRetroactiva(diasHabilesRestar: number): Date {
-    let diasRestados = 0;
-    const fechaAux = new Date();
-    while (diasRestados < diasHabilesRestar) {
-      fechaAux.setDate(fechaAux.getDate() - 1);
-      const diaSemana = fechaAux.getDay();
-      if (diaSemana !== 0 && diaSemana !== 6) diasRestados++;
-    }
-    return fechaAux;
-  }
-
-  // ==========================================
-  // DASHBOARD CONTRALOR
-  // ==========================================
-  public async obtenerKpisContralor(query: GetKpisDashboardQuery): Promise<DashboardContralorResult> {
-    const { usuarioActualId } = query; // Desestructuración del Query (estilo de tu compañero)
-    
-    const fecha60 = this.calcularFechaLimiteRetroactiva(60);
-    const fecha90 = this.calcularFechaLimiteRetroactiva(90);
-    const estadosActivos = [EstadoSubActividad.EN_PROGRESO, EstadoSubActividad.EN_REVISION, EstadoSubActividad.DEVUELTA];
-
-    // Generamos los escudos de seguridad
-    const filtroSubActividad = this.construirFiltroSeguridadSubActividad(usuarioActualId);
-    const filtroPoa = this.construirFiltroSeguridadPoa(usuarioActualId);
-
-    const [
-      centro, 
-      conteoDevueltas, 
-      conteoBorrador, 
-      subActividadesAgrupadas,
-      semaforoATiempo,
-      semaforoPrecaucion,
-      semaforoCritico
-    ] = await Promise.all([
-      // 1. Centro Universitario (filtrado por su usuario de contralor)
-      this.prisma.centroUniversitario.findFirst({
-        where: { contralores: { some: { usuario_id: usuarioActualId } } },
-        select: { clave: true, nombre: true },
-      }),
-      // 2. Bandeja de POAs (Protegida con filtroPoa)
-      this.prisma.poa.count({ where: { AND: [filtroPoa, { estado: 'DEVUELTA' }] } }),
-      this.prisma.poa.count({ where: { AND: [filtroPoa, { estado: 'BORRADOR' }] } }),
-      
-      // 3. Agrupación de flujo (Protegida con filtroSubActividad)
-      this.prisma.subActividad.groupBy({
-        by: ['estado_operativo'],
-        where: filtroSubActividad,
-        _count: { estado_operativo: true },
-      }),
-
-      // 4. Semáforos Matemáticos (Usando AND para fusionar Filtro + Lógica de negocio)
-      this.prisma.subActividad.count({
-        where: { 
-          AND: [
-            filtroSubActividad,
-            { estado_operativo: { in: estadosActivos } },
-            { fecha_inicio: { gt: fecha60 } }
-          ]
-        }
-      }),
-      this.prisma.subActividad.count({
-        where: { 
-          AND: [
-            filtroSubActividad,
-            { estado_operativo: { in: estadosActivos } },
-            { fecha_inicio: { lte: fecha60, gt: fecha90 } }
-          ]
-        }
-      }),
-      this.prisma.subActividad.count({
-        where: { 
-          AND: [
-            filtroSubActividad,
-            { estado_operativo: { in: estadosActivos } },
-            { fecha_inicio: { lte: fecha90 } }
-          ]
-        }
-      })
-    ]);
-
-    // Procesamiento de datos (igual de rápido que antes)
-    const flujo = { sin_empezar: 0, en_proceso: 0, por_revisar: 0, concluidas: 0, total: 0 };
-    subActividadesAgrupadas.forEach((agrupacion) => {
-      const cant = agrupacion._count.estado_operativo;
-      if (agrupacion.estado_operativo === 'SIN_EMPEZAR') flujo.sin_empezar += cant;
-      if (agrupacion.estado_operativo === 'EN_PROGRESO') flujo.en_proceso += cant;
-      if (agrupacion.estado_operativo === 'EN_REVISION') flujo.por_revisar += cant;
-      if (agrupacion.estado_operativo === 'CONCLUIDA') flujo.concluidas += cant;
-      flujo.total += cant;
-    });
-
-    return {
-      centro_universitario: {
-        clave: centro?.clave || 'N/A',
-        nombre: centro?.nombre || 'Centro no asignado',
-      },
-      tarjetas: {
-        bandeja_entrada: { devueltas: conteoDevueltas, listas_empezar: conteoBorrador },
-      },
-      graficas: {
-        flujo,
-        semaforos: { 
-          a_tiempo: semaforoATiempo, 
-          alerta: semaforoPrecaucion, 
-          critico: semaforoCritico, 
-          total: semaforoATiempo + semaforoPrecaucion + semaforoCritico 
-        }, 
-      },
-    };
-  }
-
-  // ==========================================
-  // DASHBOARD JEFA 
-  // ==========================================
-  public async obtenerKpisJefa(query: GetKpisDashboardQuery): Promise<DashboardJefaResult> {
-    const { usuarioActualId } = query; 
-    const fecha60 = this.calcularFechaLimiteRetroactiva(60);
-    const fecha90 = this.calcularFechaLimiteRetroactiva(90);
-    const estadosActivos = [EstadoSubActividad.EN_PROGRESO, EstadoSubActividad.EN_REVISION, EstadoSubActividad.DEVUELTA];
-
-    // ¡La magia del filtro universal! A la Jefa se le inyecta EXACTAMENTE el mismo filtro.
-    // Como el `OR` de tu compañero incluye "jefa: { usuario_id: ... }", Prisma buscará 
-    // todas las actividades de todos los centros que dependan de ella automáticamente.
-    const filtroSubActividad = this.construirFiltroSeguridadSubActividad(usuarioActualId);
-
-    const [subActividadesAgrupadas, semaforoATiempo, semaforoPrecaucion, semaforoCritico] = await Promise.all([
-      this.prisma.subActividad.groupBy({ by: ['estado_operativo'], where: filtroSubActividad, _count: { estado_operativo: true } }),
-      
-      this.prisma.subActividad.count({ 
-        where: { AND: [ filtroSubActividad, { estado_operativo: { in: estadosActivos } }, { fecha_inicio: { gt: fecha60 } } ] } 
-      }),
-      this.prisma.subActividad.count({ 
-        where: { AND: [ filtroSubActividad, { estado_operativo: { in: estadosActivos } }, { fecha_inicio: { lte: fecha60, gt: fecha90 } } ] } 
-      }),
-      this.prisma.subActividad.count({ 
-        where: { AND: [ filtroSubActividad, { estado_operativo: { in: estadosActivos } }, { fecha_inicio: { lte: fecha90 } } ] } 
-      })
-    ]);
-
-    const flujo = { sin_empezar: 0, en_proceso: 0, por_revisar: 0, concluidas: 0, total_actividades_red: 0 };
-    subActividadesAgrupadas.forEach((agrupacion) => {
-      const cant = agrupacion._count.estado_operativo;
-      if (agrupacion.estado_operativo === 'SIN_EMPEZAR') flujo.sin_empezar += cant;
-      if (agrupacion.estado_operativo === 'EN_PROGRESO') flujo.en_proceso += cant;
-      if (agrupacion.estado_operativo === 'EN_REVISION') flujo.por_revisar += cant;
-      if (agrupacion.estado_operativo === 'CONCLUIDA') flujo.concluidas += cant;
-      flujo.total_actividades_red += cant;
-    });
-
-    return {
-      tarjetas_superiores: {
-        pendientes: { actividades_por_revisar: flujo.por_revisar, actividades_solicitades: flujo.sin_empezar },
-        precaucion: { total: semaforoPrecaucion, descripcion: 'Actividades en alerta amarilla' },
-        riesgo_critico: { total: semaforoCritico, descripcion: 'Actividades vencidas o críticas' },
-      },
-      grafica_distribucion_estado: flujo,
-      grafica_semaforos: { 
-        a_tiempo: semaforoATiempo, 
-        alerta: semaforoPrecaucion, 
-        critico: semaforoCritico, 
-        total_actividades_red: semaforoATiempo + semaforoPrecaucion + semaforoCritico 
-      },
-    };
-  }
-
-  // ==========================================
-  // REZAGOS (Detalle por Centro)
-  // ==========================================
-  public async obtenerCentrosConRezago(): Promise<RezagoDataResult> {
-    const fechaLimite60Dias = this.calcularFechaLimiteRetroactiva(60);
-    const fechaLimite90Dias = this.calcularFechaLimiteRetroactiva(90);
-
-    // Obtenemos los centros que tienen rezago, pero usamos "include" para traer sus subactividades rezagadas
-    const centrosRezagados = await this.prisma.centroUniversitario.findMany({
-      where: { poas: { some: { actividades: { some: { es_rezago: true } } } } },
-      include: {
-        poas: {
-          select: {
-            actividades: {
-              where: { es_rezago: true },
-              select: {
-                sub_actividades: {
-                  select: { fecha_inicio: true, estado_operativo: true }
+        select: {
+          poa: {
+            select: {
+              centro: { // <-- Hacemos el Join explícito a la tabla 'centro'
+                select: {
+                  id: true,
+                  clave: true,
+                  nombre: true,
                 }
               }
             }
           }
         }
       }
-    });
+    };
+  }
 
-    // Mapeamos los datos y procesamos el cálculo de semáforo centro por centro
-    const data = centrosRezagados.map((centro) => {
-      let precaucion = 0;
-      let criticas = 0;
+  // ========================================================================
+  // 💡 MÉTODOS PÚBLICOS (EL "QUIÉN Y DÓNDE" VAMOS A BUSCAR)
+  // ========================================================================
+  
+  /**
+   * DASHBOARD DEL CONTRALOR
+   * Filtra las actividades para que solo vea las de su POA en el año actual.
+   */
+  public async obtenerKpisContralor(query: GetKpisDashboardQuery) {
+    const { usuarioActualId } = query;
+    const anioActual = new Date().getFullYear();
 
-      // Navegamos el objeto para extraer las subactividades y calcular sus colores
-      centro.poas.forEach(poa => {
-        poa.actividades.forEach(act => {
-          act.sub_actividades.forEach(sub => {
-            if (['EN_PROGRESO', 'EN_REVISION'].includes(sub.estado_operativo)) {
-              if (sub.fecha_inicio <= fechaLimite90Dias) {
-                criticas++;
-              } else if (sub.fecha_inicio <= fechaLimite60Dias) {
-                precaucion++;
-              }
-            }
-          });
-        });
-      });
-
-      return {
-        centro_id: centro.id,
-        centro_clave: centro.clave,
-        centro_nombre: centro.nombre,
-        distribucion: {
-          actividades_criticas: criticas,
-          actividades_precaucion: precaucion,
-          total: criticas + precaucion
+    // 1. Ejecutamos la consulta con el filtro específico del contralor
+    const subactividadesRaw = await this.prisma.subActividad.findMany({
+      where: {
+        actividad: {
+          poa: {
+            contralor: {usuario_id: usuarioActualId},
+            anio_fiscal: anioActual,       
+          }
         }
-      };
+      },
+      select: this.selectKpiPayload // Usamos nuestro molde optimizado
     });
 
-    return { data };
+    // 2. Mapeamos la respuesta cruda de Prisma a la interfaz de tu compañero
+    const payloads: KpiSubActividadPayLoad[] = subactividadesRaw.map(sub => ({
+      id: sub.id,
+      estado: sub.estado_operativo as any, // Casteo al Enum 'EstadosActividades'
+      fechaTermino: sub.fecha_termino,
+      
+      // Construimos el objeto del Centro Universitario SI existe[cite: 7]
+      centroUniversitario: sub.actividad?.poa?.centro ? {
+        id: sub.actividad.poa.centro.id,
+        clave: sub.actividad.poa.centro.clave,
+        nombre: sub.actividad.poa.centro.nombre,
+      } : undefined
+    }));
+
+    // 3. Retornamos el payload envuelto para que el Service lo orqueste
+    return { payloads };
+  }
+
+  /**
+   * DASHBOARD DE LA JEFATURA
+   * Consulta global de todas las actividades del año en curso.
+   */
+  public async obtenerKpisJefa(query: GetKpisDashboardQuery) {
+    const anioActual = new Date().getFullYear();
+
+    // 1. Consulta global (Sin filtrar por contralor)
+    const subactividadesRaw = await this.prisma.subActividad.findMany({
+      where: {
+        actividad: {
+          poa: {
+            anio_fiscal: anioActual, 
+          }
+        }
+      },
+      select: this.selectKpiPayload
+    });
+
+    // 2. Mismo mapeo exacto
+    const payloads: KpiSubActividadPayLoad[] = subactividadesRaw.map(sub => ({
+      id: sub.id,
+      estado: sub.estado_operativo as any, 
+      fechaTermino: sub.fecha_termino,
+      centroUniversitario: sub.actividad?.poa?.centro ? {
+        id: sub.actividad.poa.centro.id,
+        clave: sub.actividad.poa.centro.clave,
+        nombre: sub.actividad.poa.centro.nombre,
+      } : undefined
+    }));
+
+    return { payloads };
+  }
+
+  /**
+   * DASHBOARD DE REZAGO (VISTA GLOBAL)
+   * Agrupa los atrasos, por lo que es vital traer el nombre y clave del centro.
+   */
+  public async obtenerCentrosConRezago() {
+    // 1. Consulta para todas las actividades que NO estén concluidas
+    const subactividadesRaw = await this.prisma.subActividad.findMany({
+      where: {
+        estado_operativo: {
+          not: 'CONCLUIDA' 
+        }
+      },
+      select: this.selectKpiPayload
+    });
+
+    // 2. Mapeo (Aquí es donde la calculadora de tu compañero usará el centroUniversitario para agrupar)
+    const payloads: KpiSubActividadPayLoad[] = subactividadesRaw.map(sub => ({
+      id: sub.id,
+      estado: sub.estado_operativo as any,
+      fechaTermino: sub.fecha_termino,
+      centroUniversitario: sub.actividad?.poa?.centro ? {
+        id: sub.actividad.poa.centro.id,
+        clave: sub.actividad.poa.centro.clave,
+        nombre: sub.actividad.poa.centro.nombre,
+      } : undefined
+    }));
+
+    return { payloads };
   }
 }
-
-  

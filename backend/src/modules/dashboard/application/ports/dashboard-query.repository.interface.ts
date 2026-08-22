@@ -14,6 +14,5 @@ export interface IDashboardQueryRepository {
   
   obtenerKpisJefa(query: GetKpisDashboardQuery): Promise<DashboardJefaResult>;
   
-  // Puedes dejar este sin parámetros si no requiere filtrar por usuario (ej. una vista global del sistema)
   obtenerCentrosConRezago(): Promise<RezagoDataResult>;
 }

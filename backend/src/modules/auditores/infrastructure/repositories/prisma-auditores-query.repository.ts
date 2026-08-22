@@ -26,7 +26,7 @@ export class PrismaAuditoresQueryRepository implements IAuditoresQueryRepository
       data: auditores.map((auditor) => ({
         id: auditor.id, 
         nombre_completo: auditor.usuario.nombre_completo,
-        cargo_etiqueta: 'Auditor' 
+        cargo_etiqueta: 'Maestro.Auditor' 
       }))
     };
   }

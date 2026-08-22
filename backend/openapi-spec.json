@@ -992,19 +992,20 @@
     },
     "/api/v1/catalogos/banco-actividades": {
       "get": {
-        "description": "Muestra el banco de actividades para que el usuario pueda seleccionar.",
         "operationId": "CatalogoController_getBancoActividades",
         "parameters": [
           {
             "name": "Busqueda",
             "required": false,
             "in": "query",
-            "schema": {}
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Obtiene el catálogo de actividades del banco de actividades",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -1014,6 +1015,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Muestra el catalogo de actividades",
         "tags": [
           "Catalogos"
@@ -1022,7 +1028,6 @@
     },
     "/api/v1/catalogos/banco-actividades/{id}": {
       "get": {
-        "description": "Se devuelve una actividad asociada al ID registrado",
         "operationId": "CatalogoController_getBancoActividadesById",
         "parameters": [
           {
@@ -1036,7 +1041,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Obtiene la actividad con el ID especificado dentro del banco",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -1046,6 +1051,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Buscar actividad por ID",
         "tags": [
           "Catalogos"
@@ -1054,7 +1064,6 @@
     },
     "/api/v1/catalogos/banco-actividades/{id}/sub-actividades-sugeridas": {
       "get": {
-        "description": "Si la actividad vino del banco, en esta se mostraran sub-actividades sugeridas",
         "operationId": "CatalogoController_getSubActividadesSugeridas",
         "parameters": [
           {
@@ -1068,7 +1077,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Obtiene las sub-actividades sugeridas para una actividad específica",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -1078,6 +1087,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Entrega sub-actividades sugeridas",
         "tags": [
           "Catalogos"
@@ -1086,12 +1100,11 @@
     },
     "/api/v1/catalogos/centros": {
       "get": {
-        "description": "Devuelve los centros de trabajo registrados en el sistema.",
         "operationId": "CatalogoController_getCentros",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Obtiene el catálogo de centros de trabajo",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -1101,6 +1114,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Entrega los centros de trabajo",
         "tags": [
           "Catalogos"
@@ -1113,8 +1131,8 @@
         "operationId": "AuditoresController_getAuditores",
         "parameters": [],
         "responses": {
-          "302": {
-            "description": "Obtiene la lista de auditores",
+          "200": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -1124,6 +1142,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Entrega lista de auditores",
         "tags": [
           "Auditores"
@@ -1132,12 +1155,11 @@
     },
     "/api/v1/dashboard/contralor/kpis": {
       "get": {
-        "description": "Entrega toda la informacion necesaria para las tarjetas superiores del dashboard del contralor.",
-        "operationId": "DashboardController_getDashboardContralor",
+        "operationId": "DashboardController_getKpisContralor",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Obtiene los KPIs del dashboard para el contralor",
+            "description": "Operación realizada con éxito",
             "content": {
               "application/json": {
                 "schema": {
@@ -1147,20 +1169,24 @@
             }
           }
         },
-        "summary": "Entrega los kpis del dashboard contralor",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "KPIs del Contralor",
         "tags": [
           "Dashboard"
         ]
       }
     },
-    "/api/v1/dashboard/jefatura/kpis": {
+    "/api/v1/dashboard/jefa": {
       "get": {
-        "description": "Entrega toda la informacion necesaria para las tarjetas superiores del dashboard de la jefa.",
-        "operationId": "DashboardController_getDashboardJefa",
+        "operationId": "DashboardController_getKpisJefa",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Obtiene los kpis del dashboard de la jefa",
+            "description": "Operación realizada con éxito",
             "content": {
               "application/json": {
                 "schema": {
@@ -1170,20 +1196,24 @@
             }
           }
         },
-        "summary": "Entrega los kpis del dashboard jefa",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "KPIs de la Jefatura",
         "tags": [
           "Dashboard"
         ]
       }
     },
-    "/api/v1/dashboard/jefatura/rezago-centros": {
+    "/api/v1/dashboard/rezago": {
       "get": {
-        "description": "Entrega toda la informacion sobre los centros que tengan actividades con rezago",
-        "operationId": "DashboardController_getRezagoCentros",
+        "operationId": "DashboardController_getCentrosConRezago",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Obtiene una lista de centros con tareas rezagadas",
+            "description": "Muestra los centros universitarios con mayor atraso",
             "content": {
               "application/json": {
                 "schema": {
@@ -1193,7 +1223,12 @@
             }
           }
         },
-        "summary": "Entrega los centros con rezago",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Centros con rezago",
         "tags": [
           "Dashboard"
         ]
@@ -3070,7 +3105,7 @@
             "description": "Numero de actividades por revisar",
             "example": 14
           },
-          "actividades_solicitades": {
+          "actividades_solicitadas": {
             "type": "number",
             "description": "Numero de actividades solicitadas",
             "example": 5
@@ -3078,7 +3113,7 @@
         },
         "required": [
           "actividades_por_revisar",
-          "actividades_solicitades"
+          "actividades_solicitadas"
         ]
       },
       "RiesgoCriticoDto": {
@@ -3122,7 +3157,7 @@
       "TasaSolventacionDto": {
         "type": "object",
         "properties": {
-          "porentaje": {
+          "porcentaje": {
             "type": "number",
             "description": "Porcentaje de actividades solventadas",
             "example": 68
@@ -3134,7 +3169,7 @@
           }
         },
         "required": [
-          "porentaje",
+          "porcentaje",
           "tendencia_mes"
         ]
       },

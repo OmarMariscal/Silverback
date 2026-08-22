@@ -13,5 +13,5 @@ export class PendientesDto{
         type: Number,
         example: 5
     })
-    actividades_solicitades: number;
+    actividades_solicitadas: number;
 }
