@@ -29,6 +29,8 @@ import { PaginacionMapper } from '@core/common/mappers/paginacion.mapper';
 import { FiltrosSupervision } from './ports/filtros/subactividad-supervision.filtro.interface';
 import { SubActividadDirectorioQuery } from './ports/queries/subactividad-get-directorio.query';
 import { FiltrosDirectorio } from './ports/filtros/subactividaddirectorio.filtro.interface';
+import { ReglaNegocioException } from '@domain/excepciones/regla-negocio.exception';
+import { CodigoDeViolacion } from '@domain/codigos/codigo-violado.enum';
 
 @Injectable()
 export class SubactividadesService {
@@ -176,6 +178,25 @@ export class SubactividadesService {
             usuarioActual.usuario_id,
           );
 
+        // Regla de Autorización de Modificación
+        if (!actividad.esElegibleParaModificacion()) {
+          throw new ReglaNegocioException(
+            `La actividad de ID ${actividadId} no puede ser modificada, dado que su POA de origen ya fue Presentada`,
+            CodigoDeViolacion.ESTADO_INVALIDO,
+          );
+        }
+        // Regla de autorizazción Multitenant
+        if (
+          !actividad.puedeSerModificadaPor(
+            usuarioActual.rol,
+            usuarioActual.usuario_id,
+          )
+        ) {
+          throw new ReglaNegocioException(
+            `El usuario ${usuarioActual.rol} de ID ${usuarioActual.usuario_id} no tiene los permisos necesarios sobre el POA al que pertenece esta actividad`,
+            CodigoDeViolacion.ROL_INVALIDO,
+          );
+        }
         const nuevasSubActividades: SubactividadEntity[] = [];
 
         // 2. Lógica de Domino: Instanciar y agregar cada subactividad
@@ -233,6 +254,25 @@ export class SubactividadesService {
           );
         }
 
+        //Regla de Validación Multinet
+        if (!actividad.esElegibleParaModificacion()) {
+          throw new ReglaNegocioException(
+            `La actividad de ID ${actividadId} no puede ser modificada, dado que su POA de origen ya fue Presentada`,
+            CodigoDeViolacion.ESTADO_INVALIDO,
+          );
+        }
+
+        if (
+          !actividad.puedeSerModificadaPor(
+            usuarioActual.rol,
+            usuarioActual.usuario_id,
+          )
+        ) {
+          throw new ReglaNegocioException(
+            `El usuario ${usuarioActual.rol} de ID ${usuarioActual.usuario_id} no tiene los permisos necesarios sobre el POA al que pertenece esta actividad`,
+            CodigoDeViolacion.ROL_INVALIDO,
+          );
+        }
         // 2. Extraer el estadfo actual para estadísticas y mapeos
         const subActividadesAnteriores = actividad.getSubActividades();
         const mapaAnteriores = new Map(

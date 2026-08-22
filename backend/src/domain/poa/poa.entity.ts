@@ -88,7 +88,11 @@ export class PoaEntity {
 
     //Solo el permiso de GestioanrPoa
     const logAccion = 'Agregar o modificar actividades en la POA';
-    validarPermisoDeDominio(actorActual, Permisos.GESTIONAR_CONTENIDO_POA, logAccion);
+    validarPermisoDeDominio(
+      actorActual,
+      Permisos.GESTIONAR_CONTENIDO_POA,
+      logAccion,
+    );
   }
 
   public enviarARevision(
@@ -241,5 +245,13 @@ export class PoaEntity {
 
     const avance = sumaPorcentajes / this.actividades.length;
     return Math.round(avance * 100) / 100;
+  }
+
+  public puedeSerModificadaPor(
+    rolUsuario: Roles,
+    idUsuarioActual: string,
+  ): boolean {
+    //1. La jefa tiene el poder abosluto del contenido si es modificable
+    return true;
   }
 }
