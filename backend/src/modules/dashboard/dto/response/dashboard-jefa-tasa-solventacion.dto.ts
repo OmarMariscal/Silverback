@@ -6,7 +6,7 @@ export class TasaSolventacionDto{
         type: Number,
         example: 68
     })
-    porentaje: number;
+    porcentaje: number;
 
     @ApiProperty({
         description: 'Tendencia mensual de solventacion',
