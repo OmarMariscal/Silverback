@@ -173,13 +173,13 @@ export function TarjetaActividadPOA({
                       </p>
                     </div>
                     <div>
-                      <h5 className="text-sm font-bold text-slate-700 mb-2">Objetivos Particulares</h5>
+                      <h5 className="text-sm font-bold text-slate-700 mb-2">Meta del Proyecto</h5>
                       <p className="text-sm text-slate-600 leading-relaxed">
                         {fichaTecnica?.metaProyecto || 'Sin especificar.'}
                       </p>
                     </div>
                     <div>
-                      <h5 className="text-sm font-bold text-slate-700 mb-2">Objetivos Particulares</h5>
+                      <h5 className="text-sm font-bold text-slate-700 mb-2">Indicadores</h5>
                       <p className="text-sm text-slate-600 leading-relaxed">
                         {fichaTecnica?.indicadores || 'Sin especificar.'}
                       </p>

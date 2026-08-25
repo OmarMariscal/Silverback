@@ -37,6 +37,7 @@ export default function PoaPage() {
     actividades,
     cargandoInicial,
     cargarPoaInicial,
+    borrarActividad,
     sugerenciasSubactividades,
     sincronizarSubactividades,
     expandirTarjeta,
@@ -89,10 +90,7 @@ export default function PoaPage() {
   };
 
   const handleBorrarActividad = (idActividad: string) => {
-    const actividad = actividades.find(a => a.idActividad === idActividad);
-    if (actividad) {
-      actividad.onBorrarActividad();
-    }
+    borrarActividad(idActividad);
   };
 
   if (cargandoInicial || !cabecera) {
@@ -116,9 +114,17 @@ export default function PoaPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="bg-yellow-100 border border-yellow-300 rounded-lg px-3 py-2 flex items-center gap-2">
-            <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-            <span className="text-sm font-semibold text-yellow-800">Estado: En Borrador</span>
+          <div className={`border rounded-lg px-3 py-2 flex items-center gap-2 ${
+            cabecera.estadoActual === 'EN_REVISION'
+              ? 'bg-amber-100 border-amber-300 text-amber-800'
+              : 'bg-yellow-100 border-yellow-300 text-yellow-800'
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${
+              cabecera.estadoActual === 'EN_REVISION' ? 'bg-amber-500' : 'bg-yellow-500'
+            }`}></span>
+            <span className="text-sm font-semibold">
+              Estado: {cabecera.estadoActual.replace('_', ' ')}
+            </span>
           </div>
           <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
             <span>+</span>
