@@ -148,7 +148,7 @@ function generarDetalleInicial(idActividad: string): { fichaTecnica: FichaTecnic
     fichaTecnica: {
       justificacion: 'La auditoría responde a la normativa institucional vigente para la transparencia de fondos.',
       objetivoGeneral: 'Revisar la correcta aplicación presupuestal en el primer semestre.',
-      objetivosParticulares: '1. Cotejar nóminas. 2. Verificar expedie.',
+      objetivosParticulares: '1. Cotejar nóminas.',
       metaProyecto: '1 Documento de observaciones finales',
       indicadores: 'Porcentaje de expedientes de personal validados',
       equipoAuditor: [
