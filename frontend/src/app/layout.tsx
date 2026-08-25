@@ -31,3 +31,174 @@ export default function RootLayout({
     </html>
   );
 }
+
+/*
+
+'use client';
+import React, { useState } from 'react';
+import { usePoaStore } from '@/store';
+import { ContenidoDashboard } from '../elementos/ContenidoDashboard';
+import { PantallaPOA } from './PantallaPOA';
+import { Dashboard } from './Dashboard';
+
+export function Layout() {
+  // Controla a quién se le da visibilidad
+  const [pantallaActiva, setPantallaActiva] = useState<'DASHBOARD' | 'ACTIVIDADES' | 'POA'>('POA');
+
+  // El Layout extrae la información de tu store global
+  const cabecera = usePoaStore((state) => state.cabecera);
+  const actividades = usePoaStore((state) => state.actividades);
+  const sugerenciasSubactividades = usePoaStore((state) => state.sugerenciasSubactividades);
+  const cargandoInicial = usePoaStore((state) => state.cargandoInicial);
+
+  const obtenerTitulo = () => {
+    switch (pantallaActiva) {
+      case 'DASHBOARD': return "Panel de Gestión - Contralor";
+      case 'POA': return cabecera ? `Plan Operativo Anual ${cabecera.anioFiscal}` : "Gestión del POA";
+      case 'ACTIVIDADES': return "Mis Actividades";
+      default: return "Sistema Integral";
+    }
+  };
+
+  return (
+    // CONTENEDOR PRINCIPAL: layout flex que abarca toda la pantalla
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden">
+      
+      {}
+      <aside className="w-36 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+        <div className="py-8 flex flex-col items-center border-b border-slate-100">
+          <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-black text-4xl shadow-lg shadow-indigo-200 mb-3">
+            C
+          </div>
+          <span className="text-sm font-black text-slate-800 tracking-tight leading-none text-center">
+            SISTEMA<br />INTEGRAL
+          </span>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-4">
+          <button 
+            onClick={() => setPantallaActiva('DASHBOARD')}
+            className={`w-full flex flex-col items-center justify-center py-3 px-2 rounded-xl transition-all group ${
+              pantallaActiva === 'DASHBOARD' 
+                ? 'bg-indigo-50 text-indigo-700' 
+                : 'text-slate-400 hover:bg-slate-50 hover:text-indigo-600'
+            }`}
+          >
+            <svg className={`w-8 h-8 mb-2 transition-transform ${pantallaActiva !== 'DASHBOARD' && 'group-hover:scale-110'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+            </svg>
+            <span className="text-[11px] font-medium text-center leading-tight">Dashboard</span>
+          </button>
+
+          <button 
+            onClick={() => setPantallaActiva('ACTIVIDADES')}
+            className={`w-full flex flex-col items-center justify-center py-3 px-2 rounded-xl transition-all group ${
+              pantallaActiva === 'ACTIVIDADES' 
+                ? 'bg-indigo-50 text-indigo-700' 
+                : 'text-slate-400 hover:bg-slate-50 hover:text-indigo-600'
+            }`}
+          >
+            <svg className={`w-8 h-8 mb-2 transition-transform ${pantallaActiva !== 'ACTIVIDADES' && 'group-hover:scale-110'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            <span className="text-[11px] font-medium text-center leading-tight">Actividades</span>
+          </button>
+
+          <button 
+            onClick={() => setPantallaActiva('POA')}
+            className={`w-full flex flex-col items-center justify-center py-4 px-2 rounded-xl transition-all group ${
+              pantallaActiva === 'POA' 
+                ? 'bg-indigo-50 text-indigo-700' 
+                : 'text-slate-400 hover:bg-slate-50 hover:text-indigo-600'
+            }`}
+          >
+            <svg className={`w-8 h-8 mb-2 transition-transform ${pantallaActiva !== 'POA' && 'group-hover:scale-110'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
+            </svg>
+            <span className="text-[11px] font-bold text-center leading-tight">POA</span>
+          </button>
+        </nav>
+
+        <div className="py-4 px-3 border-t border-slate-100">
+          <button className="w-full flex flex-col items-center justify-center py-3 px-2 text-slate-400 hover:bg-slate-50 hover:text-slate-800 rounded-xl transition-all group">
+            <svg className="w-7 h-7 mb-1.5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span className="text-[10px] font-medium text-center">Ajustes</span>
+          </button>
+        </div>
+      </aside>
+
+      {}
+      <div className="flex-1 flex flex-col min-w-0 bg-slate-50/50">
+        
+        {}
+        <header className="h-24 px-10 bg-white border-b border-slate-200 flex items-center justify-between shrink-0 z-10 shadow-sm">
+          <div>
+            <h1 className="text-3xl font-black text-slate-800 tracking-tight">{obtenerTitulo()}</h1>
+          </div>
+
+          <div className="flex items-center space-x-6">
+            <button className="text-slate-400 hover:text-indigo-600 transition-colors relative">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+              </svg>
+            </button>
+
+            <button className="text-slate-400 hover:text-indigo-600 transition-colors relative">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+              </svg>
+              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+
+            <div className="flex items-center space-x-3 pl-4 border-l border-slate-200 cursor-pointer group">
+              <div className="flex flex-col items-end">
+                <span className="text-base font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">Contralor Titular</span>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">CU Valles</span>
+              </div>
+              <div className="w-12 h-12 rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden flex items-center justify-center">
+                <svg className="w-7 h-7 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {}
+        <main className="flex-1 overflow-y-auto p-10">
+          <div className="max-w-[1600px] mx-auto h-full">
+            {cargandoInicial ? (
+              <div className="flex justify-center items-center h-full text-indigo-600 font-bold animate-pulse">
+                Cargando información del sistema...
+              </div>
+            ) : (
+              <>
+                {pantallaActiva === 'DASHBOARD' && <Dashboard />}
+                
+                {pantallaActiva === 'POA' && cabecera && (
+                  <PantallaPOA 
+                    datosCabecera={cabecera} 
+                    listaActividades={actividades} 
+                    bancoSugerencias={sugerenciasSubactividades} 
+                  />
+                )}
+                
+                {pantallaActiva === 'ACTIVIDADES' && (
+                  <div className="text-slate-500 font-bold text-center mt-20">
+                    Pantalla de Actividades...
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </main>
+
+      </div>
+    </div>
+  );
+}
+
+*/
