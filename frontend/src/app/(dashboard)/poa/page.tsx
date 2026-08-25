@@ -2,23 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { usePoaStore } from '@/store';
-import { TarjetaActividadPOA } from '@/components/ui/TarjetaActividadPrinsipal'; // AJUSTA esta ruta a donde tengas el componente
-import { ModalSubactividades } from '@/components/ui/ModalSubactividades'; // AJUSTA esta ruta a donde tengas el componente
+import { TarjetaActividadPOA } from '@/components/ui/TarjetaActividadPrinsipal';
+import { ModalSubactividades } from '@/components/ui/ModalSubactividades';
 import { SubactividadFilaForm, SubactividadFilaProps } from '@/types/poa-contratos';
 
-// ------------------------------------------------------------------
-// LIMITACIÓN CONOCIDA: subactividades en el store viene como
-// SubactividadFilaProps (formato de SOLO LECTURA para la tabla: fechas ya
-// formateadas como "15 Ene 26", sin el campo "tipo"). El modal necesita
-// SubactividadFilaForm (fechas ISO editables + tipo). El contrato actual
-// no guarda el dato crudo después de formatearlo, así que esto es una
-// reconstrucción aproximada:
-//  - la fecha se reconvierte de "15 Ene 26" a ISO.
-//  - "tipo" no existe en el formato de tabla, así que se usa 'AUDITORIA'
-//    por defecto. Si necesitas que el tipo real sobreviva el viaje de ida
-//    y vuelta, lo correcto a futuro es que el store también guarde la
-//    versión sin formatear, o pedirle ese dato a un endpoint dedicado.
-// ------------------------------------------------------------------
 const MESES: Record<string, string> = {
   Ene: '01', Feb: '02', Mar: '03', Abr: '04', May: '05', Jun: '06',
   Jul: '07', Ago: '08', Sep: '09', Oct: '10', Nov: '11', Dic: '12'
@@ -45,20 +32,20 @@ function propsAFilaForm(sub: SubactividadFilaProps): SubactividadFilaForm {
 }
 
 export default function PoaPage() {
-  // Usamos el store MOCK a propósito: así pruebas todo el flujo (expandir,
-  // añadir sub-actividades, sincronizar) sin depender del backend ni de login.
   const {
     cabecera,
     actividades,
     cargandoInicial,
     cargarPoaInicial,
     sugerenciasSubactividades,
-    sincronizarSubactividades
+    sincronizarSubactividades,
+    expandirTarjeta,
+    editarFichaTecnica
   } = usePoaStore();
 
   useEffect(() => {
     cargarPoaInicial();
-  }, []);
+  }, [cargarPoaInicial]);
 
   const [modalAbierto, setModalAbierto] = useState(false);
   const [actividadActivaId, setActividadActivaId] = useState<string | null>(null);
@@ -88,6 +75,23 @@ export default function PoaPage() {
       }
     } finally {
       setEstaGuardando(false);
+    }
+  };
+
+  const handleConfigurarFichaTecnica = (idActividad: string) => {
+    console.log("Abriendo editor de ficha técnica para:", idActividad);
+    // TODO: Aquí iría la lógica para abrir un modal/formulario de edición de ficha técnica
+    // Por ahora solo lo logueamos
+  };
+
+  const handleExpandirTarjeta = (idActividad: string) => {
+    expandirTarjeta(idActividad);
+  };
+
+  const handleBorrarActividad = (idActividad: string) => {
+    const actividad = actividades.find(a => a.idActividad === idActividad);
+    if (actividad) {
+      actividad.onBorrarActividad();
     }
   };
 
@@ -130,6 +134,9 @@ export default function PoaPage() {
             {...actividad}
             consecutivoIndex={index}
             onAbrirModalSubactividades={handleAbrirModal}
+            onConfigurarFichaTecnica={() => handleConfigurarFichaTecnica(actividad.idActividad)}
+            onExpandirTarjeta={() => handleExpandirTarjeta(actividad.idActividad)}
+            onBorrarActividad={() => handleBorrarActividad(actividad.idActividad)}
           />
         ))}
       </div>
