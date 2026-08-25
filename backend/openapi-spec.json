@@ -2590,7 +2590,7 @@
           "estado_anterior": {
             "type": "string",
             "description": "Estado anterior de la POA",
-            "example": "EN_PROGRESO"
+            "example": "BORRADOR"
           },
           "estado_nuevo": {
             "type": "string",
@@ -2658,12 +2658,12 @@
           "estado_anterior": {
             "type": "string",
             "description": "Estado anterior de la POA",
-            "example": "EN_PROGRESO"
+            "example": "EN_REVISION"
           },
           "estado_nuevo": {
             "type": "string",
             "description": "Estado nuevo de la POA",
-            "example": "EN_REVISION"
+            "example": "BORRADOR"
           },
           "fecha_cancelacion": {
             "type": "string",

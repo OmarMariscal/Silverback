@@ -24,7 +24,10 @@ export interface IActividadRepository {
    * @param id Identificaddor único de la Actividad
    * @returns Array con las as entidades que pertenencen a la POA
    */
-  obtenerPorPoaId(id: string): Promise<ActividadEntity[]>;
+  obtenerPorPoaId(
+    id: string,
+    tx?: TransactionHandle,
+  ): Promise<ActividadEntity[]>;
 
   /**
    * Persiste el estado actual del Agregado Raíz completo

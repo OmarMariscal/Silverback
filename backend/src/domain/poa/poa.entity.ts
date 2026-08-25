@@ -6,6 +6,7 @@ import { CodigoDeViolacion } from '@domain/codigos/codigo-violado.enum';
 import { ValidacionIntegridadException } from '@domain/excepciones/validacion-integridad.exception';
 import { validarPermisoDeDominio } from '@domain/shared/utils/autorizacion.utils';
 import { Permisos } from '@domain/roles/permisos.enum';
+import { Roles } from '@domain/roles/roles.enum';
 
 export class PoaEntity {
   constructor(
@@ -20,6 +21,10 @@ export class PoaEntity {
 
     private fechaAprobado: Date | null = null,
     private ultimaSecuenciaActividad: number = 0,
+
+    private idUsuarioDuenoPoa?: string,
+    private idUsuarioJefaAsignada?: string,
+    private contextoSeguridadCargado: boolean = false,
   ) {}
 
   // Funciones Auxiliares
@@ -28,6 +33,34 @@ export class PoaEntity {
       throw new ReglaNegocioException(
         `Operación inválida. La POA está en ${this.estado}, pero requiere estar en: ${estadoInicial.join(' o ')}.`,
         CodigoDeViolacion.ESTADO_INVALIDO,
+      );
+    }
+  }
+
+  private validarTenencia(actorActual: Actor, idUsuarioActual: string): void {
+    if (!this.contextoSeguridadCargado) {
+      throw new Error(
+        'Se intentó evaluar autorización sin haber inyectado el contexto de seguridad primero en la entidad POA.',
+      );
+    }
+
+    if (
+      actorActual.rol === Roles.JEFA &&
+      this.idUsuarioJefaAsignada !== idUsuarioActual
+    ) {
+      throw new ReglaNegocioException(
+        `La Jefatura no tiene jurisdicción sobre el Contralor dueño de este POA.`,
+        CodigoDeViolacion.ROL_INVALIDO,
+      );
+    }
+
+    if (
+      actorActual.rol === Roles.CONTRALOR &&
+      this.idUsuarioDuenoPoa !== idUsuarioActual
+    ) {
+      throw new ReglaNegocioException(
+        `El Contralor no es propietario de este POA.`,
+        CodigoDeViolacion.ROL_INVALIDO,
       );
     }
   }
@@ -82,39 +115,47 @@ export class PoaEntity {
    * Permiso Necesario: Permisos.GESTIONAR_TRABAJO_POA
    */
 
-  public validarEdicion(actorActual: Actor): void {
-    // Solo se puede editar si está en BORRADOR o en DEVUELTA
+  public validarEdicion(actorActual: Actor, idUsuarioActual: string): void {
     this.validarEstadoInicial([EstadosPoa.BORRADOR, EstadosPoa.DEVUELTA]);
 
-    //Solo el permiso de GestioanrPoa
-    const logAccion = 'Agregar o modificar actividades en la POA';
-    validarPermisoDeDominio(actorActual, Permisos.GESTIONAR_CONTENIDO_POA, logAccion);
+    validarPermisoDeDominio(
+      actorActual,
+      Permisos.GESTIONAR_CONTENIDO_POA,
+      'Agregar o modificar actividades en la POA',
+    );
+
+    this.validarTenencia(actorActual, idUsuarioActual);
   }
 
   public enviarARevision(
     actorActual: Actor,
-    cantidadRezagadasPendientes: number,
+    idUsuarioActual: string,
+    totalRezagadasEsperadas: number,
   ): void {
     //Fallo rápido de Estados
     //Una POA solo puede pasar a EN_REVISIÓN si viene del estado BORRADOR
     this.validarEstadoInicial([EstadosPoa.BORRADOR, EstadosPoa.DEVUELTA]);
 
-    const logAccion = `Pasar de estado ${this.estado} a ${EstadosPoa.EN_REVISION}`;
-
     validarPermisoDeDominio(
       actorActual,
       Permisos.GESTIONAR_TRABAJO_POA,
-      logAccion,
+      `Pasar de estado ${this.estado} a ${EstadosPoa.EN_REVISION}`,
     );
 
+    this.validarTenencia(actorActual, idUsuarioActual);
     // Validaciones y recopialción de logs
     const erroresPoa: ReglaNegocioException[] = [];
 
     // Regla 1: Se deben incluir todas las actividades rezagadas
-    if (cantidadRezagadasPendientes > 0) {
+    const rezagadasIncluidas = this.actividades.filter(
+      (act) => act.esRezago,
+    ).length;
+
+    if (rezagadasIncluidas < totalRezagadasEsperadas) {
+      const faltantes = totalRezagadasEsperadas - rezagadasIncluidas;
       erroresPoa.push(
         new ReglaNegocioException(
-          `Faltan ${cantidadRezagadasPendientes} actividades rezagadas por incluirse`,
+          `Obligatorio: Faltan ${faltantes} actividades rezagadas por incluirse en el POA. (Se esperaban ${totalRezagadasEsperadas}, pero solo se incluyeron ${rezagadasIncluidas}).`,
           CodigoDeViolacion.DATOS_INSUFICIENTES,
         ),
       );
@@ -161,17 +202,19 @@ export class PoaEntity {
   /**
    * Permiso Necesario: Permisos.GESTIONAR_TRABAJO_POA
    */
-  public cancelarEnvio(actorActual: Actor): void {
+  public cancelarEnvio(actorActual: Actor, idUsuarioActual: string): void {
     //Solo una POA en estado EN_REVISION puede cancelar su envio
     this.validarEstadoInicial([EstadosPoa.EN_REVISION]);
 
-    const logAccion = `Cancelar un envío de una POA en estado ${this.estado}`;
-
+    // 2. Validar permiso (JWT)
     validarPermisoDeDominio(
       actorActual,
       Permisos.GESTIONAR_TRABAJO_POA,
-      logAccion,
+      `Cancelar un envío de una POA en estado ${this.estado}`,
     );
+
+    //3. Validación de Tenencia (Owner Check)
+    this.validarTenencia(actorActual, idUsuarioActual);
 
     //Autorizar el cambio de estado
     this.estado = EstadosPoa.BORRADOR;
@@ -241,5 +284,14 @@ export class PoaEntity {
 
     const avance = sumaPorcentajes / this.actividades.length;
     return Math.round(avance * 100) / 100;
+  }
+
+  public inyectarContextoDeSeguridad(
+    idUsuarioContralor: string | null,
+    idJefa: string | null,
+  ): void {
+    this.idUsuarioDuenoPoa = idUsuarioContralor ?? undefined;
+    this.idUsuarioJefaAsignada = idJefa ?? undefined;
+    this.contextoSeguridadCargado = true;
   }
 }

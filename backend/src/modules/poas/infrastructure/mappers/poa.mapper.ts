@@ -6,12 +6,13 @@ import {
   traducirEstadoPoaADominio,
   traducirEstadoPoaAPrisma,
 } from '@core/utils/estados-poa.traslator';
+import { PrismaPoaPayload } from './types/prisma-poa.payload';
 
 @Injectable()
 export class PoaMapper implements Mapper<PoaEntity, PrismaPoa> {
-  public toDomain(raw: PrismaPoa): PoaEntity {
+  public toDomain(raw: PrismaPoaPayload): PoaEntity {
     // Construimos la entidad princiipal
-    return new PoaEntity(
+    const poa = new PoaEntity(
       raw.id,
       raw.anio_fiscal,
       raw.contralor_id,
@@ -22,6 +23,15 @@ export class PoaMapper implements Mapper<PoaEntity, PrismaPoa> {
       raw.fecha_aprobado,
       raw.ultima_secuencia_actividad,
     );
+
+    //2. Hidratación defensiva del contexto de seguridad
+    if (raw.contralor) {
+      const idUsuarioContralor = raw.contralor.usuario_id || null;
+      const idJefa = raw.contralor.jefa?.usuario_id || null;
+      poa.inyectarContextoDeSeguridad(idUsuarioContralor, idJefa);
+    }
+
+    return poa;
   }
 
   public toPersistence(entity: PoaEntity): PrismaPoa {

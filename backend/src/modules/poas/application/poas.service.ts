@@ -6,8 +6,13 @@ import { ACTIVIDAD_REPOSITORY_TOKEN } from '@domain/actividad/actividad.reposito
 import { RecursoNoEncontradoException } from '@domain/excepciones/recurso-no-encontrado.exception';
 import type { IPoaRepository } from '@domain/poa/poa.repository.interface';
 import { POA_REPOSITORY_TOKEN } from '@domain/poa/poa.repository.interface';
+import { ActividadSnapshot } from '@domain/poa/value-objects/actividad-snapshot.value-object';
 import { TransactionHandle } from '@domain/shared/transaction.interface';
-import { Inject, Injectable, NotImplementedException } from '@nestjs/common';
+import type { IActividadesQueryRepository } from '@modules/actividades/application/ports/actividades-query.repository.interface';
+import { ACTIVIDADES_QUERY_REPOSITORY_TOKEN } from '@modules/actividades/application/ports/actividades-query.repository.interface';
+import { Inject, Injectable } from '@nestjs/common';
+import { CancelarPoaDto } from '../dto/request/poas-cancelar.dto';
+import { PresentarPoasDto } from '../dto/request/poas-presentar.dto';
 import { CrearActividadesResponseDto } from '../dto/response/poa-actividades.response.dto';
 import { PoaActualDto } from '../dto/response/poa-actual.dto';
 import { PoaResponseMapper } from '../infrastructure/mappers/poa-response.mapper';
@@ -27,6 +32,8 @@ export class PoasService {
     private readonly actividadRepository: IActividadRepository,
     @Inject(POA_QUERY_REPOSITORY_TOKEN)
     private readonly poaQueryRepository: IPoaQueryRepository,
+    @Inject(ACTIVIDADES_QUERY_REPOSITORY_TOKEN)
+    private readonly actividadQueryRepository: IActividadesQueryRepository,
     @Inject(UNIT_OF_WORK_TOKEN)
     private readonly unitOfWork: IUnitOfWork,
   ) {}
@@ -70,7 +77,8 @@ export class PoasService {
             usuario.usuario_id,
           );
 
-        poa.validarEdicion(usuario.actor);
+        // Validar que la POA esté en un estado que se pueda editar y por un usuario que pueda.
+        poa.validarEdicion(usuario.actor, usuario.usuario_id);
 
         // 2. Lógica de Dominio: Generar el Folio Secuencial
         const nuevoFolio = poa.generarFolioNuevaActividad();
@@ -108,17 +116,100 @@ export class PoasService {
     );
   }
 
-  presentarPoa(command: PresentarPoaCommand) {
+  async presentarPoa(command: PresentarPoaCommand): Promise<PresentarPoasDto> {
     // Deconstrucción del command
     const { usuarioActual, poaId } = command;
 
-    throw new NotImplementedException();
+    //Inclumos la transacción en el Unit Of Work
+    return this.unitOfWork.ejecutarTransaccion(
+      async (tx: TransactionHandle) => {
+        //1. Obtener al Agregado Raíz
+        const poa = await this.poaRepository.obtenerPorId(poaId, tx);
+
+        //Fail-firs
+        if (!poa) {
+          throw new RecursoNoEncontradoException(
+            'POA',
+            poaId,
+            usuarioActual.usuario_id,
+          );
+        }
+
+        const estadoAnterior = poa.getEstadosPoa();
+
+        //2. Extraemos actividades reales y armamos los Snapshots
+        const actividades = await this.actividadRepository.obtenerPorPoaId(
+          poaId,
+          tx,
+        );
+
+        const snapshots: ActividadSnapshot[] = actividades.map((act) => ({
+          id: act.getId(),
+          porcentajeAvance: act.calcularPorcentajeAvance(),
+          mensajesValidacion: act.validarIntegridad().map((e) => e.message),
+          esRezago: act.getEsRezago(),
+        }));
+
+        poa.cargarSnapshotsActividades(snapshots);
+
+        const totalRezagadasEsperadas =
+          await this.actividadQueryRepository.contarRezagosHistoricos({
+            usuarioActualId: poa.getContralorId(),
+            anioFiscalActual: poa.getAnioFiscal(),
+          });
+
+        //4. Validaciones de Dominio
+        poa.enviarARevision(
+          usuarioActual.actor,
+          usuarioActual.usuario_id,
+          totalRezagadasEsperadas,
+        );
+
+        //5. Persistir los cambios
+        await this.poaRepository.guardar(poa, tx);
+
+        //6. Retorno
+        return PoaResponseMapper.toPresentarPoaDto(
+          poaId,
+          estadoAnterior,
+          poa.getEstadosPoa(),
+        );
+      },
+    );
   }
 
-  cancelarEnvio(command: CancelarEnvioCommand) {
+  async cancelarEnvio(command: CancelarEnvioCommand): Promise<CancelarPoaDto> {
     // Deconstrucción del command
     const { usuarioActual, poaId } = command;
 
-    throw new NotImplementedException();
+    return this.unitOfWork.ejecutarTransaccion(
+      async (tx: TransactionHandle) => {
+        //1. Obtener el agrego raíz
+        const poa = await this.poaRepository.obtenerPorId(poaId, tx);
+
+        //Fail-first
+        if (!poa) {
+          throw new RecursoNoEncontradoException(
+            'POA',
+            poaId,
+            usuarioActual.usuario_id,
+          );
+        }
+
+        const estadoAnterior = poa.getEstadosPoa();
+
+        //2. Validaciones de Dominio
+        poa.cancelarEnvio(usuarioActual.actor, usuarioActual.usuario_id);
+
+        //3. Persistir cambios
+        await this.poaRepository.guardar(poa, tx);
+
+        return PoaResponseMapper.toCancelarPoa(
+          poaId,
+          estadoAnterior,
+          poa.getEstadosPoa(),
+        );
+      },
+    );
   }
 }
