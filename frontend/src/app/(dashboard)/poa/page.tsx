@@ -32,17 +32,16 @@ function propsAFilaForm(sub: SubactividadFilaProps): SubactividadFilaForm {
 }
 
 export default function PoaPage() {
-  const {
-    cabecera,
-    actividades,
-    cargandoInicial,
-    cargarPoaInicial,
-    borrarActividad,
-    sugerenciasSubactividades,
-    sincronizarSubactividades,
-    expandirTarjeta,
-    editarFichaTecnica
-  } = usePoaStore();
+  // ✅ CAMBIO AQUÍ: Separar la extracción en constantes individuales
+  const cabecera = usePoaStore((state) => state.cabecera);
+  const actividades = usePoaStore((state) => state.actividades);
+  const cargandoInicial = usePoaStore((state) => state.cargandoInicial);
+  const cargarPoaInicial = usePoaStore((state) => state.cargarPoaInicial);
+  const sugerenciasSubactividades = usePoaStore((state) => state.sugerenciasSubactividades);
+  const sincronizarSubactividades = usePoaStore((state) => state.sincronizarSubactividades);
+  const expandirTarjeta = usePoaStore((state) => state.expandirTarjeta);
+  const editarFichaTecnica = usePoaStore((state) => state.editarFichaTecnica);
+  const borrarActividad = usePoaStore((state) => state.borrarActividad);
 
   useEffect(() => {
     cargarPoaInicial();

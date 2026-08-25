@@ -5,6 +5,6 @@ import { usePoaMockStore } from './poa.mock-store';
 // 🔴 CAMBIA ESTA BANDERA PARA ALTERNAR
 // true  => Usa el MOCK con datos falsos
 // false => Usa la API REAL de Emiliano
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 export const usePoaStore = USE_MOCK ? usePoaMockStore : usePoaRealStore;
