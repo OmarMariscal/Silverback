@@ -15,12 +15,21 @@ export const api = axios.create({
 // El INTERCEPTOR: Se ejecuta automáticamente ANTES de cada petición que hagas
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Aquí leerás el token (por ahora simulado, luego lo sacaremos de Zustand o Cookies)
     const token = typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
     
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`; // Le pegamos el gafete
+    if (config.headers) {
+      // Si llegas a tener un token real, lo enviará
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`; 
+      }
+      
+      // ✅ INYECCIÓN DE CABECERAS MOCK PARA DESARROLLO
+      // Puedes cambiar 'CONTRALOR' y el ID por los valores exactos que espere Emiliano
+      // HARDCODE
+      config.headers['x-mock-role'] = 'CONTRALOR'; 
+      config.headers['x-mock-user-id'] = '0ec928c4-f7fd-4d6d-b8aa-f12a5eee99af'; 
     }
+    
     return config;
   },
   (error) => Promise.reject(error)
@@ -35,7 +44,7 @@ api.interceptors.response.use(
       localStorage.removeItem('jwt_token'); // Limpiamos la basura
       // Forzamos al navegador a recargarse en la pantalla de Login
       if (typeof window !== 'undefined') {
-        window.location.href = '/login'; 
+        //window.location.href = '/login'; 
       }
     }
     // Propagamos el error para que el catch de tu servicio sepa que algo falló

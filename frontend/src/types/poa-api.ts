@@ -108,6 +108,7 @@ export interface SubActividadDetallesSync {
   fecha_inicio: string;
   fecha_termino: string;
   tipo: TipoActividadAPI;
+  banco_sub_actividad_id?: string;
 }
 
 export interface SubActividadesSyncRequest {
@@ -209,6 +210,7 @@ export interface SubActividadesBulkRequest {
     fecha_inicio: string;
     fecha_termino: string;
     tipo: TipoActividadAPI;
+    banco_sub_actividad_id?: string;
   }[];
 }
 

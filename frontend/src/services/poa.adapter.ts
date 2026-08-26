@@ -36,7 +36,7 @@ export const adaptarPoaActual = (
   const cabeceraAdaptada: CabeceraPOAProps = {
     anioFiscal: datosAPI.anio_fiscal.toString(),
     estadoActual: datosAPI.estado as any, 
-    puedeEditar: datosAPI.estado === "SIN_ENVIAR" || datosAPI.estado === "DEVUELTA",
+    puedeEditar: datosAPI.estado === "SIN_ENVIAR" || datosAPI.estado === "BORRADOR" || datosAPI.estado === "DEVUELTA",
     estaCargando: false,
     onEnviarRevision: () => {}, 
     onCancelarEnvio: () => {},

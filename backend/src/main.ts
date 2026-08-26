@@ -15,6 +15,8 @@ async function bootstrap() {
   //Prefijo Global para el Versioando de la API
   app.setGlobalPrefix('api/v1');
 
+  app.enableCors();
+
   //Class-Validator
   app.useGlobalPipes(
     new ValidationPipe({
@@ -59,3 +61,4 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
+
