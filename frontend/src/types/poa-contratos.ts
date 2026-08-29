@@ -54,6 +54,7 @@ export interface TarjetaActividadPOAProps {
   // --- Fechas del Padre (que pediste al backend) ---
   fechaInicioPadre?: string;
   fechaTerminoPadre?: string;
+  auditoresResumen?: string[];
   
   // --- Los detalles técnicos (Vienen de getactividadfichatecnica) ---
   fichaTecnica?: FichaTecnicaExpandida; // Es undefined hasta que se expande
