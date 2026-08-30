@@ -48,6 +48,11 @@ export const adaptarPoaActual = (
     participacionGlobalVisible: `${act.participacion_global}%`,
     // Ahora toma la bandera 'es_rezagado' individual de cada actividad del backend
     esRezagada: act.es_rezagado ?? false,
+
+    // 👈 MAPEO DE FECHAS Y AUDITORES PARA LA VISTA COMPRIMIDA
+    fechaInicioPadre: datosAPI.fecha_inicio,
+    fechaTerminoPadre: datosAPI.fecha_termino,
+    auditoresResumen: act.auditores_nombres || [],
     
     subactividades: [],
     estaCargandoDetalles: false,
