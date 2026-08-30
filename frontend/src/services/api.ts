@@ -3,6 +3,16 @@
 // En palabras sencillas: Este archivo es como un "centro de control" para todas las llamadas HTTP que hagamos al backend. Configura cómo se hacen las peticiones y qué hacer si algo sale mal, como cuando el token de sesión expira.
 
 import axios, { InternalAxiosRequestConfig } from 'axios';
+import type { RolUsuario } from '@/types/roles';
+
+// Sesión única del mock de desarrollo. Cambiar aquí el rol y el usuario
+// mantiene sincronizados los headers y la visualización del frontend.
+export const MOCK_SESSION: { role: RolUsuario; userId: string } = {
+  role: 'CONTRALOR',
+  userId: '1c31aebe-b941-4961-94c0-35806b595da0',
+};
+
+export const MOCK_ROLE = MOCK_SESSION.role;
 
 // Creamos una instancia base apuntando al servidor de Emiliano
 export const api = axios.create({
@@ -26,8 +36,8 @@ api.interceptors.request.use(
       // ✅ INYECCIÓN DE CABECERAS MOCK PARA DESARROLLO
       // Puedes cambiar 'CONTRALOR' y el ID por los valores exactos que espere Emiliano
       // HARDCODE
-      config.headers['x-mock-role'] = 'CONTRALOR'; 
-      config.headers['x-mock-user-id'] = '1c31aebe-b941-4961-94c0-35806b595da0'; 
+      config.headers['x-mock-role'] = MOCK_SESSION.role;
+      config.headers['x-mock-user-id'] = MOCK_SESSION.userId;
     }
     
     return config;

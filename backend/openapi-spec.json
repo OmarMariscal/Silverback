@@ -516,6 +516,20 @@
                 "CONCLUIDA"
               ]
             }
+          },
+          {
+            "name": "semaforo",
+            "required": false,
+            "in": "query",
+            "description": "Estado del semáforo calculado por vencimiento",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "A_TIEMPO",
+                "CRITICO",
+                "PRECAUCION"
+              ]
+            }
           }
         ],
         "responses": {

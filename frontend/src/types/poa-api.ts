@@ -240,3 +240,4 @@ export interface CentroDataDto {
 export interface CentroDto {
   data: CentroDataDto[];
 }
+

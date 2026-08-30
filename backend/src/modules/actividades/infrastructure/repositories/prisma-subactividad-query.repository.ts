@@ -22,6 +22,8 @@ import { SubActividadesDirectorioResult } from '@modules/actividades/application
 import { ISubactividadesQueryRepository } from '@modules/actividades/application/ports/subactividaeds-query.repository.interface';
 import { Injectable, NotImplementedException } from '@nestjs/common';
 import { EstadoSubActividad, Prisma } from '@prisma/client';
+import { EstadosSemaforo } from '@domain/semaforo/estados-semaforo-enum';
+import { SemaforoService } from '@domain/semaforo/semaforo-service';
 
 @Injectable()
 export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRepository {
@@ -282,6 +284,10 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       AND: andConditions,
     };
 
+    // El semáforo depende de días hábiles y no es un campo persistido.
+    // Se filtra después de recuperar los registros autorizados para conservar
+    // una única regla de negocio con la usada por la respuesta.
+
     // 2. MAPEO SEGURO DE ORDENAMIENTO
     const orderByPrisma: Prisma.SubActividadOrderByWithRelationInput = {};
     switch (sortBy) {
@@ -335,8 +341,9 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       this.prisma.subActividad.count({ where: wherePrisma }),
       this.prisma.subActividad.findMany({
         where: wherePrisma,
-        skip,
-        take: limite,
+        // El semáforo se calcula con días hábiles; se pagina después del filtro.
+        skip: filtros.semaforo ? undefined : skip,
+        take: filtros.semaforo ? undefined : limite,
         orderBy: orderByPrisma,
         select: selectArgs,
       }),
@@ -376,17 +383,25 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       };
     });
 
+    const dataFiltrada = filtros.semaforo
+      ? data.filter((item) => SemaforoService.calcularSemaforoVencimiento(item.fecha_termino) === filtros.semaforo)
+      : data;
+    const datosPaginados = filtros.semaforo
+      ? dataFiltrada.slice(skip, skip + limite)
+      : dataFiltrada;
+    const totalRegistros = filtros.semaforo ? dataFiltrada.length : totalItems;
+
     // 5. CONSTRUCCIÓN DE METADATOS
-    const totalPages = Math.ceil(totalItems / limite);
+    const totalPages = Math.ceil(totalRegistros / limite);
 
     return {
       meta: {
-        total_registros: totalItems,
+        total_registros: totalRegistros,
         pagina_actual: pagina,
         total_paginas: totalPages,
         limite: limite,
       },
-      data,
+      data: datosPaginados,
     };
   }
 

@@ -4,6 +4,7 @@ import { ActividadesSortColumn } from '../../enums/actividades-sort-column.enum'
 import { IsOptional, IsEnum, IsString, IsUUID } from 'class-validator';
 import { TipoSubActividad } from '@domain/actividad/tipos-de-actividades.enum';
 import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
+import { EstadosSemaforo } from '@domain/semaforo/estados-semaforo-enum';
 
 export class SubActividadesDirectorioQueryDto extends PaginacionQueryDto {
   @ApiPropertyOptional({
@@ -47,4 +48,12 @@ export class SubActividadesDirectorioQueryDto extends PaginacionQueryDto {
   @IsOptional()
   @IsEnum(EstadosActividades)
   estado_flujo?: EstadosActividades;
+
+  @ApiPropertyOptional({
+    description: 'Estado del semáforo calculado por vencimiento',
+    enum: EstadosSemaforo,
+  })
+  @IsOptional()
+  @IsEnum(EstadosSemaforo)
+  semaforo?: EstadosSemaforo;
 }

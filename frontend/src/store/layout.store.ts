@@ -4,6 +4,8 @@
 
 import { create } from 'zustand';
 import { CabeceraGeneralGlobalProps, NotificacionItem, MensajeItem } from '../types/layout-contratos';
+import { RolUsuario } from '../types/roles';
+import { MOCK_ROLE } from '../services/api';
 
 // 1. DICCIONARIO DE TRADUCCIÓN DE ROLES
 const MAPA_ROLES: Record<string, string> = {
@@ -17,6 +19,7 @@ interface LayoutState {
   tituloPantallaActual: string;
   nombreUsuario: string;
   cargoUsuario: string;
+  rolUsuario: RolUsuario;
   urlImagenPerfil?: string;
   
   mensajes: MensajeItem[];
@@ -43,6 +46,7 @@ export const useLayoutStore = create<LayoutState>((set, get) => ({
   tituloPantallaActual: 'Plan Operativo Anual 2026',
   nombreUsuario: 'Mtro. Braulio Vicente', // TODO: Limpiar al integrar login real
   cargoUsuario: 'Contralor de Centro - CUCEI', // TODO: Limpiar al integrar login real
+  rolUsuario: MOCK_ROLE,
   urlImagenPerfil: undefined,
   
   mensajes: [],
@@ -65,6 +69,7 @@ export const useLayoutStore = create<LayoutState>((set, get) => ({
     set({
       nombreUsuario: nombre,
       cargoUsuario: cargoFinal,
+      rolUsuario: rolNormalizado as RolUsuario,
       urlImagenPerfil: avatarUrl,
     });
   },
