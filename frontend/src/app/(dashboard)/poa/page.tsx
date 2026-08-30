@@ -5,6 +5,7 @@ import { usePoaStore } from '@/store/poa.store';
 import { TarjetaActividadPOA } from '@/components/ui/TarjetaActividadPrinsipal';
 import { ModalSubactividades } from '@/components/ui/ModalSubactividades';
 import { ModalEditarFichaTecnica } from '@/components/ui/ModalFichaTecnica';
+import { ModalBancoActividades } from '@/components/ui/ModalBancoActividades';
 import { SubactividadFilaForm, SubactividadFilaProps, DatosFormularioFicha } from '@/types/poa-contratos';
 
 function propsAFilaForm(sub: SubactividadFilaProps): SubactividadFilaForm {
@@ -32,6 +33,13 @@ export default function PoaPage() {
   const editarFichaTecnica = usePoaStore((state) => state.editarFichaTecnica);
   const auditoresDisponibles = usePoaStore((state) => state.auditoresDisponibles);
   const cargarAuditores = usePoaStore((state) => state.cargarAuditores);
+  const bancoActividades = usePoaStore((state) => state.bancoActividades);
+  const cargandoBanco = usePoaStore((state) => state.cargandoBanco);
+  const cargarBancoActividades = usePoaStore((state) => state.cargarBancoActividades);
+  const seleccionarActividadBanco = usePoaStore((state) => state.seleccionarActividadBanco);
+  const crearNuevaActividad = usePoaStore((state) => state.crearNuevaActividad);
+  const obtenerSubactividadesSugeridas = usePoaStore((state) => state.obtenerSubactividadesSugeridas);
+  const crearSubactividadesMasivas = usePoaStore((state) => state.crearSubactividadesMasivas);
 
   const expandirTarjeta = usePoaStore((state) => state.expandirTarjeta);
   const borrarActividad = usePoaStore((state) => state.borrarActividad);
@@ -113,7 +121,77 @@ export default function PoaPage() {
   const [wizardCreacion, setWizardCreacion] = useState<{
   paso: number; // 0: Cerrado, 1: Seleccion, 2: Ficha, 3: Subactividades
   fichaData: DatosFormularioFicha | null;
-  }>({ paso: 0, fichaData: null });
+  bancoId: string | null;
+  actividadId: string | null;
+  }>({ paso: 0, fichaData: null, bancoId: null, actividadId: null });
+
+  const abrirWizardCreacion = async () => {
+    setWizardCreacion({ paso: 1, fichaData: null, bancoId: null, actividadId: null });
+    await cargarBancoActividades();
+  };
+
+  const seleccionarDelBanco = async (idBanco: string) => {
+    await seleccionarActividadBanco(idBanco);
+    const detalle = usePoaStore.getState().actividadBancoSeleccionada;
+    setWizardCreacion({
+      paso: 2,
+      bancoId: idBanco,
+      actividadId: null,
+      fichaData: {
+        titulo: detalle?.titulo || '',
+        justificacion: detalle?.justificacion || '',
+        objetivoGeneral: detalle?.objetivoGeneral || '',
+        objetivosParticulares: detalle?.objetivosParticulares || '',
+        metaProyecto: detalle?.metaProyecto || '',
+        indicadores: detalle?.indicadores || '',
+        auditoresSeleccionadosIds: [],
+      },
+    });
+  };
+
+  const crearDesdeCero = () => {
+    setWizardCreacion({
+      paso: 2,
+      fichaData: {
+        titulo: '', justificacion: '', objetivoGeneral: '', objetivosParticulares: '',
+        metaProyecto: '', indicadores: '', auditoresSeleccionadosIds: [],
+      },
+      bancoId: null,
+      actividadId: null,
+    });
+  };
+
+  const cerrarWizard = () => setWizardCreacion({ paso: 0, fichaData: null, bancoId: null, actividadId: null });
+
+  const guardarFichaNueva = async (datosIngresados: DatosFormularioFicha) => {
+    setEstaGuardando(true);
+    try {
+      const actividadId = wizardCreacion.actividadId
+        ? wizardCreacion.actividadId
+        : await crearNuevaActividad(datosIngresados, wizardCreacion.bancoId);
+      if (!actividadId) return;
+      if (wizardCreacion.actividadId) {
+        const actualizada = await editarFichaTecnica(actividadId, datosIngresados);
+        if (!actualizada) return;
+      }
+      if (wizardCreacion.bancoId) await obtenerSubactividadesSugeridas(wizardCreacion.bancoId);
+      setWizardCreacion((prev) => ({ ...prev, paso: 3, fichaData: datosIngresados, actividadId }));
+    } finally {
+      setEstaGuardando(false);
+    }
+  };
+
+  const guardarSubactividadesNuevas = async (filas: SubactividadFilaForm[]) => {
+    if (!wizardCreacion.actividadId) return;
+    setEstaGuardando(true);
+    try {
+      const ok = await crearSubactividadesMasivas(wizardCreacion.actividadId, filas);
+      if (ok) cerrarWizard();
+      else alert('No se pudieron guardar las sub-actividades. Intenta de nuevo.');
+    } finally {
+      setEstaGuardando(false);
+    }
+  };
 
   if (cargandoInicial || !cabecera) {
     return (
@@ -141,7 +219,7 @@ export default function PoaPage() {
             <span className={`w-2 h-2 rounded-full ${cabecera.estadoActual === 'EN_REVISION' ? 'bg-amber-500' : 'bg-yellow-500'}`}></span>
             <span className="text-sm font-semibold">Estado: {cabecera.estadoActual.replace('_', ' ')}</span>
           </div>
-          <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+          <button onClick={abrirWizardCreacion} disabled={!cabecera.puedeEditar} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50">
             <span>+</span> Agregar Actividad
           </button>
         </div>
@@ -164,6 +242,7 @@ export default function PoaPage() {
       {/* RENDERIZADO DE MODALES CENTRALIZADOS */}
       
       <ModalSubactividades
+        key={`${actividadActivaId}-${modalSubactividadesAbierto}`}
         isOpen={modalSubactividadesAbierto}
         tituloActividadPadre={actividadActivaTitulo}
         subactividadesIniciales={subactividadesIniciales}
@@ -180,6 +259,38 @@ export default function PoaPage() {
           estaGuardando={estaGuardando}
           onCancelar={() => setModalFichaAbierto(false)}
           onContinuarASubactividades={handleGuardarFichaTecnica}
+        />
+      )}
+
+      <ModalBancoActividades
+        isOpen={wizardCreacion.paso === 1}
+        actividadesDisponibles={bancoActividades}
+        estaCargando={cargandoBanco}
+        onSeleccionar={seleccionarDelBanco}
+        onCrearPersonalizada={crearDesdeCero}
+        onCancelar={cerrarWizard}
+      />
+
+      {wizardCreacion.paso === 2 && wizardCreacion.fichaData && (
+        <ModalEditarFichaTecnica
+          valoresIniciales={wizardCreacion.fichaData}
+          listaAuditoresDisponibles={auditoresDisponibles}
+          estaGuardando={estaGuardando}
+          onCancelar={cerrarWizard}
+          onContinuarASubactividades={guardarFichaNueva}
+        />
+      )}
+
+      {wizardCreacion.paso === 3 && wizardCreacion.fichaData && (
+        <ModalSubactividades
+          key={`wizard-${wizardCreacion.actividadId}`}
+          isOpen
+          tituloActividadPadre={wizardCreacion.fichaData.titulo}
+          subactividadesIniciales={[]}
+            sugerenciasBanco={wizardCreacion.bancoId ? sugerenciasSubactividades : []}
+          estaGuardando={estaGuardando}
+          onRegresarAFicha={() => setWizardCreacion((prev) => ({ ...prev, paso: 2 }))}
+          onGuardarSincronizacion={guardarSubactividadesNuevas}
         />
       )}
     </div>

@@ -27,7 +27,7 @@ api.interceptors.request.use(
       // Puedes cambiar 'CONTRALOR' y el ID por los valores exactos que espere Emiliano
       // HARDCODE
       config.headers['x-mock-role'] = 'CONTRALOR'; 
-      config.headers['x-mock-user-id'] = '4334d2a7-8075-43d5-9ba3-ec907f7e9fbc'; 
+      config.headers['x-mock-user-id'] = '1c31aebe-b941-4961-94c0-35806b595da0'; 
     }
     
     return config;

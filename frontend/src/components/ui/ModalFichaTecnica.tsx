@@ -70,9 +70,10 @@ export const ModalEditarFichaTecnica: React.FC<FormularioFichaTecnicaProps> = ({
         {/* Cabecera */}
         <div className="px-6 sm:px-10 pt-6 pb-5 border-b border-slate-100 shrink-0 bg-white z-10 flex justify-between items-start">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 leading-tight">Editar Ficha Técnica</h2>
+            <p className="mb-1 text-xs font-bold uppercase tracking-widest text-indigo-600">Paso 2 de 3</p>
+            <h2 className="text-2xl font-bold text-slate-900 leading-tight">Configurar Ficha Técnica</h2>
             <p className="text-sm text-slate-500 mt-1">
-              Actualiza los atributos generales y el equipo auditor asignado a esta actividad.
+              Revisa los atributos generales y asigna el equipo auditor para esta actividad.
             </p>
           </div>
           <button
@@ -239,7 +240,7 @@ export const ModalEditarFichaTecnica: React.FC<FormularioFichaTecnicaProps> = ({
           </button>
           
           <button type="submit" form="form-ficha-tecnica" disabled={estaGuardando} className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-lg flex items-center disabled:opacity-50">
-            {estaGuardando ? 'Sincronizando...' : 'Guardar y Finalizar'}
+            {estaGuardando ? 'Guardando...' : 'Continuar a Sub-actividades'}
           </button>
         </div>
       </div>
