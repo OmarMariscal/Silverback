@@ -181,7 +181,7 @@ export class ActividadesService {
         }
 
         // Regla de negocio: No se puede eliminar una actividad en estado de rezago
-        if (actividad.esEliminable()) {
+        if (!actividad.esEliminable()) {
           throw new ReglaNegocioException(
             `No se puede eliminar la actividad porque está en estado de rezago`,
             CodigoDeViolacion.ESTADO_INVALIDO,
