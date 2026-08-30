@@ -32,6 +32,7 @@ export class ActividadEntity {
     private idUsuarioDuenoPoa?: string,
     private idUsuarioJefaAsignada?: string,
     private contextoSeguridadCargado: boolean = false,
+    private anioFiscal?: number,
   ) {}
 
   // FUNCIONES AUXILIARES (PRIVADAS)
@@ -178,6 +179,10 @@ export class ActividadEntity {
 
   public getContextoSeguridadCargado(): boolean {
     return this.contextoSeguridadCargado;
+  }
+
+  public getAnioFiscal(): number | undefined {
+    return this.anioFiscal;
   }
 
   // MANEJO DE COLECCIONES (FAIL-FAST) CON SEGURIDAD AÑADIDA
@@ -355,11 +360,23 @@ export class ActividadEntity {
     estadoPoa: EstadosPoa,
     idContralor: string | null,
     idJefa: string | null,
+    anioFiscal?: number,
   ): void {
     this.poaEstado = estadoPoa;
     this.idUsuarioDuenoPoa = idContralor ?? undefined;
     this.idUsuarioJefaAsignada = idJefa ?? undefined;
     this.contextoSeguridadCargado = true;
+    if (anioFiscal !== undefined) {
+      this.anioFiscal = anioFiscal;
+      // Inyectar el año fiscal a todas las subactividades
+      this.inyectarAnioFiscalASubActividades(anioFiscal);
+    }
+  }
+
+  private inyectarAnioFiscalASubActividades(anioFiscal: number): void {
+    for (const subActividad of this.subActividades) {
+      subActividad.inyectarAnioFiscal(anioFiscal);
+    }
   }
 
   public esElegibleParaModificacion(): boolean {
