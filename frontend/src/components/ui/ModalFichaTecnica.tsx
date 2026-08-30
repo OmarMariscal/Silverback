@@ -59,7 +59,6 @@ export const ModalEditarFichaTecnica: React.FC<FormularioFichaTecnicaProps> = ({
     e.preventDefault();
     onContinuarASubactividades({
       ...formData,
-      // Se agregan al objeto resultante por si el backend los recibe
       ...( { totalParticipantes, porcentajePorAuditor: porcentajeCalculadoNumero } as any )
     });
   };
@@ -115,59 +114,40 @@ export const ModalEditarFichaTecnica: React.FC<FormularioFichaTecnicaProps> = ({
               Asignación de Equipo Auditor
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start mb-6">
-              {/* Total Participantes (Sólo Lectura Calculada) */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+              
+              {/* Porcentaje (Izquierda) */}
               <div className="md:col-span-4">
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
-                  Total Participantes (+ Líder)
-                </label>
-                <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 h-[52px] flex items-center justify-center shadow-inner">
-                  <span className="text-xl font-black text-slate-800">{totalParticipantes}</span>
-                </div>
-              </div>
-
-              {/* Porcentaje Calculado */}
-              <div className="md:col-span-4">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
-                  % Por Auditor
+                  Porcentaje
                 </label>
                 <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 h-[52px] flex items-center justify-center shadow-inner">
                   <span className="text-xl font-black text-indigo-600">{porcentajePorAuditor}%</span>
                 </div>
               </div>
 
-              {/* Auditores Seleccionados */}
-              <div className="md:col-span-4">
+              {/* Listado de Auditores Disponibles (Derecha) */}
+              <div className="md:col-span-8">
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
-                  Auditores Seleccionados
+                  Seleccionar Integrantes del Catálogo
                 </label>
-                <div className="w-full h-[52px] bg-slate-50 border border-slate-200 rounded-xl px-4 flex items-center justify-center text-xs font-semibold text-slate-600">
-                  {formData.auditoresSeleccionadosIds.length} seleccionados
+                <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
+                  {listaAuditoresDisponibles?.map((auditor) => {
+                    const seleccionado = formData.auditoresSeleccionadosIds.includes(auditor.id);
+                    return (
+                      <div
+                        key={auditor.id}
+                        onClick={() => toggleAuditor(auditor.id)}
+                        className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors ${
+                          seleccionado ? 'bg-indigo-50 border border-indigo-200' : 'bg-white border border-slate-100 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span className="text-sm font-medium text-slate-800">{auditor.nombreCompleto}</span>
+                        <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">{auditor.cargoVisible}</span>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-            </div>
-
-            {/* Listado de Auditores Disponibles */}
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
-                Seleccionar Integrantes del Catálogo
-              </label>
-              <div className="max-h-40 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
-                {listaAuditoresDisponibles?.map((auditor) => {
-                  const seleccionado = formData.auditoresSeleccionadosIds.includes(auditor.id);
-                  return (
-                    <div
-                      key={auditor.id}
-                      onClick={() => toggleAuditor(auditor.id)}
-                      className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors ${
-                        seleccionado ? 'bg-indigo-50 border border-indigo-200' : 'bg-white border border-slate-100 hover:bg-slate-100'
-                      }`}
-                    >
-                      <span className="text-sm font-medium text-slate-800">{auditor.nombreCompleto}</span>
-                      <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">{auditor.cargoVisible}</span>
-                    </div>
-                  );
-                })}
               </div>
             </div>
           </div>
