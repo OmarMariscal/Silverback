@@ -9,7 +9,7 @@ import type { RolUsuario } from '@/types/roles';
 // mantiene sincronizados los headers y la visualización del frontend.
 export const MOCK_SESSION: { role: RolUsuario; userId: string } = {
   role: 'CONTRALOR',
-  userId: '1c31aebe-b941-4961-94c0-35806b595da0',
+  userId: '4334d2a7-8075-43d5-9ba3-ec907f7e9fbc',
 };
 
 export const MOCK_ROLE = MOCK_SESSION.role;
