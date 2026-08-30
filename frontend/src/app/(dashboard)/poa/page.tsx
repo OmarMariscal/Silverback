@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePoaStore } from '@/store';
+import { usePoaStore } from '@/store/poa.store';
 import { TarjetaActividadPOA } from '@/components/ui/TarjetaActividadPrinsipal';
 import { ModalSubactividades } from '@/components/ui/ModalSubactividades';
 import { SubactividadFilaForm, SubactividadFilaProps } from '@/types/poa-contratos';
@@ -11,22 +11,15 @@ const MESES: Record<string, string> = {
   Jul: '07', Ago: '08', Sep: '09', Oct: '10', Nov: '11', Dic: '12'
 };
 
-function fechaCortaAIso(fechaCorta: string): string {
-  const partes = fechaCorta.trim().split(' ');
-  if (partes.length !== 3) return '';
-  const [dia, mesTexto, anioCorto] = partes;
-  const mes = MESES[mesTexto];
-  if (!mes) return '';
-  return `20${anioCorto}-${mes}-${dia.padStart(2, '0')}`;
-}
+
 
 function propsAFilaForm(sub: SubactividadFilaProps): SubactividadFilaForm {
   return {
     idUiTemporal: sub.id,
     idBackend: sub.id,
     descripcionTarea: sub.descripcion,
-    fechaInicio: fechaCortaAIso(sub.fechaInicioFormateada),
-    fechaTermino: fechaCortaAIso(sub.fechaTerminoFormateada),
+    fechaInicio: sub.fechaInicioFormateada,
+    fechaTermino: sub.fechaTerminoFormateada,
     tipo: 'AUDITORIA'
   };
 }
@@ -53,6 +46,7 @@ export default function PoaPage() {
   const [estaGuardando, setEstaGuardando] = useState(false);
 
   const actividadActiva = actividades.find(a => a.idActividad === actividadActivaId);
+
   const subactividadesIniciales = actividadActiva
     ? actividadActiva.subactividades.map(propsAFilaForm)
     : [];
