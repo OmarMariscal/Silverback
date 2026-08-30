@@ -25,6 +25,7 @@ export class SubactividadEntity {
     private mensajeResolucion: string | null = null,
 
     private bancoSubActividadId: string | null = null,
+    private anioFiscal?: number,
   ) {}
 
   private validarEstadoInicial(estadoInicial: EstadosActividades[]): void {
@@ -32,6 +33,22 @@ export class SubactividadEntity {
       throw new ReglaNegocioException(
         `Operación inválida. La sub-actividad está en ${this.estado}, pero requiere estar en: ${estadoInicial.join(' o ')}.`,
         CodigoDeViolacion.ESTADO_INVALIDO,
+      );
+    }
+  }
+
+  private validarAnioFiscal(fechaInicio: Date, fechaTermino: Date): void {
+    if (this.anioFiscal === undefined) {
+      return;
+    }
+
+    const anioInicio = fechaInicio.getFullYear();
+    const anioTermino = fechaTermino.getFullYear();
+
+    if (anioInicio !== this.anioFiscal || anioTermino !== this.anioFiscal) {
+      throw new ReglaNegocioException(
+        `Las fechas de la sub-actividad deben estar dentro del anio fiscal operativo ${this.anioFiscal}. Inicio: ${anioInicio}, Termino: ${anioTermino}.`,
+        CodigoDeViolacion.FECHA_INVALIDA,
       );
     }
   }
@@ -75,6 +92,14 @@ export class SubactividadEntity {
 
   public getBancoSubActividadId(): string | null {
     return this.bancoSubActividadId;
+  }
+
+  public getAnioFiscal(): number | undefined {
+    return this.anioFiscal;
+  }
+
+  public inyectarAnioFiscal(anioFiscal: number): void {
+    this.anioFiscal = anioFiscal;
   }
 
   public calcularSemanasTotales(): number {
@@ -204,6 +229,9 @@ export class SubactividadEntity {
     tipo: TipoSubActividad,
     bancoActividadId: string | null,
   ): void {
+    // Validar que las fechas estén dentro del año fiscal operativo
+    this.validarAnioFiscal(fechaInicio, fechaTermino);
+
     this.numeroOrden = numeroOrden;
     this.descripcion = descripcion;
     this.fechaInicio = fechaInicio;

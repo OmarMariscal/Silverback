@@ -214,6 +214,7 @@ export class SubactividadesService {
             null, // Fecha Envio
             null, // mensaje Resolución
             item.banco_sub_actividad_id || null,
+            actividad.getAnioFiscal(), // Inyectar el año fiscal operativo
           );
 
           // Utilizamos el método para agregar la entidad
@@ -320,6 +321,7 @@ export class SubactividadesService {
               null,
               null,
               item.banco_sub_actividad_id || null,
+              actividad.getAnioFiscal(), // Inyectar el año fiscal operativo
             );
 
             listadoSincronizado.push(nueva);

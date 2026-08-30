@@ -54,11 +54,13 @@ export class ActividadMapper implements Mapper<
       const estadoPoaDominio = traducirEstadoPoaADominio(raw.poa.estado);
       const idContralor = raw.poa.contralor?.usuario_id || null;
       const idJefa = raw.poa.contralor?.jefa?.usuario_id || null;
+      const anioFiscal = raw.poa.anio_fiscal;
 
       actividad.inyectarContextoDeSeguridad(
         estadoPoaDominio,
         idContralor,
         idJefa,
+        anioFiscal,
       );
     }
 
