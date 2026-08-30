@@ -396,4 +396,8 @@ export class ActividadEntity {
 
     return false;
   }
+
+  public esEliminable(): boolean {
+    return this.esElegibleParaModificacion() && !this.esRezago;
+  }
 }
