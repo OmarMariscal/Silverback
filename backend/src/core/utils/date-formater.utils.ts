@@ -20,8 +20,8 @@ export class DateFormatterUtil {
     if (!fecha) return '-';
 
     const anio = fecha.getFullYear();
-    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-    const dia = String(fecha.getDate()).padStart(2, '0');
+    const mes = String(fecha.getUTCMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getUTCDate()).padStart(2, '0');
 
     return `${anio}-${mes}-${dia}`;
   }
