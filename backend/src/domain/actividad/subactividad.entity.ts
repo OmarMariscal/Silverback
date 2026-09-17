@@ -7,6 +7,8 @@ import { Permisos } from '@domain/roles/permisos.enum';
 import { validarPermisoDeDominio } from '@domain/shared/utils/autorizacion.utils';
 
 export class SubactividadEntity {
+  private indiceOrden: number;
+
   constructor(
     private readonly id: string,
     private numeroOrden: string,
@@ -26,7 +28,17 @@ export class SubactividadEntity {
 
     private bancoSubActividadId: string | null = null,
     private anioFiscal?: number,
-  ) {}
+  ) {
+    this.indiceOrden = this.calcularIndiceOrden(this.numeroOrden);
+  }
+
+  private calcularIndiceOrden(orden: string): number {
+    if (!orden) return 0;
+    const partes = orden.split('.');
+    const mayor = parseInt(partes[0] || '0', 10);
+    const menor = parseInt(partes[1] || '0', 10);
+    return (isNaN(mayor) ? 0 : mayor * 1000) + (isNaN(menor) ? 0 : menor);
+  }
 
   private validarEstadoInicial(estadoInicial: EstadosActividades[]): void {
     if (!estadoInicial.includes(this.estado)) {
@@ -60,6 +72,10 @@ export class SubactividadEntity {
 
   public getNumeroOrden(): string {
     return this.numeroOrden;
+  }
+
+  public getIndiceOrden(): number {
+    return this.indiceOrden;
   }
 
   public getDescripcion(): string {
@@ -233,6 +249,7 @@ export class SubactividadEntity {
     this.validarAnioFiscal(fechaInicio, fechaTermino);
 
     this.numeroOrden = numeroOrden;
+    this.indiceOrden = this.calcularIndiceOrden(numeroOrden);
     this.descripcion = descripcion;
     this.fechaInicio = fechaInicio;
     this.fechaTermino = fechaTermino;

@@ -7,6 +7,7 @@ export interface SubActividadesDirectorioResult {
   tipo: TipoSubActividad;
   titulo: string;
   fecha_termino: Date;
+  fecha_envio: Date | null;
 
   // Atributos que varían según la vista (null es más seguro para Prisma)
   centro_clave: string | null;
