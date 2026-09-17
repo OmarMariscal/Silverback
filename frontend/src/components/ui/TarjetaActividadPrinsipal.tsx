@@ -16,6 +16,7 @@ export function TarjetaActividadPOA({
   esRezagada,
   fechaInicioPadre,
   fechaTerminoPadre,
+  auditoresResumen,
   fichaTecnica,
   subactividades,
   estaCargandoDetalles,
@@ -35,9 +36,11 @@ export function TarjetaActividadPOA({
 
   const numConsecutivo = (consecutivoIndex + 1).toString().padStart(2, '0');
 
-  const auditoresTexto = fichaTecnica?.equipoAuditor && fichaTecnica.equipoAuditor.length > 0
-    ? fichaTecnica.equipoAuditor.map(a => a.nombreCompleto).join(', ')
-    : 'Sin auditores asignados';
+  const auditoresTexto = auditoresResumen && auditoresResumen.length > 0
+    ? auditoresResumen.join(', ')
+    : (fichaTecnica?.equipoAuditor && fichaTecnica.equipoAuditor.length > 0
+        ? fichaTecnica.equipoAuditor.map(a => a.nombreCompleto).join(', ')
+        : 'Sin auditores asignados');
 
   return (
     <div 

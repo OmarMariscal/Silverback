@@ -5,6 +5,7 @@ import { usePoaStore } from '@/store';
 import { TarjetaActividadPOA } from '@/components/ui/TarjetaActividadPrinsipal';
 import { ModalSubactividades } from '@/components/ui/ModalSubactividades';
 import { SubactividadFilaForm, SubactividadFilaProps } from '@/types/poa-contratos';
+import { useLayoutStore } from '@/store/layout.store';
 
 const MESES: Record<string, string> = {
   Ene: '01', Feb: '02', Mar: '03', Abr: '04', May: '05', Jun: '06',
@@ -42,6 +43,12 @@ export default function PoaPage() {
   const expandirTarjeta = usePoaStore((state) => state.expandirTarjeta);
   const editarFichaTecnica = usePoaStore((state) => state.editarFichaTecnica);
   const borrarActividad = usePoaStore((state) => state.borrarActividad);
+
+  useEffect(() => {
+    useLayoutStore.getState().setTituloPantalla(
+      cabecera ? `Plan Operativo Anual ${cabecera.anioFiscal}` : 'Plan Operativo Anual 2026'
+    );
+  }, [cabecera]);
 
   useEffect(() => {
     cargarPoaInicial();
