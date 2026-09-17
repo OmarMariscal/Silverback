@@ -322,7 +322,8 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
 
     switch (columnaSort) {
       case ActividadesSortColumn.IDENTIFICADOR:
-        orderByPrisma.push({ numero_orden: direccion });
+        orderByPrisma.push({ actividad: { folio: direccion } });
+        orderByPrisma.push({ indice_orden: direccion });
         break;
 
       case ActividadesSortColumn.FECHA_TERMINO:
