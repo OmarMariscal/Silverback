@@ -188,6 +188,7 @@ model ActividadAuditor {
 model SubActividad {
   id                    String        @id @default(uuid())
   numero_orden          String        
+  indice_orden          Int           @default(0)
   descripcion_tarea     String        @db.Text
   estado_operativo      EstadoSubActividad @default(SIN_EMPEZAR)
   mensaje_observacion   String?       @db.Text
