@@ -83,6 +83,7 @@ export class SubactividadesService {
       // Si existe, lo envolvemos en arreglo, sino, queda undefined
       tipoActividad: dto.tipo_actividad ? [dto.tipo_actividad] : undefined,
       estadoFlujo: dto.estado_flujo ? [dto.estado_flujo] : undefined,
+      semaforo: dto.semaforo,
     };
 
     // 3. Ejecución de la consulta en la BD
