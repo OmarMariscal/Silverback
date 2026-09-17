@@ -223,6 +223,7 @@ export class SubActividadResponseMapper {
 
         // Blindaje contra zonas horarias
         fecha_termino: DateFormatterUtil.toAnioMesDia(raw.fecha_termino),
+        fecha_envio: DateFormatterUtil.toAnioMesDia(raw.fecha_envio),
 
         // Inyección del polimorfismo
         asignacion: this.construirAsignacion(raw, rolUsuario),

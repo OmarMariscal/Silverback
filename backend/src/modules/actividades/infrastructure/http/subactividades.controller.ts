@@ -103,7 +103,7 @@ export class SubactividadesController {
   @ApiOperation({
     summary: 'Directorio de Actividades',
     description:
-      'Listado de las actividades para la construcción de los dashboards',
+      'Listado de las actividades para la construcción de los dashboards. Solo devuelve las subactividades del año fiscal vigente',
   })
   @ApiResponse({
     status: HttpStatus.OK,

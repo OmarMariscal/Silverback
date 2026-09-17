@@ -5,15 +5,18 @@ import { IsOptional, IsEnum, IsString, IsUUID } from 'class-validator';
 import { TipoSubActividad } from '@domain/actividad/tipos-de-actividades.enum';
 import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
 import { EstadosSemaforo } from '@domain/semaforo/estados-semaforo-enum';
+import { Expose } from 'class-transformer';
 
 export class SubActividadesDirectorioQueryDto extends PaginacionQueryDto {
   @ApiPropertyOptional({
+    name: 'sort_by',
     enum: ActividadesSortColumn,
     default: ActividadesSortColumn.FECHA_TERMINO,
   })
+  @Expose({ name: 'sort_by' })
   @IsOptional()
   @IsEnum(ActividadesSortColumn)
-  sort_by?: ActividadesSortColumn = ActividadesSortColumn.FECHA_TERMINO;
+  sortBy?: ActividadesSortColumn = ActividadesSortColumn.FECHA_TERMINO;
 
   @ApiPropertyOptional({
     description: 'Búsqueda libre por texto o identificador',
