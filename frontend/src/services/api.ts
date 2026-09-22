@@ -4,6 +4,35 @@
 
 import axios, { InternalAxiosRequestConfig } from 'axios';
 
+// =========================================================================
+// CONFIGURACIÓN DE DESARROLLO (MOCKS)
+// Puedes cambiar 'CONTRALOR' o 'JEFA' aquí, o mediante localStorage:
+// localStorage.setItem('mock_role', 'JEFA')
+// =========================================================================
+export const CONFIG_DEV = {
+    //CAMBIAR AQUÍ ↓↓↓↓↓↓
+  rolPorDefecto: 'CONTRALOR' as 'CONTRALOR' | 'JEFA' | 'AUDITOR',
+  usuarioIdPorDefecto: '4334d2a7-8075-43d5-9ba3-ec907f7e9fbc'
+};
+
+export const obtenerRolActivo = (): 'CONTRALOR' | 'JEFA' | 'AUDITOR' => {
+  if (typeof window !== 'undefined') {
+    const rolGuardado = localStorage.getItem('mock_role');
+    if (rolGuardado === 'JEFA' || rolGuardado === 'CONTRALOR' || rolGuardado === 'AUDITOR') {
+      return rolGuardado;
+    }
+  }
+  return CONFIG_DEV.rolPorDefecto;
+};
+
+export const obtenerUsuarioIdActivo = (): string => {
+  if (typeof window !== 'undefined') {
+    const idGuardado = localStorage.getItem('mock_user_id');
+    if (idGuardado) return idGuardado;
+  }
+  return CONFIG_DEV.usuarioIdPorDefecto;
+};
+
 // Creamos una instancia base apuntando al servidor de Emiliano
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1',
@@ -16,20 +45,17 @@ export const api = axios.create({
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
-    
+    const rolActual = obtenerRolActivo();
+    const usuarioIdActual = obtenerUsuarioIdActivo();
+
     if (config.headers) {
-      // Si llegas a tener un token real, lo enviará
       if (token) {
-        config.headers.Authorization = `Bearer ${token}`; 
+        config.headers.Authorization = `Bearer ${token}`;
       }
-      
-      // ✅ INYECCIÓN DE CABECERAS MOCK PARA DESARROLLO
-      // Puedes cambiar 'CONTRALOR' y el ID por los valores exactos que espere Emiliano
-      // HARDCODE
-      config.headers['x-mock-role'] = 'CONTRALOR'; 
-      config.headers['x-mock-user-id'] = '4334d2a7-8075-43d5-9ba3-ec907f7e9fbc'; 
+      config.headers['x-mock-role'] = rolActual;
+      config.headers['x-mock-user-id'] = usuarioIdActual;
     }
-    
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -45,6 +71,7 @@ api.interceptors.response.use(
       // Forzamos al navegador a recargarse en la pantalla de Login
       if (typeof window !== 'undefined') {
         //window.location.href = '/login'; 
+        // Nota: Comentado para evitar recarga automática durante desarrollo. Puedes descomentar en producción.
       }
     }
     // Propagamos el error para que el catch de tu servicio sepa que algo falló

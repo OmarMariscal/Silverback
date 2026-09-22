@@ -1,15 +1,44 @@
 // frontend/src/services/dashboard.service.ts
-import { api } from './api';
+// Este archivo contiene funciones para interactuar con el backend de Emiliano y obtener datos específicos del dashboard, como KPIs, actividades próximas a vencer, bandeja de supervisión, etc.
+// En palabras sencillas: Este archivo es como un "puente" entre tu frontend y el backend de Emiliano. Cada función hace una llamada HTTP a un endpoint específico y devuelve los datos que necesitas para mostrar en la interfaz de usuario.
+
+import { api, obtenerRolActivo } from './api';
 import * as DashApi from '../types/dashboard-api';
 
 export const dashboardService = {
-  // --- CONTRALOR ---
+  // --- KPIs DINÁMICOS SEGÚN ROL ---
+  obtenerKpisGenerales: async (): Promise<any> => {
+    try {
+      const rol = obtenerRolActivo();
+      if (rol === 'JEFA') {
+        const res = await api.get<DashApi.DashboardJefaDto>('/dashboard/jefa');
+        return res.data;
+      } else {
+        const res = await api.get<DashApi.DashboardContralorDto>('/dashboard/contralor/kpis');
+        return res.data;
+      }
+    } catch (error) {
+      console.error('Error al obtener KPIs del Dashboard:', error);
+      throw error;
+    }
+  },
+
   obtenerKpisContralor: async (): Promise<DashApi.DashboardContralorDto> => {
     try {
       const res = await api.get<DashApi.DashboardContralorDto>('/dashboard/contralor/kpis');
       return res.data;
     } catch (error) {
       console.error('Error al obtener KPIs de Contralor:', error);
+      throw error;
+    }
+  },
+
+  obtenerKpisJefa: async (): Promise<DashApi.DashboardJefaDto> => {
+    try {
+      const res = await api.get<DashApi.DashboardJefaDto>('/dashboard/jefa');
+      return res.data;
+    } catch (error) {
+      console.error('Error al obtener KPIs de Jefa:', error);
       throw error;
     }
   },
@@ -24,6 +53,7 @@ export const dashboardService = {
     }
   },
 
+  // Exclusivo de Contralor: /actividades/supervision
   obtenerBandejaSupervision: async (page = 1, limit = 10): Promise<DashApi.SupervisionResponseDto> => {
     try {
       const res = await api.get<DashApi.SupervisionResponseDto>(
@@ -36,13 +66,16 @@ export const dashboardService = {
     }
   },
 
-  // --- JEFA ---
-  obtenerKpisJefa: async (): Promise<DashApi.DashboardJefaDto> => {
+  // Exclusivo de Jefa: /actividades/directorio ordenado por fecha
+  obtenerBandejaDirectorioJefa: async (page = 1, limit = 10, estado?: string): Promise<DashApi.DirectorioResponseDto> => {
     try {
-      const res = await api.get<DashApi.DashboardJefaDto>('/dashboard/jefa');
+      const filtroEstado = estado ? `&estado_flujo=${estado}` : '';
+      const res = await api.get<DashApi.DirectorioResponseDto>(
+        `/actividades/directorio?page=${page}&limit=${limit}&order=desc&sort_by=FECHA_TERMINO${filtroEstado}`
+      );
       return res.data;
     } catch (error) {
-      console.error('Error al obtener KPIs de Jefa:', error);
+      console.error('Error al obtener directorio de actividades para la Jefa:', error);
       throw error;
     }
   },
@@ -53,23 +86,6 @@ export const dashboardService = {
       return res.data;
     } catch (error) {
       console.error('Error al obtener centros con rezago:', error);
-      throw error;
-    }
-  },
-
-  obtenerColaRevisionJefa: async (
-    estado?: 'EN_REVISION' | 'SOLICITADO',
-    page = 1,
-    limit = 10
-  ): Promise<DashApi.DirectorioResponseDto> => {
-    try {
-      const filtroEstado = estado ? `&estado_flujo=${estado}` : '';
-      const res = await api.get<DashApi.DirectorioResponseDto>(
-        `/actividades/directorio?page=${page}&limit=${limit}&order=desc&sort_by=FECHA_TERMINO${filtroEstado}`
-      );
-      return res.data;
-    } catch (error) {
-      console.error('Error al obtener cola de revisión de la Jefa:', error);
       throw error;
     }
   }

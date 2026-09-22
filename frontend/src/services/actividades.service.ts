@@ -1,4 +1,7 @@
 // frontend/src/services/actividades.service.ts
+// Este archivo contiene funciones para interactuar con el backend de Emiliano y obtener datos relacionados con actividades, como el directorio de actividades.
+// En palabras sencillas: Este archivo es como un "puente" entre tu frontend y el backend de Emiliano. Cada función hace una llamada HTTP a un endpoint específico y devuelve los datos que necesitas para mostrar en la interfaz de usuario.
+
 import { api } from './api';
 import * as DashApi from '../types/dashboard-api';
 import { FiltrosDirectorio } from '../types/actividades-contratos';
@@ -7,7 +10,6 @@ export const actividadesService = {
   obtenerDirectorio: async (filtros: FiltrosDirectorio = {}): Promise<DashApi.DirectorioResponseDto> => {
     try {
       const params = new URLSearchParams();
-
       if (filtros.page) params.append('page', filtros.page.toString());
       if (filtros.limit) params.append('limit', filtros.limit.toString());
       if (filtros.order) params.append('order', filtros.order);

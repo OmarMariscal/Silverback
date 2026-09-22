@@ -8,22 +8,143 @@ import { useLayoutStore } from '@/store/layout.store';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { datosContralor, cargando, cargarDashboardContralor } = useDashboardStore();
+  const { datosContralor, datosJefa, rolActual, cargando, cargarDashboard } = useDashboardStore();
 
   useEffect(() => {
-    useLayoutStore.getState().setTituloPantalla('Panel de Gestión - Contralor');
-  }, []); 
+    useLayoutStore.getState().setTituloPantalla(
+      rolActual === 'JEFA' ? 'Panel de Gestión - Jefatura' : 'Panel de Gestión - Contralor'
+    );
+  }, [rolActual]);
 
   useEffect(() => {
-    cargarDashboardContralor();
-  }, [cargarDashboardContralor]);
+    cargarDashboard();
+  }, [cargarDashboard]);
 
-  if (cargando || !datosContralor) {
+  if (cargando || (!datosContralor && !datosJefa)) {
     return (
       <div className="flex justify-center items-center py-32 text-indigo-600 font-bold animate-pulse text-lg">
         Cargando resumen operativo...
       </div>
     );
+  }
+
+  // ==========================================
+  // VISTA PARA LA JEFA
+  // ==========================================
+  if (rolActual === 'JEFA' && datosJefa) {
+    const { kpis, directorio } = datosJefa;
+    const ts = kpis.tarjetas_superiores;
+
+    return (
+      <div className="max-w-[1600px] mx-auto space-y-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
+              Resumen Directivo Global (Jefatura)
+            </h2>
+            <p className="text-base text-slate-500 mt-1">
+              Supervisión de Centros Universitarios y Red de Auditoría
+            </p>
+          </div>
+          <button 
+            onClick={() => router.push('/actividades')}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-md shadow-indigo-200 transition-all flex items-center cursor-pointer"
+          >
+            Directorio Completo de Red
+            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Tarjetas KPI Jefa */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+          <div 
+            onClick={() => router.push('/actividades?estado_flujo=EN_REVISION')}
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 hover:border-indigo-300 cursor-pointer transition-all hover:shadow-md"
+          >
+            <h3 className="text-base font-bold text-slate-500 uppercase tracking-widest mb-3">Pendientes de Revisión</h3>
+            <span className="text-5xl font-black text-indigo-700">{ts.pendientes.actividades_por_revisar}</span>
+            <p className="text-sm text-slate-500 mt-2">Actividades por revisar</p>
+          </div>
+          <div 
+            onClick={() => router.push('/actividades?semaforo=CRITICO')}
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 hover:border-red-300 cursor-pointer transition-all hover:shadow-md"
+          >
+            <h3 className="text-base font-bold text-slate-500 uppercase tracking-widest mb-3">Riesgo Crítico Red</h3>
+            <span className="text-5xl font-black text-red-600">{ts.riesgo_critico.total}</span>
+            <p className="text-sm text-red-500 mt-2">{ts.riesgo_critico.descripcion}</p>
+          </div>
+          <div 
+            onClick={() => router.push('/actividades?semaforo=PRECAUCION')}
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 hover:border-amber-300 cursor-pointer transition-all hover:shadow-md"
+          >
+            <h3 className="text-base font-bold text-slate-500 uppercase tracking-widest mb-3">Precaución Red</h3>
+            <span className="text-5xl font-black text-amber-500">{ts.precaucion.total}</span>
+            <p className="text-sm text-amber-600 mt-2">{ts.precaucion.descripcion}</p>
+          </div>
+          <div 
+            onClick={() => router.push('/actividades?estado_flujo=CONCLUIDA')}
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 hover:border-emerald-300 cursor-pointer transition-all hover:shadow-md"
+          >
+            <h3 className="text-base font-bold text-slate-500 uppercase tracking-widest mb-3">Tasa Solventación</h3>
+            <span className="text-5xl font-black text-emerald-600">{ts.tasa_solventacion.porcentaje}%</span>
+            <p className="text-sm text-emerald-500 mt-2">Tendencia: {ts.tasa_solventacion.tendencia_mes}</p>
+          </div>
+        </div>
+
+        {/* Tabla de Actividades de la Red (Directorio ordenado por fecha de llegada) */}
+        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-8 py-6 border-b border-slate-100 bg-white">
+            <h2 className="text-xl font-bold text-slate-800">Bandeja de Actividades en Red (Directorio)</h2>
+            <p className="text-base text-slate-500 mt-1">Organizadas por fecha de término y llegada reciente.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                  <th className="px-8 py-5">Centro / Contralor</th>
+                  <th className="px-8 py-5">Actividad</th>
+                  <th className="px-8 py-5">Estado</th>
+                  <th className="px-8 py-5 text-right">Fecha Término</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-base">
+                {directorio.map((item: any) => (
+                  <tr 
+                    key={item.id} 
+                    onClick={() => router.push(`/actividades?search=${encodeURIComponent(item.titulo)}`)}
+                    className="hover:bg-slate-50 transition-colors cursor-pointer"
+                  >
+                    <td className="px-8 py-6 font-bold text-slate-800">
+                      {item.asignacion?.centro_clave || 'Red'}
+                      <span className="block text-xs font-normal text-slate-500">{item.asignacion?.contralor || 'Sin asignar'}</span>
+                    </td>
+                    <td className="px-8 py-6 text-slate-700">
+                      <span className="font-semibold block">{item.titulo}</span>
+                      <span className="text-xs text-slate-400">{item.identificador || 'S/N'} • {item.tipo}</span>
+                    </td>
+                    <td className="px-8 py-6">
+                      <span className="inline-block px-3 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold border border-slate-200">
+                        {item.estado_operativo?.etiqueta || item.estado_operativo?.codigo || 'En proceso'}
+                      </span>
+                    </td>
+                    <td className="px-8 py-6 text-right font-medium text-slate-600">{item.fecha_termino}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // VISTA PARA EL CONTRALOR
+  // ==========================================
+  if (!datosContralor) {
+    return null;
   }
 
   const { kpis, graficaSemaforos, graficaFlujo, proximosVencimientos, bandejaSupervision } = datosContralor;
@@ -60,7 +181,6 @@ export default function DashboardPage() {
 
       {/* Tarjetas KPI Interactivas */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
-        {/* 1. Bandeja de Entrada */}
         <div 
           onClick={() => router.push('/actividades?estado_flujo=DEVUELTA')}
           className="bg-white rounded-2xl shadow-sm border border-indigo-100 p-8 relative overflow-hidden group hover:border-indigo-400 cursor-pointer transition-all hover:shadow-md"
@@ -94,7 +214,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* 2. Riesgo Crítico */}
         <div 
           onClick={() => router.push('/actividades?semaforo=CRITICO')}
           className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 relative overflow-hidden group hover:border-red-300 cursor-pointer transition-all hover:shadow-md"
@@ -115,7 +234,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* 3. Precaución */}
         <div 
           onClick={() => router.push('/actividades?semaforo=PRECAUCION')}
           className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 relative overflow-hidden group hover:border-amber-300 cursor-pointer transition-all hover:shadow-md"
@@ -136,7 +254,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* 4. Tasa de Solventación */}
         <div 
           onClick={() => router.push('/actividades?estado_flujo=CONCLUIDA')}
           className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 relative overflow-hidden group hover:border-emerald-300 cursor-pointer transition-all hover:shadow-md"
@@ -163,7 +280,6 @@ export default function DashboardPage() {
 
       {/* Gráficas y Vencimientos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Dona 1: Semáforos */}
         <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col">
           <h3 className="text-sm font-bold text-slate-700 uppercase tracking-widest mb-8">
             {graficaSemaforos.titulo}
@@ -198,7 +314,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Dona 2: Flujo */}
         <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col">
           <h3 className="text-sm font-bold text-slate-700 uppercase tracking-widest mb-8">
             {graficaFlujo.titulo}
@@ -228,7 +343,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Columna 3: Próximos Vencimientos */}
         <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-sm font-bold text-slate-700 uppercase tracking-widest">
