@@ -12,27 +12,14 @@ export const MOCK_SESSION: { role: RolUsuario; userId: string } = {
   userId: 'a8f99f0d-c949-4feb-b849-44a5305e2f45',
 };
 
-export const MOCK_ROLE = MOCK_SESSION.role;
-
-// =========================================================================
-// CONFIGURACIÓN DE DESARROLLO (MOCKS)
-// Puedes cambiar 'CONTRALOR' o 'JEFA' aquí, o mediante localStorage:
-// localStorage.setItem('mock_role', 'JEFA')
-// =========================================================================
-export const CONFIG_DEV = {
-    //CAMBIAR AQUÍ ↓↓↓↓↓↓
-  rolPorDefecto: 'CONTRALOR' as 'CONTRALOR' | 'JEFA' | 'AUDITOR',
-  usuarioIdPorDefecto: '4334d2a7-8075-43d5-9ba3-ec907f7e9fbc'
-};
-
-export const obtenerRolActivo = (): 'CONTRALOR' | 'JEFA' | 'AUDITOR' => {
+export const obtenerRolActivo = (): RolUsuario => {
   if (typeof window !== 'undefined') {
     const rolGuardado = localStorage.getItem('mock_role');
     if (rolGuardado === 'JEFA' || rolGuardado === 'CONTRALOR' || rolGuardado === 'AUDITOR') {
       return rolGuardado;
     }
   }
-  return CONFIG_DEV.rolPorDefecto;
+  return MOCK_SESSION.role;
 };
 
 export const obtenerUsuarioIdActivo = (): string => {
@@ -40,7 +27,7 @@ export const obtenerUsuarioIdActivo = (): string => {
     const idGuardado = localStorage.getItem('mock_user_id');
     if (idGuardado) return idGuardado;
   }
-  return CONFIG_DEV.usuarioIdPorDefecto;
+  return MOCK_SESSION.userId;
 };
 
 // Creamos una instancia base apuntando al servidor de Emiliano
@@ -62,17 +49,8 @@ api.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-<<<<<<< HEAD
       config.headers['x-mock-role'] = rolActual;
       config.headers['x-mock-user-id'] = usuarioIdActual;
-=======
-      
-      // ✅ INYECCIÓN DE CABECERAS MOCK PARA DESARROLLO
-      // Puedes cambiar 'CONTRALOR' y el ID por los valores exactos que espere Emiliano
-      // HARDCODE
-      config.headers['x-mock-role'] = MOCK_SESSION.role;
-      config.headers['x-mock-user-id'] = MOCK_SESSION.userId;
->>>>>>> develop
     }
 
     return config;

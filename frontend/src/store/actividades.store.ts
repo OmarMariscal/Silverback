@@ -1,104 +1,13 @@
-<<<<<<< HEAD
 // frontend/src/store/actividades.store.ts
-import { create } from 'zustand';
-import { actividadesService } from '../services/actividades.service';
-import { adaptarDirectorioUI } from '../services/actividades.adapter';
-import { FilaDirectorioUI, FiltrosDirectorio } from '../types/actividades-contratos';
+// Este archivo contiene el estado global de las actividades usando Zustand. Define cómo se almacenan y actualizan los datos del directorio de actividades, los centros asociados y los filtros aplicados.
+// En palabras sencillas: Este archivo es como un "almacén central" para los datos de actividades. Permite que cualquier componente de la aplicación acceda a estos datos y los actualice de manera consistente, sin tener que pasar props por todos lados.
 
-interface ActividadesState {
-  // --- ESTADO ---
-  actividades: FilaDirectorioUI[];
-  totalRegistros: number;
-  totalPaginas: number;
-  cargando: boolean;
-  error: string | null;
-  filtros: FiltrosDirectorio;
-
-  // --- ACCIONES ---
-  cargarDirectorio: (nuevosFiltros?: Partial<FiltrosDirectorio>) => Promise<void>;
-  setFiltro: <K extends keyof FiltrosDirectorio>(clave: K, valor: FiltrosDirectorio[K]) => void;
-  cambiarPagina: (pagina: number) => Promise<void>;
-  limpiarFiltros: () => Promise<void>;
-}
-
-const FILTROS_DEFECTO: FiltrosDirectorio = {
-  page: 1,
-  limit: 10,
-  sortBy: 'FECHA_TERMINO',
-  order: 'desc',
-  search: '',
-  centroUuid: undefined,
-  tipoActividad: undefined,
-  estadoFlujo: undefined,
-  semaforo: undefined
-};
-
-export const useActividadesStore = create<ActividadesState>((set, get) => ({
-  actividades: [],
-  totalRegistros: 0,
-  totalPaginas: 1,
-  cargando: false,
-  error: null,
-  filtros: { ...FILTROS_DEFECTO },
-
-  // Carga actividades combinando filtros existentes con los nuevos parámetros
-  cargarDirectorio: async (nuevosFiltros?: Partial<FiltrosDirectorio>) => {
-    const filtrosActualizados = {
-      ...get().filtros,
-      ...nuevosFiltros
-    };
-
-    set({ cargando: true, error: null, filtros: filtrosActualizados });
-
-    try {
-      // El service pide la data limpia sin parámetros extra
-      const dataApi = await actividadesService.obtenerDirectorio(filtrosActualizados);
-      const adaptado = adaptarDirectorioUI(dataApi);
-
-      // Si se especificó filtro de semáforo, refinamos la lista en memoria
-      const itemsFinales = filtrosActualizados.semaforo
-        ? adaptado.items.filter((item) => item.semaforo === filtrosActualizados.semaforo)
-        : adaptado.items;
-
-      set({
-        actividades: itemsFinales,
-        totalRegistros: adaptado.total,
-        totalPaginas: adaptado.paginas,
-        cargando: false
-      });
-    } catch (err: any) {
-      console.error('Error al cargar actividades del directorio:', err);
-      set({
-        error: 'No se pudieron cargar las actividades. Intenta de nuevo.',
-        cargando: false
-      });
-    }
-  },
-
-  // Modifica un filtro individual y reinicia a la página 1
-  setFiltro: (clave, valor) => {
-    const filtros = { ...get().filtros, [clave]: valor, page: 1 };
-    get().cargarDirectorio(filtros);
-  },
-
-  // Navegación de paginación
-  cambiarPagina: async (pagina: number) => {
-    await get().cargarDirectorio({ page: pagina });
-  },
-
-  // Restaura todos los controles de búsqueda y filtros a su estado inicial
-  limpiarFiltros: async () => {
-    set({ filtros: { ...FILTROS_DEFECTO } });
-    await get().cargarDirectorio(FILTROS_DEFECTO);
-  }
-}));
-=======
 import { create } from 'zustand';
 import { actividadesService } from '@/services/actividades.service';
 import { ActividadesDirectorioQuery, ActividadesDirectorioResponse } from '@/types/actividades-api';
 import { ActividadesDirectorioFiltros } from '@/types/actividades-contratos';
 import { CentroDataDto } from '@/types/poa-api';
-import { MOCK_ROLE } from '@/services/api';
+import { obtenerRolActivo } from '@/services/api';
 
 const filtrosIniciales: ActividadesDirectorioFiltros = {
   busqueda: '',
@@ -155,7 +64,7 @@ export const useActividadesStore = create<ActividadesState>((set, get) => ({
       sort_by: filtros.ordenarPor,
       order: 'desc',
       ...(filtros.busqueda ? { search: filtros.busqueda } : {}),
-      ...(MOCK_ROLE === 'JEFA' && filtros.centroUuid ? { centro_uuid: filtros.centroUuid } : {}),
+      ...(obtenerRolActivo() === 'JEFA' && filtros.centroUuid ? { centro_uuid: filtros.centroUuid } : {}),
       ...(filtros.tipoActividad ? { tipo_actividad: filtros.tipoActividad as ActividadesDirectorioQuery['tipo_actividad'] } : {}),
       ...(filtros.estadoFlujo ? { estado_flujo: filtros.estadoFlujo as ActividadesDirectorioQuery['estado_flujo'] } : {}),
       ...(filtros.semaforo ? { semaforo: filtros.semaforo as ActividadesDirectorioQuery['semaforo'] } : {}),
@@ -174,4 +83,3 @@ export const useActividadesStore = create<ActividadesState>((set, get) => ({
   cambiarPagina: (pagina) => set({ paginaActual: pagina }),
   limpiarFiltros: () => set({ filtros: { ...filtrosIniciales }, paginaActual: 1, mensajeError: null }),
 }));
->>>>>>> develop
