@@ -44,9 +44,12 @@ export function TarjetaActividadPOA({
   };
 
   const numConsecutivo = (consecutivoIndex + 1).toString().padStart(2, '0');
-  const auditoresTexto = fichaTecnica?.equipoAuditor && fichaTecnica.equipoAuditor.length > 0
-    ? fichaTecnica.equipoAuditor.map(a => a.nombreCompleto).join(', ')
-    : 'Sin auditores asignados';
+
+  const auditoresTexto = auditoresResumen && auditoresResumen.length > 0
+    ? auditoresResumen.join(', ')
+    : (fichaTecnica?.equipoAuditor && fichaTecnica.equipoAuditor.length > 0
+        ? fichaTecnica.equipoAuditor.map(a => a.nombreCompleto).join(', ')
+        : 'Sin auditores asignados');
 
   const colorBordeTarjeta = esRezagada 
     ? (estaExpandida ? 'border-red-300 ring-4 ring-red-50/50' : 'border-red-300 hover:border-red-400')

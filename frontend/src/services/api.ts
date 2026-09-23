@@ -12,7 +12,23 @@ export const MOCK_SESSION: { role: RolUsuario; userId: string } = {
   userId: 'a8f99f0d-c949-4feb-b849-44a5305e2f45',
 };
 
-export const MOCK_ROLE = MOCK_SESSION.role;
+export const obtenerRolActivo = (): RolUsuario => {
+  if (typeof window !== 'undefined') {
+    const rolGuardado = localStorage.getItem('mock_role');
+    if (rolGuardado === 'JEFA' || rolGuardado === 'CONTRALOR' || rolGuardado === 'AUDITOR') {
+      return rolGuardado;
+    }
+  }
+  return MOCK_SESSION.role;
+};
+
+export const obtenerUsuarioIdActivo = (): string => {
+  if (typeof window !== 'undefined') {
+    const idGuardado = localStorage.getItem('mock_user_id');
+    if (idGuardado) return idGuardado;
+  }
+  return MOCK_SESSION.userId;
+};
 
 // Creamos una instancia base apuntando al servidor de Emiliano
 export const api = axios.create({
@@ -26,20 +42,17 @@ export const api = axios.create({
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
-    
+    const rolActual = obtenerRolActivo();
+    const usuarioIdActual = obtenerUsuarioIdActivo();
+
     if (config.headers) {
-      // Si llegas a tener un token real, lo enviará
       if (token) {
-        config.headers.Authorization = `Bearer ${token}`; 
+        config.headers.Authorization = `Bearer ${token}`;
       }
-      
-      // ✅ INYECCIÓN DE CABECERAS MOCK PARA DESARROLLO
-      // Puedes cambiar 'CONTRALOR' y el ID por los valores exactos que espere Emiliano
-      // HARDCODE
-      config.headers['x-mock-role'] = MOCK_SESSION.role;
-      config.headers['x-mock-user-id'] = MOCK_SESSION.userId;
+      config.headers['x-mock-role'] = rolActual;
+      config.headers['x-mock-user-id'] = usuarioIdActual;
     }
-    
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -55,6 +68,7 @@ api.interceptors.response.use(
       // Forzamos al navegador a recargarse en la pantalla de Login
       if (typeof window !== 'undefined') {
         //window.location.href = '/login'; 
+        // Nota: Comentado para evitar recarga automática durante desarrollo. Puedes descomentar en producción.
       }
     }
     // Propagamos el error para que el catch de tu servicio sepa que algo falló
