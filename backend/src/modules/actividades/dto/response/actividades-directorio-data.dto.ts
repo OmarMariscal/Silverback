@@ -42,6 +42,12 @@ export class ActividadesDirectorioData {
   fecha_termino!: string;
 
   @ApiProperty({
+    example: '2026-05-29',
+    description: 'Fecha en que fue enviada la sub-actividad',
+  })
+  fecha_envio!: string;
+
+  @ApiProperty({
     oneOf: [
       { $ref: getSchemaPath(ActividadesDirectorioAsignacionJefa) },
       { $ref: getSchemaPath(ActividadesDirectorioAsignacionContralor) },

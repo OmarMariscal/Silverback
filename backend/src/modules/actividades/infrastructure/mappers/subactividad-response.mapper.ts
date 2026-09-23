@@ -202,7 +202,8 @@ export class SubActividadResponseMapper {
 
     return {
       tipo_vista: Roles.CONTRALOR,
-      participacion_porcentaje: raw.participacion_porcentaje ?? 100,
+      participacion_porcentaje:
+        Math.round((100 / (raw.auditor_apoyo.length + 1)) * 100) / 100,
       auditor_apoyo: auditoresStr,
     };
   }
@@ -222,6 +223,7 @@ export class SubActividadResponseMapper {
 
         // Blindaje contra zonas horarias
         fecha_termino: DateFormatterUtil.toAnioMesDia(raw.fecha_termino),
+        fecha_envio: DateFormatterUtil.toAnioMesDia(raw.fecha_envio),
 
         // Inyección del polimorfismo
         asignacion: this.construirAsignacion(raw, rolUsuario),

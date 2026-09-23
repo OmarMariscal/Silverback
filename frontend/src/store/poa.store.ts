@@ -344,7 +344,8 @@ export const usePoaStore = create<PoaState>((set, get) => ({
           descripcion_tarea: f.descripcionTarea,
           fecha_inicio: f.fechaInicio,
           fecha_termino: f.fechaTermino,
-          tipo: f.tipo
+          tipo: f.tipo,
+          ...(f.idBancoSugerencia ? { banco_sub_actividad_id: f.idBancoSugerencia } : {})
         }))
       };
 

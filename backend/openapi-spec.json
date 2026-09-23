@@ -412,7 +412,7 @@
     },
     "/api/v1/actividades/directorio": {
       "get": {
-        "description": "Listado de las actividades para la construcción de los dashboards",
+        "description": "Listado de las actividades para la construcción de los dashboards. Solo devuelve las subactividades del año fiscal vigente",
         "operationId": "SubactividadesController_getActividadesDirectorio",
         "parameters": [
           {
@@ -461,6 +461,7 @@
               "enum": [
                 "IDENTIFICADOR",
                 "FECHA_TERMINO",
+                "FECHA_ENVIO",
                 "ESTADO_FLUJO"
               ]
             }
@@ -514,6 +515,20 @@
                 "EN_REVISION",
                 "DEVUELTA",
                 "CONCLUIDA"
+              ]
+            }
+          },
+          {
+            "name": "semaforo",
+            "required": false,
+            "in": "query",
+            "description": "Estado del semáforo calculado por vencimiento",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "A_TIEMPO",
+                "CRITICO",
+                "PRECAUCION"
               ]
             }
           }
@@ -1892,6 +1907,11 @@
             "example": "2026-05-23",
             "description": "Fecha en formato reducido para visualización"
           },
+          "fecha_envio": {
+            "type": "string",
+            "example": "2026-05-29",
+            "description": "Fecha en que fue enviada la sub-actividad"
+          },
           "asignacion": {
             "oneOf": [
               {
@@ -1933,6 +1953,7 @@
           "tipo",
           "titulo",
           "fecha_termino",
+          "fecha_envio",
           "asignacion",
           "estado_operativo",
           "semaforo"

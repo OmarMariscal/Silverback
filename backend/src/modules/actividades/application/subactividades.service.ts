@@ -1,10 +1,13 @@
+import { PaginacionMapper } from '@core/common/mappers/paginacion.mapper';
 import type { IUnitOfWork } from '@core/interfaces/unit-of-work.interface';
 import { UNIT_OF_WORK_TOKEN } from '@core/interfaces/unit-of-work.interface';
 import type { IActividadRepository } from '@domain/actividad/actividad.repository.interface';
 import { ACTIVIDAD_REPOSITORY_TOKEN } from '@domain/actividad/actividad.repository.interface';
 import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
 import { SubactividadEntity } from '@domain/actividad/subactividad.entity';
+import { CodigoDeViolacion } from '@domain/codigos/codigo-violado.enum';
 import { RecursoNoEncontradoException } from '@domain/excepciones/recurso-no-encontrado.exception';
+import { ReglaNegocioException } from '@domain/excepciones/regla-negocio.exception';
 import { TransactionHandle } from '@domain/shared/transaction.interface';
 import { Inject, Injectable } from '@nestjs/common';
 import { SubActividadesDirectorioResponse } from '../dto/response/actividades-directorio.response.dto';
@@ -18,6 +21,10 @@ import { SubActividadesSyncResponse } from '../dto/response/sub-actividades-sync
 import { SubActividadResponseMapper } from '../infrastructure/mappers/subactividad-response.mapper';
 import { SubActividadBulkQuery } from './ports/commands/subactividad-bulk.command';
 import { SubActividadSyncQuery } from './ports/commands/subactividad-sync.command';
+import { PaginacionParams } from './ports/filtros/paginacion-params.filtro.interface';
+import { FiltrosSupervision } from './ports/filtros/subactividad-supervision.filtro.interface';
+import { FiltrosDirectorio } from './ports/filtros/subactividaddirectorio.filtro.interface';
+import { SubActividadDirectorioQuery } from './ports/queries/subactividad-get-directorio.query';
 import { SubActividadGetPoaQuery } from './ports/queries/subactividad-get-poa.query';
 import { SubActividadGetSelectQuery } from './ports/queries/subactividad-get-select.query';
 import { SubActividadGetSupervisionQuery } from './ports/queries/subactividad-get-supervision.query';
@@ -25,12 +32,6 @@ import { SubActividadGetQuery } from './ports/queries/subactividad-get.query';
 import { SubActividadProximasAVencerQuery } from './ports/queries/subactividad-proximas-a-vencer.query';
 import type { ISubactividadesQueryRepository } from './ports/subactividaeds-query.repository.interface';
 import { SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN } from './ports/subactividaeds-query.repository.interface';
-import { PaginacionMapper } from '@core/common/mappers/paginacion.mapper';
-import { FiltrosSupervision } from './ports/filtros/subactividad-supervision.filtro.interface';
-import { SubActividadDirectorioQuery } from './ports/queries/subactividad-get-directorio.query';
-import { FiltrosDirectorio } from './ports/filtros/subactividaddirectorio.filtro.interface';
-import { ReglaNegocioException } from '@domain/excepciones/regla-negocio.exception';
-import { CodigoDeViolacion } from '@domain/codigos/codigo-violado.enum';
 
 @Injectable()
 export class SubactividadesService {
@@ -72,7 +73,10 @@ export class SubactividadesService {
     const { usuarioActual, dto } = query;
 
     // 1. Estandarización de Paginación
-    const paginacionParams = PaginacionMapper.toParams(dto);
+    const paginacionParams: PaginacionParams = {
+      ...PaginacionMapper.toParams(dto),
+      sortBy: dto.sortBy,
+    };
 
     // 2. Adaptación de Filtros (De singular DTO a plural de Repositorio)
     const filtros: FiltrosDirectorio = {
@@ -83,6 +87,7 @@ export class SubactividadesService {
       // Si existe, lo envolvemos en arreglo, sino, queda undefined
       tipoActividad: dto.tipo_actividad ? [dto.tipo_actividad] : undefined,
       estadoFlujo: dto.estado_flujo ? [dto.estado_flujo] : undefined,
+      semaforo: dto.semaforo,
     };
 
     // 3. Ejecución de la consulta en la BD

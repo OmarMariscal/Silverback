@@ -130,6 +130,7 @@ export type TipoActividadAPI = "AUDITORIA" | "REVISION";
 export interface SubactividadFilaForm {
   idUiTemporal: string; 
   idBackend?: string; 
+  idBancoSugerencia?: string;
   descripcionTarea: string; 
   fechaInicio: string; 
   fechaTermino: string; 

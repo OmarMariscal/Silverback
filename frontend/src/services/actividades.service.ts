@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // frontend/src/services/actividades.service.ts
 // Este archivo contiene funciones para interactuar con el backend de Emiliano y obtener datos relacionados con actividades, como el directorio de actividades.
 // En palabras sencillas: Este archivo es como un "puente" entre tu frontend y el backend de Emiliano. Cada función hace una llamada HTTP a un endpoint específico y devuelve los datos que necesitas para mostrar en la interfaz de usuario.
@@ -28,3 +29,24 @@ export const actividadesService = {
     }
   }
 };
+=======
+import { api } from './api';
+import { ActividadesDirectorioQuery, ActividadesDirectorioResponse } from '@/types/actividades-api';
+import { CentroDto } from '@/types/poa-api';
+
+export const actividadesService = {
+  obtenerDirectorio: async (
+    query: ActividadesDirectorioQuery,
+  ): Promise<ActividadesDirectorioResponse> => {
+    const respuesta = await api.get<ActividadesDirectorioResponse>('/actividades/directorio', {
+      params: query,
+    });
+    return respuesta.data;
+  },
+
+  obtenerCentros: async (): Promise<CentroDto> => {
+    const respuesta = await api.get<CentroDto>('/catalogos/centros');
+    return respuesta.data;
+  },
+};
+>>>>>>> develop

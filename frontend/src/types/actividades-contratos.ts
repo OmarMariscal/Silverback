@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // frontend/src/types/actividades-contratos.ts
 // Este archivo define los tipos y contratos relacionados con las actividades y auditorías en la aplicación. Incluye interfaces para representar la información de las actividades, subactividades, fichas técnicas, y los filtros que se pueden aplicar en el directorio de actividades.
 // En palabras sencillas: Este archivo es como un "manual de instrucciones" para los desarrolladores. Define cómo deben lucir los datos de las actividades y qué propiedades se esperan, asegurando que todos los componentes y servicios trabajen con la misma estructura de información.
@@ -35,3 +36,33 @@ export interface FiltrosDirectorio {
   page?: number;
   limit?: number;
 }
+=======
+import { ActividadesDirectorioData, ActividadesDirectorioQuery } from './actividades-api';
+import { CentroDataDto } from './poa-api';
+
+export interface ActividadDirectorioItemProps {
+  actividad: ActividadesDirectorioData;
+  onSeleccionar: (id: string) => void;
+}
+
+export interface ActividadesDirectorioFiltros {
+  busqueda: string;
+  centroUuid: string;
+  tipoActividad: string;
+  estadoFlujo: string;
+  ordenarPor: ActividadesDirectorioQuery['sort_by'];
+  semaforo: string;
+}
+
+export interface ActividadesDirectorioViewModel {
+  actividades: ActividadesDirectorioData[];
+  centros: CentroDataDto[];
+  filtros: ActividadesDirectorioFiltros;
+  paginaActual: number;
+  totalPaginas: number;
+  totalRegistros: number;
+  limite: number;
+  estaCargando: boolean;
+  mensajeError: string | null;
+}
+>>>>>>> develop

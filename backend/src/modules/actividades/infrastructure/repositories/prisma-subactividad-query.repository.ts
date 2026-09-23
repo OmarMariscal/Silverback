@@ -6,6 +6,7 @@ import {
   traducirTipoSubActividadAPrisma,
 } from '@core/utils/estados-sub-actividades.traslator';
 import { PrismaService } from '@database/prisma.service';
+import { SemaforoService } from '@domain/semaforo/semaforo-service';
 import { PaginacionParams } from '@modules/actividades/application/ports/filtros/paginacion-params.filtro.interface';
 import { FiltroActividades } from '@modules/actividades/application/ports/filtros/subactividad-get-actividades.filtro.interface';
 import { FiltroObtenerPorActividadId } from '@modules/actividades/application/ports/filtros/subactividad-obtener-por-actividad.filtro';
@@ -20,6 +21,7 @@ import { SubActividadSelectResult } from '@modules/actividades/application/ports
 import { SubActividadSupervisionResult } from '@modules/actividades/application/ports/results/subactividad-supervision.result';
 import { SubActividadesDirectorioResult } from '@modules/actividades/application/ports/results/subactividades-directorio.result';
 import { ISubactividadesQueryRepository } from '@modules/actividades/application/ports/subactividaeds-query.repository.interface';
+import { ActividadesSortColumn } from '@modules/actividades/enums/actividades-sort-column.enum';
 import { Injectable, NotImplementedException } from '@nestjs/common';
 import { EstadoSubActividad, Prisma } from '@prisma/client';
 
@@ -106,7 +108,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       pagina,
       limite,
       orden = 'desc',
-      sortBy = 'fecha_envio',
+      sortBy = ActividadesSortColumn.FECHA_TERMINO,
     } = paginacion;
     const skip = (pagina - 1) * limite;
 
@@ -121,23 +123,43 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       actividad: this.construirFiltroAcceso(filtros.usuarioUuid),
     };
 
-    //3. Mapeo Seguro de Ordenamiento Dinámico
-    // Evitamos inyección de dependencias validando las columnas permitidas
-    const orderByPrisma: Prisma.SubActividadOrderByWithRelationInput = {};
-    switch (sortBy) {
+    // 2. MAPEO SEGURO DE ORDENAMIENTO
+    const sortByNormalizado = sortBy ? sortBy.toLowerCase() : 'fecha_termino';
+    const direccion = orden.toLowerCase() === 'asc' ? 'asc' : 'desc';
+
+    const orderByPrisma: Prisma.SubActividadOrderByWithRelationInput[] = [];
+
+    switch (sortByNormalizado) {
+      case 'identificador':
+        orderByPrisma.push({ numero_orden: direccion });
+        break;
       case 'titulo':
-        orderByPrisma.descripcion_tarea = orden;
+        orderByPrisma.push({ descripcion_tarea: direccion });
         break;
-      case 'estado_resolucion':
-        orderByPrisma.estado_operativo = orden;
+      case 'fecha_termino':
+        // Al ser obligatoria en la BD, Prisma solo acepta el string directo ('asc' | 'desc')
+        orderByPrisma.push({ fecha_termino: direccion });
         break;
-      case 'fecha_vencimiento_poa':
-        orderByPrisma.fecha_termino = orden;
+      case 'fecha_envio':
+        // Al ser nullable en la BD, Prisma habilita el objeto SortOrderInput para manejar nulos
+        orderByPrisma.push({ fecha_envio: { sort: direccion, nulls: 'last' } });
+        break;
+      case 'estado_flujo':
+        orderByPrisma.push({ estado_operativo: direccion });
         break;
       default:
-        orderByPrisma.fecha_envio = orden;
+        orderByPrisma.push({ fecha_termino: direccion });
         break;
     }
+
+    // TIE-BREAKER CRÍTICO: Garantiza que la paginación no duplique ni omita registros
+    orderByPrisma.push({ id: 'asc' });
+
+    // TIE-BREAKER CRÍTICO: Garantiza que la paginación no duplique ni omita registros
+    orderByPrisma.push({ id: 'asc' });
+
+    // TIE-BREAKER CRÍTICO: Garantiza que la paginación no duplique ni omita registros
+    orderByPrisma.push({ id: 'asc' });
 
     // 3. Ejecución Transaccional Paralela (Máximo Rendimiento)
     // Dispara el Count y el Select al mismo tiempo en PostgreSQL
@@ -206,9 +228,13 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
     const skip = (pagina - 1) * limite;
 
     // 1. MOTOR DE FILTROS DINÁMICOS
+    const anioVigente = new Date().getFullYear();
+
     // Creamos el arreglo fuertemente tipado de antemano
     const andConditions: Prisma.SubActividadWhereInput[] = [
       { actividad: this.construirFiltroAcceso(filtros.usuarioUuid) },
+      // 👇 EL NUEVO ESCUDO: Solo trae las del POA del año en curso
+      { actividad: { poa: { anio_fiscal: anioVigente } } },
     ];
 
     // A. Búsqueda por Texto (search)
@@ -282,22 +308,47 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       AND: andConditions,
     };
 
-    // 2. MAPEO SEGURO DE ORDENAMIENTO
-    const orderByPrisma: Prisma.SubActividadOrderByWithRelationInput = {};
-    switch (sortBy) {
-      case 'identificador':
-        orderByPrisma.numero_orden = orden;
+    // El semáforo depende de días hábiles y no es un campo persistido.
+    // Se filtra después de recuperar los registros autorizados para conservar
+    // una única regla de negocio con la usada por la respuesta.
+
+    // 2. MAPEO SEGURO DE ORDENAMIENTO (SIN STRINGS MÁGICOS)
+    const direccion = orden.toLowerCase() === 'asc' ? 'asc' : 'desc';
+    const orderByPrisma: Prisma.SubActividadOrderByWithRelationInput[] = [];
+
+    // Tomamos el valor tipado
+    const columnaSort =
+      (sortBy as ActividadesSortColumn) ?? ActividadesSortColumn.FECHA_TERMINO;
+
+    switch (columnaSort) {
+      case ActividadesSortColumn.IDENTIFICADOR:
+        orderByPrisma.push({ actividad: { folio: direccion } });
+        orderByPrisma.push({ indice_orden: direccion });
         break;
-      case 'titulo':
-        orderByPrisma.descripcion_tarea = orden;
+
+      case ActividadesSortColumn.FECHA_TERMINO:
+        orderByPrisma.push({ fecha_termino: direccion });
         break;
-      case 'fecha_termino':
-        orderByPrisma.fecha_termino = orden;
+
+      case ActividadesSortColumn.FECHA_ENVIO:
+        orderByPrisma.push({
+          fecha_envio: {
+            sort: direccion,
+            nulls: 'last',
+          },
+        });
         break;
+
+      case ActividadesSortColumn.ESTADO_FLUJO:
+        orderByPrisma.push({ estado_operativo: direccion });
+        break;
+
       default:
-        orderByPrisma.fecha_termino = orden;
+        orderByPrisma.push({ fecha_termino: direccion });
         break;
     }
+
+    orderByPrisma.push({ id: 'asc' });
 
     // Definimos los selectores de forma explícita para que Prisma e inferencia trabajen perfecto
     const selectArgs = {
@@ -306,6 +357,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       tipo: true,
       descripcion_tarea: true,
       fecha_termino: true,
+      fecha_envio: true,
       estado_operativo: true,
       actividad: {
         select: {
@@ -335,8 +387,9 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       this.prisma.subActividad.count({ where: wherePrisma }),
       this.prisma.subActividad.findMany({
         where: wherePrisma,
-        skip,
-        take: limite,
+        // El semáforo se calcula con días hábiles; se pagina después del filtro.
+        skip: filtros.semaforo ? undefined : skip,
+        take: filtros.semaforo ? undefined : limite,
         orderBy: orderByPrisma,
         select: selectArgs,
       }),
@@ -364,6 +417,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
 
         titulo: raw.descripcion_tarea,
         fecha_termino: raw.fecha_termino,
+        fecha_envio: raw.fecha_envio,
 
         centro_clave: raw.actividad?.poa?.centro?.clave ?? null,
         contralor:
@@ -376,17 +430,29 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
       };
     });
 
+    const dataFiltrada = filtros.semaforo
+      ? data.filter(
+          (item) =>
+            SemaforoService.calcularSemaforoVencimiento(item.fecha_termino) ===
+            filtros.semaforo,
+        )
+      : data;
+    const datosPaginados = filtros.semaforo
+      ? dataFiltrada.slice(skip, skip + limite)
+      : dataFiltrada;
+    const totalRegistros = filtros.semaforo ? dataFiltrada.length : totalItems;
+
     // 5. CONSTRUCCIÓN DE METADATOS
-    const totalPages = Math.ceil(totalItems / limite);
+    const totalPages = Math.ceil(totalRegistros / limite);
 
     return {
       meta: {
-        total_registros: totalItems,
+        total_registros: totalRegistros,
         pagina_actual: pagina,
         total_paginas: totalPages,
         limite: limite,
       },
-      data,
+      data: datosPaginados,
     };
   }
 

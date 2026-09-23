@@ -3,6 +3,16 @@
 // En palabras sencillas: Este archivo es como un "centro de control" para todas las llamadas HTTP que hagamos al backend. Configura cómo se hacen las peticiones y qué hacer si algo sale mal, como cuando el token de sesión expira.
 
 import axios, { InternalAxiosRequestConfig } from 'axios';
+import type { RolUsuario } from '@/types/roles';
+
+// Sesión única del mock de desarrollo. Cambiar aquí el rol y el usuario
+// mantiene sincronizados los headers y la visualización del frontend.
+export const MOCK_SESSION: { role: RolUsuario; userId: string } = {
+  role: 'CONTRALOR',
+  userId: 'a8f99f0d-c949-4feb-b849-44a5305e2f45',
+};
+
+export const MOCK_ROLE = MOCK_SESSION.role;
 
 // =========================================================================
 // CONFIGURACIÓN DE DESARROLLO (MOCKS)
@@ -52,8 +62,17 @@ api.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+<<<<<<< HEAD
       config.headers['x-mock-role'] = rolActual;
       config.headers['x-mock-user-id'] = usuarioIdActual;
+=======
+      
+      // ✅ INYECCIÓN DE CABECERAS MOCK PARA DESARROLLO
+      // Puedes cambiar 'CONTRALOR' y el ID por los valores exactos que espere Emiliano
+      // HARDCODE
+      config.headers['x-mock-role'] = MOCK_SESSION.role;
+      config.headers['x-mock-user-id'] = MOCK_SESSION.userId;
+>>>>>>> develop
     }
 
     return config;

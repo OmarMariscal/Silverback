@@ -35,6 +35,7 @@ export class SubActividadMapper implements Mapper<
     return {
       id: entity.getId(),
       numero_orden: entity.getNumeroOrden(),
+      indice_orden: entity.getIndiceOrden(),
       descripcion_tarea: entity.getDescripcion(),
       estado_operativo: traducirEstadoSubActividadAPrisma(entity.getEstado()),
       fecha_inicio: entity.getFechaInicio(),
