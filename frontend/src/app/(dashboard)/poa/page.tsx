@@ -1,31 +1,14 @@
+// frontend/src/app/(dashboard)/poa/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import { usePoaStore } from '@/store/poa.store';
 import { TarjetaActividadPOA } from '@/components/ui/TarjetaActividadPrinsipal';
 import { ModalSubactividades } from '@/components/ui/ModalSubactividades';
-<<<<<<< HEAD
-import { SubactividadFilaForm, SubactividadFilaProps } from '@/types/poa-contratos';
-import { useLayoutStore } from '@/store/layout.store';
-
-const MESES: Record<string, string> = {
-  Ene: '01', Feb: '02', Mar: '03', Abr: '04', May: '05', Jun: '06',
-  Jul: '07', Ago: '08', Sep: '09', Oct: '10', Nov: '11', Dic: '12'
-};
-
-function fechaCortaAIso(fechaCorta: string): string {
-  const partes = fechaCorta.trim().split(' ');
-  if (partes.length !== 3) return '';
-  const [dia, mesTexto, anioCorto] = partes;
-  const mes = MESES[mesTexto];
-  if (!mes) return '';
-  return `20${anioCorto}-${mes}-${dia.padStart(2, '0')}`;
-}
-=======
 import { ModalEditarFichaTecnica } from '@/components/ui/ModalFichaTecnica';
 import { ModalBancoActividades } from '@/components/ui/ModalBancoActividades';
 import { SubactividadFilaForm, SubactividadFilaProps, DatosFormularioFicha } from '@/types/poa-contratos';
->>>>>>> develop
+import { useLayoutStore } from '@/store/layout.store';
 
 function propsAFilaForm(sub: SubactividadFilaProps): SubactividadFilaForm {
   return {
@@ -34,7 +17,7 @@ function propsAFilaForm(sub: SubactividadFilaProps): SubactividadFilaForm {
     descripcionTarea: sub.descripcion,
     fechaInicio: sub.fechaInicioFormateada,
     fechaTermino: sub.fechaTerminoFormateada,
-    tipo: 'AUDITORIA'
+    tipo: 'AUDITORIA',
   };
 }
 
@@ -43,11 +26,11 @@ export default function PoaPage() {
   const actividades = usePoaStore((state) => state.actividades);
   const cargandoInicial = usePoaStore((state) => state.cargandoInicial);
   const cargarPoaInicial = usePoaStore((state) => state.cargarPoaInicial);
-  
+
   // Variables Store: Subactividades
   const sugerenciasSubactividades = usePoaStore((state) => state.sugerenciasSubactividades);
   const sincronizarSubactividades = usePoaStore((state) => state.sincronizarSubactividades);
-  
+
   // Variables Store: Ficha Técnica
   const editarFichaTecnica = usePoaStore((state) => state.editarFichaTecnica);
   const auditoresDisponibles = usePoaStore((state) => state.auditoresDisponibles);
@@ -82,27 +65,29 @@ export default function PoaPage() {
 
   useEffect(() => {
     cargarPoaInicial();
-    cargarAuditores(); // Traemos el catálogo de auditores al montar la página
+    cargarAuditores();
   }, [cargarPoaInicial, cargarAuditores]);
 
   // Derivamos la actividad seleccionada
-  const actividadActiva = actividades.find(a => a.idActividad === actividadActivaId);
+  const actividadActiva = actividades.find((a) => a.idActividad === actividadActivaId);
 
   // Valores pre-cargados para Subactividades
   const subactividadesIniciales = actividadActiva
     ? actividadActiva.subactividades.map(propsAFilaForm)
     : [];
 
-  // Valores pre-cargados para la Ficha Técnica (Mapeando los datos que ya vienen de la Actividad)
-  const valoresInicialesFicha: DatosFormularioFicha | undefined = actividadActiva ? {
-    titulo: actividadActiva.titulo,
-    justificacion: actividadActiva.fichaTecnica?.justificacion || '',
-    objetivoGeneral: actividadActiva.fichaTecnica?.objetivoGeneral || '',
-    objetivosParticulares: actividadActiva.fichaTecnica?.objetivosParticulares || '',
-    metaProyecto: actividadActiva.fichaTecnica?.metaProyecto || '',
-    indicadores: actividadActiva.fichaTecnica?.indicadores || '',
-    auditoresSeleccionadosIds: [], 
-  } : undefined;
+  // Valores pre-cargados para la Ficha Técnica
+  const valoresInicialesFicha: DatosFormularioFicha | undefined = actividadActiva
+    ? {
+        titulo: actividadActiva.titulo,
+        justificacion: actividadActiva.fichaTecnica?.justificacion || '',
+        objetivoGeneral: actividadActiva.fichaTecnica?.objetivoGeneral || '',
+        objetivosParticulares: actividadActiva.fichaTecnica?.objetivosParticulares || '',
+        metaProyecto: actividadActiva.fichaTecnica?.metaProyecto || '',
+        indicadores: actividadActiva.fichaTecnica?.indicadores || '',
+        auditoresSeleccionadosIds: [],
+      }
+    : undefined;
 
   // HANDLERS SUBACTIVIDADES
   const handleAbrirModalSubactividades = (idActividad: string, titulo: string) => {
@@ -125,8 +110,7 @@ export default function PoaPage() {
 
   // HANDLERS FICHA TÉCNICA
   const handleAbrirModalFichaTecnica = async (idActividad: string) => {
-    // Si quieres asegurar que la info de la ficha esté cargada antes de abrir el modal:
-    await expandirTarjeta(idActividad); 
+    await expandirTarjeta(idActividad);
     setActividadActivaId(idActividad);
     setModalFichaAbierto(true);
   };
@@ -144,10 +128,10 @@ export default function PoaPage() {
   };
 
   const [wizardCreacion, setWizardCreacion] = useState<{
-  paso: number; // 0: Cerrado, 1: Seleccion, 2: Ficha, 3: Subactividades
-  fichaData: DatosFormularioFicha | null;
-  bancoId: string | null;
-  actividadId: string | null;
+    paso: number; // 0: Cerrado, 1: Seleccion, 2: Ficha, 3: Subactividades
+    fichaData: DatosFormularioFicha | null;
+    bancoId: string | null;
+    actividadId: string | null;
   }>({ paso: 0, fichaData: null, bancoId: null, actividadId: null });
 
   const abrirWizardCreacion = async () => {
@@ -178,8 +162,13 @@ export default function PoaPage() {
     setWizardCreacion({
       paso: 2,
       fichaData: {
-        titulo: '', justificacion: '', objetivoGeneral: '', objetivosParticulares: '',
-        metaProyecto: '', indicadores: '', auditoresSeleccionadosIds: [],
+        titulo: '',
+        justificacion: '',
+        objetivoGeneral: '',
+        objetivosParticulares: '',
+        metaProyecto: '',
+        indicadores: '',
+        auditoresSeleccionadosIds: [],
       },
       bancoId: null,
       actividadId: null,
@@ -238,13 +227,25 @@ export default function PoaPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className={`border rounded-lg px-3 py-2 flex items-center gap-2 ${
-            cabecera.estadoActual === 'EN_REVISION' ? 'bg-amber-100 border-amber-300 text-amber-800' : 'bg-yellow-100 border-yellow-300 text-yellow-800'
-          }`}>
-            <span className={`w-2 h-2 rounded-full ${cabecera.estadoActual === 'EN_REVISION' ? 'bg-amber-500' : 'bg-yellow-500'}`}></span>
+          <div
+            className={`border rounded-lg px-3 py-2 flex items-center gap-2 ${
+              cabecera.estadoActual === 'EN_REVISION'
+                ? 'bg-amber-100 border-amber-300 text-amber-800'
+                : 'bg-yellow-100 border-yellow-300 text-yellow-800'
+            }`}
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                cabecera.estadoActual === 'EN_REVISION' ? 'bg-amber-500' : 'bg-yellow-500'
+              }`}
+            ></span>
             <span className="text-sm font-semibold">Estado: {cabecera.estadoActual.replace('_', ' ')}</span>
           </div>
-          <button onClick={abrirWizardCreacion} disabled={!cabecera.puedeEditar} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50">
+          <button
+            onClick={abrirWizardCreacion}
+            disabled={!cabecera.puedeEditar}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
             <span>+</span> Agregar Actividad
           </button>
         </div>
@@ -265,7 +266,6 @@ export default function PoaPage() {
       </div>
 
       {/* RENDERIZADO DE MODALES CENTRALIZADOS */}
-      
       <ModalSubactividades
         key={`${actividadActivaId}-${modalSubactividadesAbierto}`}
         isOpen={modalSubactividadesAbierto}
@@ -312,7 +312,7 @@ export default function PoaPage() {
           isOpen
           tituloActividadPadre={wizardCreacion.fichaData.titulo}
           subactividadesIniciales={[]}
-            sugerenciasBanco={wizardCreacion.bancoId ? sugerenciasSubactividades : []}
+          sugerenciasBanco={wizardCreacion.bancoId ? sugerenciasSubactividades : []}
           estaGuardando={estaGuardando}
           onRegresarAFicha={() => setWizardCreacion((prev) => ({ ...prev, paso: 2 }))}
           onGuardarSincronizacion={guardarSubactividadesNuevas}
