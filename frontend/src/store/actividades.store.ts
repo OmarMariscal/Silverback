@@ -1,9 +1,13 @@
+// frontend/src/store/actividades.store.ts
+// Este archivo contiene el estado global de las actividades usando Zustand. Define cómo se almacenan y actualizan los datos del directorio de actividades, los centros asociados y los filtros aplicados.
+// En palabras sencillas: Este archivo es como un "almacén central" para los datos de actividades. Permite que cualquier componente de la aplicación acceda a estos datos y los actualice de manera consistente, sin tener que pasar props por todos lados.
+
 import { create } from 'zustand';
 import { actividadesService } from '@/services/actividades.service';
 import { ActividadesDirectorioQuery, ActividadesDirectorioResponse } from '@/types/actividades-api';
 import { ActividadesDirectorioFiltros } from '@/types/actividades-contratos';
 import { CentroDataDto } from '@/types/poa-api';
-import { MOCK_ROLE } from '@/services/api';
+import { obtenerRolActivo } from '@/services/api';
 
 const filtrosIniciales: ActividadesDirectorioFiltros = {
   busqueda: '',
@@ -60,7 +64,7 @@ export const useActividadesStore = create<ActividadesState>((set, get) => ({
       sort_by: filtros.ordenarPor,
       order: 'desc',
       ...(filtros.busqueda ? { search: filtros.busqueda } : {}),
-      ...(MOCK_ROLE === 'JEFA' && filtros.centroUuid ? { centro_uuid: filtros.centroUuid } : {}),
+      ...(obtenerRolActivo() === 'JEFA' && filtros.centroUuid ? { centro_uuid: filtros.centroUuid } : {}),
       ...(filtros.tipoActividad ? { tipo_actividad: filtros.tipoActividad as ActividadesDirectorioQuery['tipo_actividad'] } : {}),
       ...(filtros.estadoFlujo ? { estado_flujo: filtros.estadoFlujo as ActividadesDirectorioQuery['estado_flujo'] } : {}),
       ...(filtros.semaforo ? { semaforo: filtros.semaforo as ActividadesDirectorioQuery['semaforo'] } : {}),
