@@ -10,6 +10,13 @@ import { Permisos } from '@domain/roles/permisos.enum';
 import { JwtPayloadDto } from '../auth/dto/jwt-payload.dto';
 import { crearActor } from '@domain/roles/actor.factory';
 
+const DEV_MOCK_USER_IDS: Record<string, string> = {
+  ADMIN: '00000000-0000-4000-8000-000000000000',
+  JEFA: '11111111-1111-4111-8111-111111111111',
+  CONTRALOR: 'a8f99f0d-c949-4feb-b849-44a5305e2f45',
+  AUDITOR: '22222222-2222-4222-8222-222222222222',
+};
+
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
@@ -42,13 +49,14 @@ export class JwtAuthGuard implements CanActivate {
       // 2. Utilizamos tu factory para obtener el rol y la lista de permisos unificada
       const datosActor = crearActor(rolStr, mockPermisos);
 
-      const mockUserIdHeader = request.headers['x-mock-user-id']; // [1]
+      const mockUserIdHeader = request.headers['x-mock-user-id'];
+      const mockUserId = mockUserIdHeader
+        ? mockUserIdHeader.toString()
+        : DEV_MOCK_USER_IDS[rolStr] ?? `mock-user-${rolStr.toLowerCase()}`;
 
       // 3. Construimos el Payload Falso usando los datos del factory
       const mockPayload: JwtPayloadDto = {
-        usuario_id: mockUserIdHeader
-          ? mockUserIdHeader.toString()
-          : `mock-user-${rolStr.toLowerCase()}`,
+        usuario_id: mockUserId,
         rol: datosActor.rol, // Viene del factory
         permisos: datosActor.permisos, // ¡Viene del factory con los permisos por defecto!
         centro_id: rolStr === 'JEFA' ? null : mockCentro,

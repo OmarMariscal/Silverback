@@ -55,3 +55,40 @@ export interface DashboardContralorUI {
   proximosVencimientos: ItemVencimientoProps[];
   bandejaSupervision: FilaSupervisionProps[];
 }
+
+export interface FilaDirectorioJefaUI {
+  id: string;
+  identificador: string;
+  tipo: string;
+  titulo: string;
+  centroClave: string;
+  contralor: string;
+  estadoEtiqueta: string;
+  fechaTermino: string;
+}
+
+export interface CentroRezagoUI {
+  centroId: string;
+  centroClave: string;
+  centroNombre: string;
+  actividadesCriticas: number;
+  actividadesPrecaucion: number;
+  total: number;
+}
+
+export interface DashboardJefaUI {
+  kpis: {
+    actividadesPorRevisar: number;
+    actividadesSolicitadas: number;
+    riesgoCritico: number;
+    riesgoCriticoDescripcion: string;
+    precaucion: number;
+    precaucionDescripcion: string;
+    tasaSolventacion: number;
+    tendenciaMes: string;
+  };
+  graficaSemaforos: DonutChartProps;
+  graficaDistribucion: DonutChartProps;
+  rezago: CentroRezagoUI[];
+  directorio: FilaDirectorioJefaUI[];
+}

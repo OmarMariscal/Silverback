@@ -1,4 +1,3 @@
-// frontend/src/app/(dashboard)/poa/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -7,8 +6,9 @@ import { TarjetaActividadPOA } from '@/components/ui/TarjetaActividadPrinsipal';
 import { ModalSubactividades } from '@/components/ui/ModalSubactividades';
 import { ModalEditarFichaTecnica } from '@/components/ui/ModalFichaTecnica';
 import { ModalBancoActividades } from '@/components/ui/ModalBancoActividades';
-import { SubactividadFilaForm, SubactividadFilaProps, DatosFormularioFicha } from '@/types/poa-contratos';
+import type { SubactividadFilaForm, SubactividadFilaProps, DatosFormularioFicha } from '@/types/poa-contratos';
 import { useLayoutStore } from '@/store/layout.store';
+import RoleShell from '@/modules/perfiles/role-shell';
 
 function propsAFilaForm(sub: SubactividadFilaProps): SubactividadFilaForm {
   return {
@@ -21,17 +21,15 @@ function propsAFilaForm(sub: SubactividadFilaProps): SubactividadFilaForm {
   };
 }
 
-export default function PoaPage() {
+export default function ContralorPoaPage() {
   const cabecera = usePoaStore((state) => state.cabecera);
   const actividades = usePoaStore((state) => state.actividades);
   const cargandoInicial = usePoaStore((state) => state.cargandoInicial);
   const cargarPoaInicial = usePoaStore((state) => state.cargarPoaInicial);
 
-  // Variables Store: Subactividades
   const sugerenciasSubactividades = usePoaStore((state) => state.sugerenciasSubactividades);
   const sincronizarSubactividades = usePoaStore((state) => state.sincronizarSubactividades);
 
-  // Variables Store: Ficha Técnica
   const editarFichaTecnica = usePoaStore((state) => state.editarFichaTecnica);
   const auditoresDisponibles = usePoaStore((state) => state.auditoresDisponibles);
   const cargarAuditores = usePoaStore((state) => state.cargarAuditores);
@@ -46,15 +44,10 @@ export default function PoaPage() {
   const expandirTarjeta = usePoaStore((state) => state.expandirTarjeta);
   const borrarActividad = usePoaStore((state) => state.borrarActividad);
 
-  // Estados Globales de Modales
   const [actividadActivaId, setActividadActivaId] = useState<string | null>(null);
   const [estaGuardando, setEstaGuardando] = useState(false);
-
-  // Estados: Modal Subactividades
   const [modalSubactividadesAbierto, setModalSubactividadesAbierto] = useState(false);
   const [actividadActivaTitulo, setActividadActivaTitulo] = useState('');
-
-  // Estados: Modal Ficha Técnica
   const [modalFichaAbierto, setModalFichaAbierto] = useState(false);
 
   useEffect(() => {
@@ -68,15 +61,12 @@ export default function PoaPage() {
     cargarAuditores();
   }, [cargarPoaInicial, cargarAuditores]);
 
-  // Derivamos la actividad seleccionada
   const actividadActiva = actividades.find((a) => a.idActividad === actividadActivaId);
 
-  // Valores pre-cargados para Subactividades
   const subactividadesIniciales = actividadActiva
     ? actividadActiva.subactividades.map(propsAFilaForm)
     : [];
 
-  // Valores pre-cargados para la Ficha Técnica
   const valoresInicialesFicha: DatosFormularioFicha | undefined = actividadActiva
     ? {
         titulo: actividadActiva.titulo,
@@ -89,7 +79,6 @@ export default function PoaPage() {
       }
     : undefined;
 
-  // HANDLERS SUBACTIVIDADES
   const handleAbrirModalSubactividades = (idActividad: string, titulo: string) => {
     setActividadActivaId(idActividad);
     setActividadActivaTitulo(titulo);
@@ -108,7 +97,6 @@ export default function PoaPage() {
     }
   };
 
-  // HANDLERS FICHA TÉCNICA
   const handleAbrirModalFichaTecnica = async (idActividad: string) => {
     await expandirTarjeta(idActividad);
     setActividadActivaId(idActividad);
@@ -128,7 +116,7 @@ export default function PoaPage() {
   };
 
   const [wizardCreacion, setWizardCreacion] = useState<{
-    paso: number; // 0: Cerrado, 1: Seleccion, 2: Ficha, 3: Subactividades
+    paso: number;
     fichaData: DatosFormularioFicha | null;
     bancoId: string | null;
     actividadId: string | null;
@@ -209,115 +197,118 @@ export default function PoaPage() {
 
   if (cargandoInicial || !cabecera) {
     return (
-      <div className="flex justify-center items-center h-full text-indigo-600 font-bold animate-pulse py-20">
-        Cargando información del POA...
-      </div>
+      <RoleShell perfil="CONTRALOR" modulo="poa" title="Plan Operativo Anual" subtitle="Cargando información del POA...">
+        <div className="flex items-center justify-center py-20 text-lg font-bold text-indigo-600 animate-pulse">
+          Cargando información del POA...
+        </div>
+      </RoleShell>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h3 className="text-xl font-bold text-slate-900">
-            Actividades Programadas ({actividades.length})
-          </h3>
-          <p className="text-sm text-slate-600 mt-1">
-            Configura las actividades e indicadores para este ciclo fiscal.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div
-            className={`border rounded-lg px-3 py-2 flex items-center gap-2 ${
-              cabecera.estadoActual === 'EN_REVISION'
-                ? 'bg-amber-100 border-amber-300 text-amber-800'
-                : 'bg-yellow-100 border-yellow-300 text-yellow-800'
-            }`}
-          >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                cabecera.estadoActual === 'EN_REVISION' ? 'bg-amber-500' : 'bg-yellow-500'
-              }`}
-            ></span>
-            <span className="text-sm font-semibold">Estado: {cabecera.estadoActual.replace('_', ' ')}</span>
+    <RoleShell
+      perfil="CONTRALOR"
+      modulo="poa"
+      title={`Plan Operativo Anual ${cabecera.anioFiscal}`}
+      subtitle="Configura las actividades e indicadores para este ciclo fiscal."
+    >
+      <div className="space-y-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Actividades Programadas ({actividades.length})</h3>
+            <p className="mt-1 text-sm text-slate-600">Configura las actividades e indicadores para este ciclo fiscal.</p>
           </div>
-          <button
-            onClick={abrirWizardCreacion}
-            disabled={!cabecera.puedeEditar}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <span>+</span> Agregar Actividad
-          </button>
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${
+                cabecera.estadoActual === 'EN_REVISION'
+                  ? 'border-amber-300 bg-amber-100 text-amber-800'
+                  : 'border-yellow-300 bg-yellow-100 text-yellow-800'
+              }`}
+            >
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  cabecera.estadoActual === 'EN_REVISION' ? 'bg-amber-500' : 'bg-yellow-500'
+                }`}
+              />
+              <span className="text-sm font-semibold">Estado: {cabecera.estadoActual.replace('_', ' ')}</span>
+            </div>
+            <button
+              onClick={abrirWizardCreacion}
+              disabled={!cabecera.puedeEditar}
+              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span>+</span> Agregar Actividad
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div className="space-y-4">
-        {actividades.map((actividad, index) => (
-          <TarjetaActividadPOA
-            key={actividad.idActividad}
-            {...actividad}
-            consecutivoIndex={index}
-            onAbrirModalSubactividades={handleAbrirModalSubactividades}
-            onConfigurarFichaTecnica={() => handleAbrirModalFichaTecnica(actividad.idActividad)}
-            onExpandirTarjeta={() => expandirTarjeta(actividad.idActividad)}
-            onBorrarActividad={() => borrarActividad(actividad.idActividad)}
-          />
-        ))}
-      </div>
+        <div className="space-y-4">
+          {actividades.map((actividad, index) => (
+            <TarjetaActividadPOA
+              key={actividad.idActividad}
+              {...actividad}
+              consecutivoIndex={index}
+              onAbrirModalSubactividades={handleAbrirModalSubactividades}
+              onConfigurarFichaTecnica={() => handleAbrirModalFichaTecnica(actividad.idActividad)}
+              onExpandirTarjeta={() => expandirTarjeta(actividad.idActividad)}
+              onBorrarActividad={() => borrarActividad(actividad.idActividad)}
+            />
+          ))}
+        </div>
 
-      {/* RENDERIZADO DE MODALES CENTRALIZADOS */}
-      <ModalSubactividades
-        key={`${actividadActivaId}-${modalSubactividadesAbierto}`}
-        isOpen={modalSubactividadesAbierto}
-        tituloActividadPadre={actividadActivaTitulo}
-        subactividadesIniciales={subactividadesIniciales}
-        sugerenciasBanco={sugerenciasSubactividades}
-        estaGuardando={estaGuardando}
-        onRegresarAFicha={() => setModalSubactividadesAbierto(false)}
-        onGuardarSincronizacion={handleGuardarSincronizacion}
-      />
-
-      {modalFichaAbierto && actividadActiva && (
-        <ModalEditarFichaTecnica
-          valoresIniciales={valoresInicialesFicha}
-          listaAuditoresDisponibles={auditoresDisponibles}
-          estaGuardando={estaGuardando}
-          onCancelar={() => setModalFichaAbierto(false)}
-          onContinuarASubactividades={handleGuardarFichaTecnica}
-        />
-      )}
-
-      <ModalBancoActividades
-        isOpen={wizardCreacion.paso === 1}
-        actividadesDisponibles={bancoActividades}
-        estaCargando={cargandoBanco}
-        onSeleccionar={seleccionarDelBanco}
-        onCrearPersonalizada={crearDesdeCero}
-        onCancelar={cerrarWizard}
-      />
-
-      {wizardCreacion.paso === 2 && wizardCreacion.fichaData && (
-        <ModalEditarFichaTecnica
-          valoresIniciales={wizardCreacion.fichaData}
-          listaAuditoresDisponibles={auditoresDisponibles}
-          estaGuardando={estaGuardando}
-          onCancelar={cerrarWizard}
-          onContinuarASubactividades={guardarFichaNueva}
-        />
-      )}
-
-      {wizardCreacion.paso === 3 && wizardCreacion.fichaData && (
         <ModalSubactividades
-          key={`wizard-${wizardCreacion.actividadId}`}
-          isOpen
-          tituloActividadPadre={wizardCreacion.fichaData.titulo}
-          subactividadesIniciales={[]}
-          sugerenciasBanco={wizardCreacion.bancoId ? sugerenciasSubactividades : []}
+          key={`${actividadActivaId}-${modalSubactividadesAbierto}`}
+          isOpen={modalSubactividadesAbierto}
+          tituloActividadPadre={actividadActivaTitulo}
+          subactividadesIniciales={subactividadesIniciales}
+          sugerenciasBanco={sugerenciasSubactividades}
           estaGuardando={estaGuardando}
-          onRegresarAFicha={() => setWizardCreacion((prev) => ({ ...prev, paso: 2 }))}
-          onGuardarSincronizacion={guardarSubactividadesNuevas}
+          onRegresarAFicha={() => setModalSubactividadesAbierto(false)}
+          onGuardarSincronizacion={handleGuardarSincronizacion}
         />
-      )}
-    </div>
+
+        {modalFichaAbierto && actividadActiva && (
+          <ModalEditarFichaTecnica
+            valoresIniciales={valoresInicialesFicha}
+            listaAuditoresDisponibles={auditoresDisponibles}
+            estaGuardando={estaGuardando}
+            onCancelar={() => setModalFichaAbierto(false)}
+            onContinuarASubactividades={handleGuardarFichaTecnica}
+          />
+        )}
+
+        <ModalBancoActividades
+          isOpen={wizardCreacion.paso === 1}
+          actividadesDisponibles={bancoActividades}
+          estaCargando={cargandoBanco}
+          onSeleccionar={seleccionarDelBanco}
+          onCrearPersonalizada={crearDesdeCero}
+          onCancelar={cerrarWizard}
+        />
+
+        {wizardCreacion.paso === 2 && wizardCreacion.fichaData && (
+          <ModalEditarFichaTecnica
+            valoresIniciales={wizardCreacion.fichaData}
+            listaAuditoresDisponibles={auditoresDisponibles}
+            estaGuardando={estaGuardando}
+            onCancelar={cerrarWizard}
+            onContinuarASubactividades={guardarFichaNueva}
+          />
+        )}
+
+        {wizardCreacion.paso === 3 && wizardCreacion.actividadId && wizardCreacion.fichaData && (
+          <ModalSubactividades
+            isOpen={true}
+            tituloActividadPadre={wizardCreacion.fichaData.titulo}
+            subactividadesIniciales={[]}
+            sugerenciasBanco={sugerenciasSubactividades}
+            estaGuardando={estaGuardando}
+            onRegresarAFicha={cerrarWizard}
+            onGuardarSincronizacion={guardarSubactividadesNuevas}
+          />
+        )}
+      </div>
+    </RoleShell>
   );
 }
