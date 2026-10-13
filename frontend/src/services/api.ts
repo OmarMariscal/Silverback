@@ -8,15 +8,21 @@ import type { RolUsuario } from '@/types/roles';
 // Sesión única del mock de desarrollo. Cambiar aquí el rol y el usuario
 // mantiene sincronizados los headers y la visualización del frontend.
 export const MOCK_SESSION: { role: RolUsuario; userId: string } = {
-  role: 'CONTRALOR',
-  userId: 'a8f99f0d-c949-4feb-b849-44a5305e2f45',
+  role: 'JEFA',
+  userId: '11111111-1111-4111-8111-111111111111',
 };
 
 export const obtenerRolActivo = (): RolUsuario => {
   if (typeof window !== 'undefined') {
     const rolGuardado = localStorage.getItem('mock_role');
-    if (rolGuardado === 'JEFA' || rolGuardado === 'CONTRALOR' || rolGuardado === 'AUDITOR') {
-      return rolGuardado;
+    if (
+      rolGuardado === 'ADMIN' ||
+      rolGuardado === 'JEFA' ||
+      rolGuardado === 'CONTRALOR_GENERAL' ||
+      rolGuardado === 'CONTRALOR' ||
+      rolGuardado === 'AUDITOR'
+    ) {
+      return rolGuardado as RolUsuario;
     }
   }
   return MOCK_SESSION.role;

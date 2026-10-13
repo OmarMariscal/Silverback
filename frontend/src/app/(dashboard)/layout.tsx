@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { HeaderPOA } from '@/components/ui/HeaderPoa';
+import { obtenerRolActivo } from '@/services/api';
+import { getMenuItemsByRol } from '@/modules/perfiles/role-menu';
 
 export default function DashboardLayout({
   children,
@@ -10,6 +12,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const rolActivo = obtenerRolActivo();
+  const menuItems = getMenuItemsByRol(rolActivo);
 
   const isActive = (path: string) =>
     pathname === path || pathname.startsWith(`${path}/`);
@@ -27,92 +31,34 @@ export default function DashboardLayout({
         </div>
 
         <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-4">
-          {/* Dashboard */}
-          <Link
-            href="/dashboard"
-            className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl transition-all group ${
-              isActive('/dashboard')
-                ? 'bg-indigo-50 text-indigo-700 font-bold'
-                : 'text-slate-400 hover:bg-slate-50 hover:text-indigo-600 font-medium'
-            }`}
-          >
-            <svg
-              className={`w-8 h-8 mb-2 transition-transform group-hover:scale-110 ${
-                isActive('/dashboard') ? 'text-indigo-600' : ''
-              }`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-              ></path>
-            </svg>
-            <span className="text-[11px] text-center leading-tight">
-              Dashboard
-            </span>
-          </Link>
-
-          {/* Actividades */}
-          <Link
-            href="/actividades"
-            className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl transition-all group ${
-              isActive('/actividades')
-                ? 'bg-indigo-50 text-indigo-700 font-bold'
-                : 'text-slate-400 hover:bg-slate-50 hover:text-indigo-600 font-medium'
-            }`}
-          >
-            <svg
-              className={`w-8 h-8 mb-2 transition-transform group-hover:scale-110 ${
-                isActive('/actividades') ? 'text-indigo-600' : ''
-              }`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              ></path>
-            </svg>
-            <span className="text-[11px] text-center leading-tight">
-              Actividades
-            </span>
-          </Link>
-
-          {/* POA */}
-          <Link
-            href="/poa"
-            className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl transition-all group ${
-              isActive('/poa')
-                ? 'bg-indigo-50 text-indigo-700 font-bold'
-                : 'text-slate-400 hover:bg-slate-50 hover:text-indigo-600 font-medium'
-            }`}
-          >
-            <svg
-              className={`w-8 h-8 mb-2 transition-transform group-hover:scale-110 ${
-                isActive('/poa') ? 'text-indigo-600' : ''
-              }`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
-              ></path>
-            </svg>
-            <span className="text-[11px] text-center leading-tight">
-              POA
-            </span>
-          </Link>
+          {menuItems.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <Link
+                key={item.key}
+                href={item.href}
+                className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl transition-all group ${
+                  active
+                    ? 'bg-indigo-50 text-indigo-700 font-bold'
+                    : 'text-slate-400 hover:bg-slate-50 hover:text-indigo-600 font-medium'
+                }`}
+              >
+                <svg
+                  className={`w-8 h-8 mb-2 transition-transform group-hover:scale-110 ${
+                    active ? 'text-indigo-600' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  {item.icon}
+                </svg>
+                <span className="text-[11px] text-center leading-tight">
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="py-4 px-3 border-t border-slate-100">

@@ -14,6 +14,7 @@
     "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
+    "types": ["node", "jest"],
     "paths": {
         "@domain/*": ["./src/domain/*"],
         "@database/*": ["./src/prisma/*"],

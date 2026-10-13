@@ -72,6 +72,7 @@ async function main() {
   console.log('👥 Reclutando personal (Jefatura, Contralores y Auditores)...');
   const jefa = await prisma.usuario.create({
     data: {
+      id: '11111111-1111-4111-8111-111111111111',
       nombre_completo: 'Dra. Titular de la Contraloría',
       correo: 'jefa@contraloria.udg.mx',
       password_encriptada: passwordHash,
@@ -83,6 +84,7 @@ async function main() {
 
   const contralorCucei = await prisma.usuario.create({
     data: {
+      id: 'a8f99f0d-c949-4feb-b849-44a5305e2f45',
       nombre_completo: 'Mtro. Contralor CUCEI',
       correo: 'contralor.cucei@udg.mx',
       password_encriptada: passwordHash,
@@ -94,6 +96,7 @@ async function main() {
 
   const auditorAuxiliar = await prisma.usuario.create({
     data: {
+      id: '22222222-2222-4222-8222-222222222222',
       nombre_completo: 'Lic. Auditor Auxiliar',
       correo: 'auditor.auxiliar@udg.mx',
       password_encriptada: passwordHash,
@@ -105,6 +108,7 @@ async function main() {
 
   const auditorTitular = await prisma.usuario.create({
     data: {
+      id: '33333333-3333-4333-8333-333333333333',
       nombre_completo: 'Mtro. Auditor Titular',
       correo: 'auditor.titular@udg.mx',
       password_encriptada: passwordHash,

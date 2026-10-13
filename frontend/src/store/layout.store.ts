@@ -9,8 +9,10 @@ import { obtenerRolActivo } from '../services/api';
 
 // 1. DICCIONARIO DE TRADUCCIÓN DE ROLES
 const MAPA_ROLES: Record<string, string> = {
-  CONTRALOR: 'Contralor de Centro',
+  ADMIN: 'Administrador',
   JEFA: 'Jefa de Auditoría',
+  CONTRALOR_GENERAL: 'Contraloría General',
+  CONTRALOR: 'Contralor de Centro',
   AUDITOR: 'Auditor',
 };
 

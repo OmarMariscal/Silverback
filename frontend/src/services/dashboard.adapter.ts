@@ -3,7 +3,8 @@ import * as DashApi from '../types/dashboard-api';
 import { 
   DashboardContralorUI, 
   ItemVencimientoProps, 
-  FilaSupervisionProps 
+  FilaSupervisionProps,
+  DashboardJefaUI
 } from '../types/dashboard-contratos';
 
 export const adaptarDashboardContralorUI = (
@@ -106,5 +107,89 @@ export const adaptarDashboardContralorUI = (
     },
     proximosVencimientos,
     bandejaSupervision
+  };
+};
+
+export const adaptarDashboardJefaUI = (
+  kpisDto: DashApi.DashboardJefaDto,
+  rezagoDto: DashApi.RezagoResponseDto,
+  directorioDto: DashApi.DirectorioResponseDto
+): DashboardJefaUI => {
+  const ts = kpisDto.tarjetas_superiores;
+
+  // Gráfica de Semáforos Red
+  const sem = kpisDto.grafica_semaforos;
+  const totalSem = sem.total_actividades_red > 0 ? sem.total_actividades_red : sem.a_tiempo + sem.alerta + sem.critico;
+  const pctCritico = totalSem > 0 ? (sem.critico / totalSem) * 100 : 0;
+  const pctAlerta = totalSem > 0 ? (sem.alerta / totalSem) * 100 : 0;
+  const gradientSemaforos = totalSem > 0
+    ? `conic-gradient(#ef4444 0% ${pctCritico}%, #f59e0b ${pctCritico}% ${pctCritico + pctAlerta}%, #10b981 ${pctCritico + pctAlerta}% 100%)`
+    : 'conic-gradient(#cbd5e1 0% 100%)';
+
+  // Gráfica de Distribución de Estado
+  const dist = kpisDto.grafica_distribucion_estado;
+  const totalDist = dist.total_actividades_red;
+  const fSin = totalDist > 0 ? (dist.sin_empezar / totalDist) * 100 : 0;
+  const fProc = totalDist > 0 ? (dist.en_proceso / totalDist) * 100 : 0;
+  const fRev = totalDist > 0 ? (dist.por_revisar / totalDist) * 100 : 0;
+  const fp1 = fSin;
+  const fp2 = fp1 + fProc;
+  const fp3 = fp2 + fRev;
+  const gradientDistribucion = totalDist > 0
+    ? `conic-gradient(#94a3b8 0% ${fp1}%, #3b82f6 ${fp1}% ${fp2}%, #8b5cf6 ${fp2}% ${fp3}%, #10b981 ${fp3}% 100%)`
+    : 'conic-gradient(#cbd5e1 0% 100%)';
+
+  return {
+    kpis: {
+      actividadesPorRevisar: ts.pendientes.actividades_por_revisar,
+      actividadesSolicitadas: ts.pendientes.actividades_solicitadas,
+      riesgoCritico: ts.riesgo_critico.total,
+      riesgoCriticoDescripcion: ts.riesgo_critico.descripcion,
+      precaucion: ts.precaucion.total,
+      precaucionDescripcion: ts.precaucion.descripcion,
+      tasaSolventacion: ts.tasa_solventacion.porcentaje,
+      tendenciaMes: ts.tasa_solventacion.tendencia_mes,
+    },
+    graficaSemaforos: {
+      titulo: 'Semáforos en la Red',
+      totalCentral: totalSem,
+      subtituloCentral: 'Actividades Red',
+      gradientStyle: gradientSemaforos,
+      leyendas: [
+        { etiqueta: 'A Tiempo', cantidad: sem.a_tiempo, colorHex: '#10b981' },
+        { etiqueta: 'Alerta', cantidad: sem.alerta, colorHex: '#f59e0b' },
+        { etiqueta: 'Crítico', cantidad: sem.critico, colorHex: '#ef4444' },
+      ],
+    },
+    graficaDistribucion: {
+      titulo: 'Distribución por Estado',
+      totalCentral: totalDist,
+      subtituloCentral: 'Total Red',
+      gradientStyle: gradientDistribucion,
+      leyendas: [
+        { etiqueta: 'Sin empezar', cantidad: dist.sin_empezar, colorHex: '#94a3b8' },
+        { etiqueta: 'En Proceso', cantidad: dist.en_proceso, colorHex: '#3b82f6' },
+        { etiqueta: 'Por Revisar', cantidad: dist.por_revisar, colorHex: '#8b5cf6' },
+        { etiqueta: 'Concluidas', cantidad: dist.concluidas, colorHex: '#10b981' },
+      ],
+    },
+    rezago: (rezagoDto.data || []).map((r) => ({
+      centroId: r.centro_id,
+      centroClave: r.centro_clave,
+      centroNombre: r.centro_nombre,
+      actividadesCriticas: r.distribucion.actividades_criticas,
+      actividadesPrecaucion: r.distribucion.actividades_precaucion,
+      total: r.distribucion.total,
+    })),
+    directorio: (directorioDto.data || []).map((d) => ({
+      id: d.id,
+      identificador: d.identificador || 'S/N',
+      tipo: d.tipo,
+      titulo: d.titulo,
+      centroClave: d.asignacion?.centro_clave || 'Red',
+      contralor: d.asignacion?.contralor || 'Sin asignar',
+      estadoEtiqueta: d.estado_operativo?.etiqueta || d.estado_operativo?.codigo || 'En proceso',
+      fechaTermino: d.fecha_termino,
+    })),
   };
 };
