@@ -50,7 +50,8 @@ export const useActividadesStore = create<ActividadesState>((set, get) => ({
     try {
       const respuesta = await actividadesService.obtenerCentros();
       set({ centros: respuesta.data });
-    } catch {
+    } catch (error: unknown) {
+      console.error('No se pudo cargar el catálogo de centros.', error);
       set({ mensajeError: 'No se pudo cargar el catálogo de centros.' });
     }
   },
@@ -74,7 +75,8 @@ export const useActividadesStore = create<ActividadesState>((set, get) => ({
     try {
       const respuesta = await actividadesService.obtenerDirectorio(query);
       set({ actividades: respuesta.data, paginaActual: respuesta.meta.pagina_actual, totalPaginas: respuesta.meta.total_paginas, totalRegistros: respuesta.meta.total_registros, limite: respuesta.meta.limite, estaCargando: false });
-    } catch {
+    } catch (error: unknown) {
+      console.error('No se pudo cargar el directorio de actividades.', error);
       set({ estaCargando: false, mensajeError: 'No se pudo cargar el directorio de actividades.' });
     }
   },

@@ -4,7 +4,7 @@
 
 export type EstadoPOA = "SIN_ENVIAR" | "BORRADOR" | "EN_REVISION" | "DEVUELTA" | "ACEPTADA";
 
-export interface CabeceraPOAProps {
+export interface CabeceraPOAData {
   // --- Datos Visuales ---
   anioFiscal: string; // Ej: "2026"
   estadoActual: EstadoPOA; 
@@ -14,9 +14,6 @@ export interface CabeceraPOAProps {
   puedeEditar: boolean; // true si es SIN_ENVIAR o DEVUELTA. Rogelio usará esto para ocultar botones.
   estaCargando: boolean; // Para que Rogelio ponga un spinner en el botón al enviar
   
-  // --- Eventos (Lo que dispara Rogelio al hacer clic) ---
-  onEnviarRevision: () => void; // Llama a POST poas/poaid/presentar
-  onCancelarEnvio: () => void;  // Llama a POST poas/poaid/cancelar-envio
 }
 
 // Estructura para listar a los auditores en la tarjeta expandida
@@ -76,18 +73,15 @@ export interface TarjetaActividadPOAProps {
   onExpandirTarjeta: () => void; // Aquí se llama al -NUEVO- endpoint
 }
 
+export type TarjetaActividadPOAData = Omit<
+  TarjetaActividadPOAProps,
+  'onBorrarActividad' | 'onConfigurarFichaTecnica' | 'onExpandirTarjeta'
+>;
+
 export interface BancoActividadItemProps {
   idActividadBanco: string; // UUID
   titulo: string;
   descripcionCorta: string;
-  
-  // --- Eventos ---
-  onSeleccionar: () => void; // Se llama a GET banco-actividades-id para llenar la ficha técnica
-}
-
-export interface ModalBancoActividadesProps {
-  actividadesDisponibles: BancoActividadItemProps[];
-  onCrearPersonalizada: () => void; // Clic en "Crear desde cero". Tú abres la Ficha Técnica vacía
 }
 
 // Para llenar el Dropdown de auditores

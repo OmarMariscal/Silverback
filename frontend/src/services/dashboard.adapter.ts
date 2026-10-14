@@ -190,6 +190,8 @@ export const adaptarDashboardJefaUI = (
       contralor: d.asignacion?.contralor || 'Sin asignar',
       estadoEtiqueta: d.estado_operativo?.etiqueta || d.estado_operativo?.codigo || 'En proceso',
       fechaTermino: d.fecha_termino,
+      fechaEnviado: d.fecha_envio,
+      semaforo: d.semaforo,
     })),
   };
 };

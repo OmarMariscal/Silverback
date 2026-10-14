@@ -1,12 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useActividadesStore } from '@/store/actividades.store';
-import { useLayoutStore } from '@/store/layout.store';
 import { adaptarDirectorioActividadesUI } from '@/services/actividades.adapter';
 import type { ActividadDirectorioItemProps } from '@/types/actividades-contratos';
-import { obtenerRolActivo } from '@/services/api';
 import RoleShell from '@/modules/perfiles/role-shell';
 
 const estadoLabels: Record<string, string> = {
@@ -44,13 +42,8 @@ function fechaCorta(fecha: string) {
 
 function FilaActividad({ actividad, onSeleccionar }: ActividadDirectorioItemProps) {
   const estado = actividad.estado_operativo.codigo;
-  const esVistaJefatura = actividad.asignacion.tipo_vista === 'JEFA';
-  const asignacionPrincipal = esVistaJefatura
-    ? actividad.asignacion.centro_clave || 'Sin centro'
-    : `${actividad.asignacion.participacion_porcentaje ?? 0}%`;
-  const asignacionSecundaria = esVistaJefatura
-    ? actividad.asignacion.contralor || 'Sin contralor'
-    : actividad.asignacion.auditor_apoyo || 'Sin auditores asignados';
+  const asignacionPrincipal = `${actividad.asignacion.participacion_porcentaje ?? 0}%`;
+  const asignacionSecundaria = actividad.asignacion.auditor_apoyo || 'Sin auditores asignados';
 
   return (
     <tr onClick={() => onSeleccionar(actividad.id)} className="group cursor-pointer transition hover:bg-indigo-50/40">
@@ -100,12 +93,11 @@ function FilaActividad({ actividad, onSeleccionar }: ActividadDirectorioItemProp
   );
 }
 
-export default function ContralorActividadesPage() {
+function ContralorActividadesContent() {
   const router = useRouter();
-  const setTituloPantalla = useLayoutStore((state) => state.setTituloPantalla);
+  const searchParams = useSearchParams();
   const {
     actividades,
-    centros,
     filtros,
     paginaActual,
     totalPaginas,
@@ -113,7 +105,6 @@ export default function ContralorActividadesPage() {
     limite,
     estaCargando,
     mensajeError,
-    cargarCentros,
     cargarDirectorio,
     actualizarFiltro,
     cambiarPagina,
@@ -122,12 +113,11 @@ export default function ContralorActividadesPage() {
   const [busqueda, setBusqueda] = useState(filtros.busqueda);
 
   useEffect(() => {
-    setTituloPantalla('Directorio de Actividades del Contralor');
-  }, [setTituloPantalla]);
-
-  useEffect(() => {
-    cargarCentros();
-  }, [cargarCentros]);
+    const estado = searchParams.get('estado_flujo') ?? '';
+    const semaforo = searchParams.get('semaforo') ?? '';
+    actualizarFiltro('estadoFlujo', Object.hasOwn(estadoLabels, estado) ? estado : '');
+    actualizarFiltro('semaforo', ['A_TIEMPO', 'CRITICO', 'PRECAUCION'].includes(semaforo) ? semaforo : '');
+  }, [searchParams, actualizarFiltro]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -140,7 +130,6 @@ export default function ContralorActividadesPage() {
   useEffect(() => {
     cargarDirectorio();
   }, [
-    filtros.centroUuid,
     filtros.tipoActividad,
     filtros.estadoFlujo,
     filtros.semaforo,
@@ -153,20 +142,17 @@ export default function ContralorActividadesPage() {
     () =>
       [
         filtros.busqueda ? `Búsqueda: ${filtros.busqueda}` : '',
-        filtros.centroUuid ? `Centro: ${centros.find((centro) => centro.id === filtros.centroUuid)?.clave || 'Seleccionado'}` : '',
         filtros.tipoActividad ? `Tipo: ${filtros.tipoActividad === 'AUDITORIA' ? 'Auditoría' : 'Revisión'}` : '',
         filtros.estadoFlujo ? `Estado: ${estadoLabels[filtros.estadoFlujo]}` : '',
         filtros.semaforo ? `Semáforo: ${semaforoLabels[filtros.semaforo]}` : '',
       ].filter(Boolean),
-    [filtros, centros]
+    [filtros]
   );
 
-  const esVistaJefatura = obtenerRolActivo() === 'JEFA';
-
-  const seleccionarFiltro = (nombre: 'centroUuid' | 'tipoActividad' | 'estadoFlujo' | 'semaforo', valor: string) =>
+  const seleccionarFiltro = (nombre: 'tipoActividad' | 'estadoFlujo' | 'semaforo', valor: string) =>
     actualizarFiltro(nombre, valor);
 
-  const filas = adaptarDirectorioActividadesUI(actividades, (id) => router.push(`/actividades/${id}`));
+  const filas = adaptarDirectorioActividadesUI(actividades, (id) => router.push(`/contralor/actividades/${id}`));
 
   return (
     <RoleShell
@@ -185,18 +171,11 @@ export default function ContralorActividadesPage() {
               className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
             />
             <select
-              value={esVistaJefatura ? filtros.centroUuid : ''}
-              disabled={!esVistaJefatura}
-              onChange={(event) => seleccionarFiltro('centroUuid', event.target.value)}
+              value=""
+              disabled
               className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <option value="">{esVistaJefatura ? 'Todos los Centros' : 'Centro único asignado'}</option>
-              {esVistaJefatura &&
-                centros.map((centro) => (
-                  <option key={centro.id} value={centro.id}>
-                    {centro.clave}
-                  </option>
-                ))}
+              <option value="">Centro único asignado</option>
             </select>
             <select
               value={filtros.tipoActividad}
@@ -252,6 +231,7 @@ export default function ContralorActividadesPage() {
                 onClick={() => {
                   limpiarFiltros();
                   setBusqueda('');
+                  router.replace('/contralor/actividades');
                 }}
                 className="text-xs font-bold text-slate-400 underline hover:text-indigo-600"
               >
@@ -267,7 +247,7 @@ export default function ContralorActividadesPage() {
           <table className="w-full min-w-[1100px] text-left">
             <thead className="border-b border-slate-200 bg-slate-50">
               <tr>
-                {['Identificador', 'Actividad y Fechas', esVistaJefatura ? 'Centro y Contralor' : 'Porcentaje de Participación', 'Estado Operativo', 'Semáforo', ''].map(
+                {['Identificador', 'Actividad y Fechas', 'Porcentaje de Participación', 'Estado Operativo', 'Semáforo', ''].map(
                   (titulo) => (
                     <th key={titulo} className="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                       {titulo}
@@ -321,5 +301,13 @@ export default function ContralorActividadesPage() {
         </footer>
       </div>
     </RoleShell>
+  );
+}
+
+export default function ContralorActividadesPage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-slate-500">Cargando directorio...</p>}>
+      <ContralorActividadesContent />
+    </Suspense>
   );
 }

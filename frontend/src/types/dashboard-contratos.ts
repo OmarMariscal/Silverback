@@ -65,6 +65,8 @@ export interface FilaDirectorioJefaUI {
   contralor: string;
   estadoEtiqueta: string;
   fechaTermino: string;
+  fechaEnviado?: string;
+  semaforo: 'A_TIEMPO' | 'CRITICO' | 'PRECAUCION';
 }
 
 export interface CentroRezagoUI {

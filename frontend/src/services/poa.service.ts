@@ -157,18 +157,7 @@ export const poaService = {
     }
   },
 
-  // 13. Obtener subactividades seleccionadas
-  obtenerSubactividadesSelect: async (actividadId: string): Promise<PoaApi.SubActividadesSelectResponse> => {
-    try {
-      const respuesta = await api.get<PoaApi.SubActividadesSelectResponse>(`/actividades/${actividadId}/sub-actividades-select`);
-      return respuesta.data;
-    } catch (error) {
-      console.error("Error al obtener subactividades select:", error);
-      throw error;
-    }
-  },
-
-  // 14. Creación masiva de subactividades (Bulk)
+  // 13. Creación masiva de subactividades (Bulk)
   crearSubactividadesBulk: async (
     actividadId: string, 
     payload: PoaApi.SubActividadesBulkRequest
@@ -182,7 +171,7 @@ export const poaService = {
     }
   },
 
-  // 15. Eliminar una actividad
+  // 14. Eliminar una actividad
   eliminarActividad: async (actividadId: string): Promise<PoaApi.EliminacionCorrecta> => {
     try {
       const respuesta = await api.delete<PoaApi.EliminacionCorrecta>(`/actividades/${actividadId}`);
@@ -193,14 +182,4 @@ export const poaService = {
     }
   },
 
-  // 16. Obtener catálogo de centros universitarios
-  obtenerCentros: async (): Promise<PoaApi.CentroDto> => {
-    try {
-      const respuesta = await api.get<PoaApi.CentroDto>('/catalogos/centros');
-      return respuesta.data;
-    } catch (error) {
-      console.error("Error al obtener catálogo de centros:", error);
-      throw error;
-    }
-  }
 };

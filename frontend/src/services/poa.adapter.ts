@@ -4,45 +4,39 @@
 
 // IMPORTACIÓN DE PROPS
 import { 
-  CabeceraPOAProps, 
-  TarjetaActividadPOAProps, 
+  CabeceraPOAData, 
+  TarjetaActividadPOAData, 
   SubactividadFilaProps, 
   FichaTecnicaExpandida, 
   OpcionAuditorProps,
   BancoActividadItemProps,
   DatosFormularioFicha,
-  SubactividadSugerida
+  SubactividadSugerida,
+  EstadoPOA,
 } from '../types/poa-contratos';
 import * as PoaApi from '../types/poa-api'; 
-
-export interface SubactividadSelectUI {
-  id: string;
-  folio: string;
-  descripcion: string;
-  tipo: PoaApi.TipoActividadAPI;
-  fechaInicioFormatted: string;
-  fechaTerminoFormatted: string;
-  semanasTotales: number;
-  seleccionada: boolean;
-}
 
 /**
  * TRADUCTOR 1: Para la Pantalla Principal del POA
  */
 export const adaptarPoaActual = (
   datosAPI: PoaApi.PoaActualDto
-): { cabecera: CabeceraPOAProps, actividades: TarjetaActividadPOAProps[] } => {
-  
-  const cabeceraAdaptada: CabeceraPOAProps = {
+): { cabecera: CabeceraPOAData, actividades: TarjetaActividadPOAData[] } => {
+  const estadosValidos: EstadoPOA[] = ['SIN_ENVIAR', 'BORRADOR', 'EN_REVISION', 'DEVUELTA', 'ACEPTADA'];
+  const estadoActual = estadosValidos.find((estado) => estado === datosAPI.estado);
+
+  if (!estadoActual) {
+    throw new Error(`Estado de POA no reconocido por el contrato: ${datosAPI.estado}`);
+  }
+
+  const cabeceraAdaptada: CabeceraPOAData = {
     anioFiscal: datosAPI.anio_fiscal.toString(),
-    estadoActual: datosAPI.estado as any, 
-    puedeEditar: datosAPI.estado === "SIN_ENVIAR" || datosAPI.estado === "BORRADOR" || datosAPI.estado === "DEVUELTA",
+    estadoActual,
+    puedeEditar: estadoActual === 'SIN_ENVIAR' || estadoActual === 'BORRADOR' || estadoActual === 'DEVUELTA',
     estaCargando: false,
-    onEnviarRevision: () => {}, 
-    onCancelarEnvio: () => {},
   };
 
-  const actividadesAdaptadas: TarjetaActividadPOAProps[] = datosAPI.actividades_resumen.map((act) => ({
+  const actividadesAdaptadas: TarjetaActividadPOAData[] = datosAPI.actividades_resumen.map((act) => ({
     idActividad: act.id,
     titulo: act.titulo,
     participacionGlobalVisible: `${act.participacion_global}%`,
@@ -56,11 +50,7 @@ export const adaptarPoaActual = (
     
     subactividades: [],
     estaCargandoDetalles: false,
-    ocultarBotonBorrar: datosAPI.estado === "EN_REVISION" || datosAPI.estado === "ACEPTADA",
-    
-    onBorrarActividad: () => {},
-    onConfigurarFichaTecnica: () => {},
-    onExpandirTarjeta: () => {}
+    ocultarBotonBorrar: estadoActual === 'EN_REVISION' || estadoActual === 'ACEPTADA',
   }));
 
   return { cabecera: cabeceraAdaptada, actividades: actividadesAdaptadas };
@@ -124,7 +114,6 @@ export const adaptarBancoActividadesUI = (
     idActividadBanco: item.id,
     titulo: item.titulo,
     descripcionCorta: item.descripcion_corta,
-    onSeleccionar: () => {}
   }));
 };
 
@@ -155,25 +144,7 @@ export const adaptarSubactividadesSugeridasUI = (
 };
 
 /**
- * TRADUCTOR 8: Para Selección de Subactividades (Pantalla 4)
- */
-export const adaptarSubactividadesSelectUI = (
-  datosAPI: PoaApi.SubActividadesSelectResponse
-): SubactividadSelectUI[] => {
-  return datosAPI.data.map((item) => ({
-    id: item.id,
-    folio: item.folio,
-    descripcion: item.descripcion,
-    tipo: item.tipo,
-    fechaInicioFormatted: item.fechas?.fecha_inicio || '',
-    fechaTerminoFormatted: item.fechas?.fecha_termino || '',
-    semanasTotales: item.fechas?.semanas || 0,
-    seleccionada: item.seleccionada
-  }));
-};
-
-/**
- * TRADUCTOR 9: De Formulario UI a DTO de Creación Backend
+ * TRADUCTOR 8: De Formulario UI a DTO de Creación Backend
  */
 export const adaptarFormularioACrearDTO = (
   datosForm: DatosFormularioFicha,

@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import RoleShell from '@/modules/perfiles/role-shell';
 import { useActividadesStore } from '@/store/actividades.store';
-import { useLayoutStore } from '@/store/layout.store';
 
 const estadoLabels: Record<string, string> = {
   SIN_EMPEZAR: 'Sin Empezar',
@@ -39,9 +38,9 @@ function fechaCorta(fecha: string) {
   return new Intl.DateTimeFormat('es-MX', { month: 'short', year: 'numeric' }).format(new Date(fecha));
 }
 
-export default function JefaActividadesPage() {
+function JefaActividadesContent() {
   const router = useRouter();
-  const setTituloPantalla = useLayoutStore((state) => state.setTituloPantalla);
+  const searchParams = useSearchParams();
   const {
     actividades,
     centros,
@@ -62,8 +61,11 @@ export default function JefaActividadesPage() {
   const [busqueda, setBusqueda] = useState(filtros.busqueda);
 
   useEffect(() => {
-    setTituloPantalla('Directorio Global de Actividades');
-  }, [setTituloPantalla]);
+    const estado = searchParams.get('estado_flujo') ?? '';
+    const semaforo = searchParams.get('semaforo') ?? '';
+    actualizarFiltro('estadoFlujo', Object.hasOwn(estadoLabels, estado) ? estado : '');
+    actualizarFiltro('semaforo', ['A_TIEMPO', 'CRITICO', 'PRECAUCION'].includes(semaforo) ? semaforo : '');
+  }, [searchParams, actualizarFiltro]);
 
   useEffect(() => {
     cargarCentros();
@@ -101,9 +103,8 @@ export default function JefaActividadesPage() {
   const limpiarTodos = () => {
     limpiarFiltros();
     setBusqueda('');
+    router.replace('/jefa/actividades');
   };
-
-  const exportarVistaActual = () => undefined;
 
   const totalResultados = totalRegistros || actividades.length;
 
@@ -121,16 +122,6 @@ export default function JefaActividadesPage() {
               <h1 className="text-3xl font-black tracking-tight text-slate-800">Directorio Global de Actividades</h1>
             </div>
 
-            <button
-              type="button"
-              onClick={exportarVistaActual}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-indigo-700"
-            >
-              <svg className="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v10m0 0l-4-4m4 4l4-4M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
-              </svg>
-              Exportar Vista Actual (.xlsx)
-            </button>
           </header>
 
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -303,7 +294,10 @@ export default function JefaActividadesPage() {
                       const semaforoColor = semaforoColors[actividad.semaforo] || semaforoColors.GRIS;
 
                       return (
-                        <tr key={actividad.id} className="cursor-pointer transition-colors hover:bg-indigo-50/40">
+                        <tr
+                          key={actividad.id}
+                          className="transition-colors hover:bg-indigo-50/40"
+                        >
                           <td className="px-8 py-5">
                             <div className="flex flex-col items-start">
                               <span className="text-base font-black text-slate-800">{actividad.identificador || 'Sin asignar'}</span>
@@ -366,7 +360,7 @@ export default function JefaActividadesPage() {
                           <td className="px-6 py-5 text-right">
                             <button
                               type="button"
-                              onClick={() => router.push(`/actividades/${actividad.id}`)}
+                              onClick={() => router.push(`/jefa/actividades/${actividad.id}`)}
                               className="ml-auto flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-indigo-100"
                               aria-label={`Ver actividad ${actividad.identificador || actividad.titulo}`}
                             >
@@ -421,5 +415,13 @@ export default function JefaActividadesPage() {
         </div>
       </div>
     </RoleShell>
+  );
+}
+
+export default function JefaActividadesPage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-slate-500">Cargando directorio...</p>}>
+      <JefaActividadesContent />
+    </Suspense>
   );
 }

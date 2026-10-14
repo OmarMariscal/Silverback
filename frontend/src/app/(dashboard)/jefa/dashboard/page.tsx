@@ -3,28 +3,39 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDashboardStore } from '@/store/dashboard.store';
-import { useLayoutStore } from '@/store/layout.store';
 import RoleShell from '@/modules/perfiles/role-shell';
+import { getModulePath } from '@/modules/perfiles/role-menu';
 
 export default function JefaDashboardPage() {
   const router = useRouter();
-  const { datosJefa, rolActual, cargando, cargarDashboard } = useDashboardStore();
-
-  useEffect(() => {
-    useLayoutStore.getState().setTituloPantalla(
-        'Panel de Supervisión Global'
-    );
-  }, [rolActual]);
+  const { datosJefa, cargando, error, cargarDashboard } = useDashboardStore();
 
   useEffect(() => {
     cargarDashboard();
   }, [cargarDashboard]);
 
-  if (cargando || !datosJefa) {
+  if (cargando) {
     return (
       <RoleShell perfil="JEFA" modulo="dashboard" title="Panel de Supervisión Global" subtitle="Cargando resumen operativo...">
         <div className="flex items-center justify-center py-32 text-lg font-bold text-indigo-600 animate-pulse">
           Cargando resumen operativo...
+        </div>
+      </RoleShell>
+    );
+  }
+
+  if (!datosJefa) {
+    return (
+      <RoleShell perfil="JEFA" modulo="dashboard" title="Panel de Supervisión Global" subtitle="Resumen operativo de la red.">
+        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-rose-800">
+          <p>{error || 'No fue posible obtener los datos del dashboard.'}</p>
+          <button
+            type="button"
+            onClick={() => void cargarDashboard()}
+            className="mt-3 rounded-lg bg-rose-700 px-4 py-2 text-sm font-bold text-white hover:bg-rose-800"
+          >
+            Reintentar
+          </button>
         </div>
       </RoleShell>
     );
@@ -42,10 +53,10 @@ export default function JefaDashboardPage() {
         <div className="flex flex-col justify-between md:flex-row md:items-end">
           <div className="mt-4 flex items-center space-x-3 md:mt-0">
             <button
-              onClick={() => router.push('/jefa/actividades')}
+              onClick={() => router.push(getModulePath('JEFA', 'actividades'))}
               className="flex items-center rounded-xl bg-indigo-600 px-6 py-2.5 font-bold text-white shadow-md shadow-indigo-200 transition-all hover:bg-indigo-700"
             >
-              Exportar resumen operativo
+              Ver actividades
               <svg className="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
               </svg>
@@ -55,7 +66,7 @@ export default function JefaDashboardPage() {
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-4">
           <div
-            onClick={() => router.push('/contralor/actividades?estado_flujo=DEVUELTA')}
+            onClick={() => router.push(`${getModulePath('JEFA', 'actividades')}?estado_flujo=DEVUELTA`)}
             className="group relative overflow-hidden rounded-2xl border border-indigo-100 bg-white p-8 shadow-sm transition-all hover:border-indigo-400 hover:shadow-md"
           >
             <div className="absolute right-0 top-0 h-32 w-32 rounded-bl-full bg-indigo-50/80 transition-transform group-hover:scale-110" />
@@ -78,7 +89,7 @@ export default function JefaDashboardPage() {
           </div>
 
           <div
-            onClick={() => router.push('/contralor/actividades?semaforo=CRITICO')}
+            onClick={() => router.push(`${getModulePath('JEFA', 'actividades')}?semaforo=CRITICO`)}
             className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all hover:border-red-300 hover:shadow-md"
           >
             <div className="absolute right-0 top-0 h-32 w-32 rounded-bl-full bg-red-50 transition-transform group-hover:scale-110" />
@@ -86,13 +97,13 @@ export default function JefaDashboardPage() {
               <h3 className="mb-3 text-base font-bold uppercase tracking-widest text-slate-500">Riesgo Crítico</h3>
               <div className="flex flex-col">
                 <span className="mt-1 mb-2 text-5xl font-black text-red-600">{kpis.riesgoCritico.toString().padStart(2, '0')}</span>
-                <span className="text-base font-medium text-red-500">riesgoCriticoDescripcion</span>
+                <span className="text-base font-medium text-red-500">{kpis.riesgoCriticoDescripcion}</span>
               </div>
             </div>
           </div>
 
           <div
-            onClick={() => router.push('/contralor/actividades?semaforo=PRECAUCION')}
+            onClick={() => router.push(`${getModulePath('JEFA', 'actividades')}?semaforo=PRECAUCION`)}
             className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all hover:border-amber-300 hover:shadow-md"
           >
             <div className="absolute right-0 top-0 h-32 w-32 rounded-bl-full bg-amber-50 transition-transform group-hover:scale-110" />
@@ -106,7 +117,7 @@ export default function JefaDashboardPage() {
           </div>
 
           <div
-            onClick={() => router.push('/contralor/actividades?estado_flujo=CONCLUIDA')}
+            onClick={() => router.push(`${getModulePath('JEFA', 'actividades')}?estado_flujo=CONCLUIDA`)}
             className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all hover:border-emerald-300 hover:shadow-md"
           >
             <div className="absolute right-0 top-0 h-32 w-32 rounded-bl-full bg-emerald-50 transition-transform group-hover:scale-110" />
@@ -193,7 +204,7 @@ export default function JefaDashboardPage() {
               </p>
               <div className="space-y-6">
                 {rezago && rezago.length > 0 ? (
-                  rezago.map((item: any) => {
+                  rezago.map((item) => {
                     const porcentaje = item.total > 0 
                       ? Math.min(100, Math.round((item.actividadesCriticas / item.total) * 100)) 
                       : 0;
@@ -229,7 +240,11 @@ export default function JefaDashboardPage() {
               </div>
             </div>
             <div className="mt-8 text-center">
-              <button className="text-xs font-bold uppercase tracking-wider text-indigo-600 transition-colors hover:text-indigo-800">
+              <button
+                type="button"
+                onClick={() => router.push(`${getModulePath('JEFA', 'actividades')}?semaforo=CRITICO`)}
+                className="text-xs font-bold uppercase tracking-wider text-indigo-600 transition-colors hover:text-indigo-800"
+              >
                 VER DESGLOSE
               </button>
             </div>
@@ -243,26 +258,16 @@ export default function JefaDashboardPage() {
                 Revisiones y Solicitudes Pendientes
               </h2>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                {directorio ? `${directorio.length} activas` : '0 activas'}
+                {directorio.length} mostradas
               </span>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center rounded-xl bg-slate-100/80 p-1 text-xs font-medium text-slate-600">
-                <button className="rounded-lg bg-white px-3 py-1.5 font-bold text-slate-800 shadow-sm">
-                  Todas ({directorio?.length || 0})
-                </button>
-                <button className="px-3 py-1.5 transition-colors hover:text-slate-900">
-                  En Revisión (pendiente-hard: conteoEnRevision)
-                </button>
-                <button className="px-3 py-1.5 transition-colors hover:text-slate-900">
-                  Solicitudes (pendiente-hard: conteoSolicitudes)
-                </button>
-              </div>
-
-              <select className="rounded-xl border-none bg-transparent py-1.5 pl-3 pr-8 text-xs font-medium text-slate-500 focus:ring-0">
-                <option>Más recientes primero</option>
-              </select>
-            </div>
+            <button
+              type="button"
+              onClick={() => router.push(getModulePath('JEFA', 'actividades'))}
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"
+            >
+              Ver directorio completo
+            </button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
@@ -278,7 +283,7 @@ export default function JefaDashboardPage() {
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
                 {directorio && directorio.length > 0 ? (
-                  directorio.map((item: any) => {
+                  directorio.map((item) => {
                     const tipoUpper = (item.tipo || '').toUpperCase();
                     const esAuditoria = tipoUpper.includes('AUDITOR');
                     const esRevision = tipoUpper.includes('REVISI');
@@ -309,7 +314,7 @@ export default function JefaDashboardPage() {
                             {item.titulo}
                           </span>
                           <span className="mt-1 block text-xs text-slate-400">
-                            Enviado: {item.fechaEnviado || 'pendiente-hard: fechaEnviado'} · Término POA: {item.fechaTermino || 'pendiente-hard: fechaTermino'}
+                            Enviado: {item.fechaEnviado || 'Sin fecha de envío'} · Término POA: {item.fechaTermino || 'Sin fecha de término'}
                           </span>
                         </td>
                         <td className="px-6 py-4 align-top">
@@ -335,27 +340,38 @@ export default function JefaDashboardPage() {
                           <div className="flex items-center gap-2">
                             <span
                               className={`h-2 w-2 rounded-full ${
-                                item.semaforo === 'Crítico'
+                                item.semaforo === 'CRITICO'
                                   ? 'bg-red-500'
-                                  : item.semaforo === 'Alerta'
+                                  : item.semaforo === 'PRECAUCION'
                                   ? 'bg-amber-500'
                                   : 'bg-emerald-500'
                               }`}
                             />
                             <span className="font-bold text-slate-700">
-                              {item.semaforo || 'pendiente-hard: semaforo'}
+                              {item.semaforo === 'CRITICO'
+                                ? 'Crítico'
+                                : item.semaforo === 'PRECAUCION'
+                                  ? 'Alerta'
+                                  : 'A tiempo'}
                             </span>
                           </div>
                         </td>
                         <td className="px-4 py-4 align-middle text-right">
-                          <svg
-                            className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-500"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                          <button
+                            type="button"
+                            onClick={() => router.push(`${getModulePath('JEFA', 'actividades')}/${item.id}`)}
+                            aria-label={`Ver actividad ${item.identificador || item.titulo}`}
+                            className="rounded-full p-2 hover:bg-indigo-50"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
+                            <svg
+                              className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-500"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
                         </td>
                       </tr>
                     );
