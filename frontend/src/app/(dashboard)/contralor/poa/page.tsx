@@ -146,8 +146,8 @@ export default function ContralorPoaPage() {
   };
 
   const seleccionarDelBanco = async (idBanco: string) => {
-    await seleccionarActividadBanco(idBanco);
-    const detalle = usePoaStore.getState().actividadBancoSeleccionada;
+    const detalle = await seleccionarActividadBanco(idBanco);
+    if (!detalle) return;
     setWizardCreacion({
       paso: 2,
       bancoId: idBanco,
@@ -267,7 +267,7 @@ export default function ContralorPoaPage() {
                 }`}
               />
               <span className="text-sm font-semibold">
-                Estado: {cabecera.estadoActual === 'AUTORIZADA' ? 'Autorizada' : cabecera.estadoActual.replace('_', ' ')}
+                Estado: {cabecera.estadoEtiqueta}
               </span>
             </div>
             {cabecera.puedeEditar ? (

@@ -21,7 +21,7 @@ import * as PoaApi from '../types/poa-api';
  */
 export const adaptarPoaActual = (
   datosAPI: PoaApi.PoaActualDto
-): { cabecera: CabeceraPOAData, actividades: TarjetaActividadPOAData[] } => {
+): { poaId: string, cabecera: CabeceraPOAData, actividades: TarjetaActividadPOAData[] } => {
   const estadosValidos: EstadoPOA[] = ['BORRADOR', 'EN_REVISION', 'DEVUELTA', 'AUTORIZADA'];
   const estadoActual = estadosValidos.find((estado) => estado === datosAPI.estado);
 
@@ -32,6 +32,7 @@ export const adaptarPoaActual = (
   const cabeceraAdaptada: CabeceraPOAData = {
     anioFiscal: datosAPI.anio_fiscal.toString(),
     estadoActual,
+    estadoEtiqueta: estadoActual === 'AUTORIZADA' ? 'Autorizada' : estadoActual.replace('_', ' '),
     puedeEditar: estadoActual === 'BORRADOR' || estadoActual === 'DEVUELTA',
     estaCargando: false,
   };
@@ -53,7 +54,7 @@ export const adaptarPoaActual = (
     ocultarBotonBorrar: estadoActual === 'EN_REVISION' || estadoActual === 'AUTORIZADA',
   }));
 
-  return { cabecera: cabeceraAdaptada, actividades: actividadesAdaptadas };
+  return { poaId: datosAPI.id, cabecera: cabeceraAdaptada, actividades: actividadesAdaptadas };
 };
 
 /**

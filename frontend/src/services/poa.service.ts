@@ -3,21 +3,15 @@
 // En palabras sencillas: Este archivo es como un "puente" entre la UI y el backend. Cada función es un camino que lleva datos desde la API hasta los componentes de la UI, y viceversa. Si los datos vienen en un formato raro, usamos adaptadores para traducirlos a algo que la UI pueda entender fácilmente.
 
 import { api } from './api';
-import { adaptarPoaActual } from './poa.adapter';
 import * as PoaApi from '../types/poa-api';
 
 export const poaService = {
   
   // 1. Obtener el POA actual
-  obtenerMiPoaActual: async () => {
+  obtenerMiPoaActual: async (): Promise<PoaApi.PoaActualDto> => {
     try {
-      // 💡 GENÉRICO AÑADIDO <PoaApi.PoaActualDto>
       const respuesta = await api.get<PoaApi.PoaActualDto>('/poas/mi-poa-actual');
-      const adaptado = adaptarPoaActual(respuesta.data);
-      return {
-        poaId: respuesta.data.id,
-        ...adaptado
-      };
+      return respuesta.data;
     } catch (error) {
       console.error("Error al obtener el POA actual:", error);
       throw error; 

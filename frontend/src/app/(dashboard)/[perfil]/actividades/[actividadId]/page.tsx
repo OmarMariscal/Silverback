@@ -2,11 +2,10 @@
 
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import RoleShell from '@/modules/perfiles/role-shell';
 import { getModulePath, moduleApiSupport, roleModuleMap } from '@/modules/perfiles/role-menu';
-import { actividadesService } from '@/services/actividades.service';
-import type { ActividadResumenResponse } from '@/types/actividades-api';
+import { useActividadesStore } from '@/store/actividades.store';
 import { ROLES_USUARIO, type RolUsuario } from '@/types/roles';
 
 const roleLabels: Record<RolUsuario, string> = {
@@ -22,34 +21,22 @@ export default function ActividadDetallePage() {
   const rol = ROLES_USUARIO.find(
     (candidate) => roleModuleMap[candidate].actividades === `/${perfil}/actividades`,
   );
-  const [actividad, setActividad] = useState<ActividadResumenResponse | null>(null);
-  const [error, setError] = useState<{ actividadId: string; mensaje: string } | null>(null);
+  const actividad = useActividadesStore((state) => state.actividadDetalle);
+  const actividadDetalleSolicitadaId = useActividadesStore((state) => state.actividadDetalleSolicitadaId);
+  const cargando = useActividadesStore((state) => state.cargandoDetalle);
+  const error = useActividadesStore((state) => state.errorDetalle);
+  const cargarResumenActividad = useActividadesStore((state) => state.cargarResumenActividad);
 
   useEffect(() => {
     if (!rol || !moduleApiSupport[rol].actividades) return;
-
-    let mounted = true;
-
-    actividadesService.obtenerResumen(actividadId)
-      .then((resultado) => {
-        if (mounted) setActividad(resultado);
-      })
-      .catch((cause: unknown) => {
-        console.error('No se pudo cargar el resumen de la actividad', cause);
-        if (mounted) {
-          setError({ actividadId, mensaje: 'No se pudo cargar el detalle de la actividad.' });
-        }
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, [actividadId, rol]);
+    void cargarResumenActividad(actividadId);
+  }, [actividadId, cargarResumenActividad, rol]);
 
   if (!rol || !moduleApiSupport[rol].actividades) notFound();
 
-  const errorActual = error?.actividadId === actividadId ? error.mensaje : null;
-  const cargando = actividad?.id !== actividadId && !errorActual;
+  const errorActual = actividadDetalleSolicitadaId === actividadId ? error : null;
+  const actividadActual = actividad?.id === actividadId ? actividad : null;
+  const estaCargando = actividadDetalleSolicitadaId !== actividadId || cargando;
 
   return (
     <RoleShell
@@ -65,21 +52,21 @@ export default function ActividadDetallePage() {
         Volver al directorio
       </Link>
 
-      {cargando ? (
+      {estaCargando ? (
         <p className="mt-6 text-sm font-semibold text-indigo-600">Cargando detalle...</p>
       ) : errorActual ? (
         <p role="alert" className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">
           {errorActual}
         </p>
-      ) : actividad ? (
+      ) : actividadActual ? (
         <article className="mt-6 space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-bold text-slate-900">{actividad.titulo}</h2>
+          <h2 className="text-2xl font-bold text-slate-900">{actividadActual.titulo}</h2>
           {([
-            ['Justificación', actividad.justificacion],
-            ['Objetivo general', actividad.objetivo_general],
-            ['Objetivos particulares', actividad.objetivos_particulares],
-            ['Meta del proyecto', actividad.meta_del_proyecto],
-            ['Indicadores', actividad.indicadores],
+            ['Justificación', actividadActual.justificacion],
+            ['Objetivo general', actividadActual.objetivoGeneral],
+            ['Objetivos particulares', actividadActual.objetivosParticulares],
+            ['Meta del proyecto', actividadActual.metaDelProyecto],
+            ['Indicadores', actividadActual.indicadores],
           ] as Array<[string, string]>).map(([label, value]) => (
             <section key={label}>
               <h3 className="text-sm font-bold text-slate-700">{label}</h3>

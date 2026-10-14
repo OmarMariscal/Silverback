@@ -24,20 +24,6 @@ const semaforoLabels: Record<string, string> = {
   GRIS: 'N/A',
 };
 
-const semaforoColors: Record<string, string> = {
-  A_TIEMPO: 'bg-emerald-500',
-  VERDE: 'bg-emerald-500',
-  PRECAUCION: 'bg-amber-400',
-  AMARILLO: 'bg-amber-400',
-  CRITICO: 'bg-red-500',
-  ROJO: 'bg-red-500',
-  GRIS: 'bg-slate-300',
-};
-
-function fechaCorta(fecha: string) {
-  return new Intl.DateTimeFormat('es-MX', { month: 'short', year: 'numeric' }).format(new Date(fecha));
-}
-
 function JefaActividadesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -284,29 +270,20 @@ function JefaActividadesContent() {
                       </td>
                     </tr>
                   ) : (
-                    actividades.map((actividad) => {
-                      const tipo = actividad.tipo === 'AUDITORIA' ? 'Auditoría' : 'Revisión';
-                      const estado = actividad.estado_operativo.codigo;
-                      const estadoEtiqueta = actividad.estado_operativo.etiqueta || estadoLabels[estado] || 'Sin estado';
-                      const centroClave = actividad.asignacion.centro_clave || 'Sin centro';
-                      const responsable = actividad.asignacion.contralor || actividad.asignacion.auditor_apoyo || 'Sin responsable';
-                      const semaforoEtiqueta = semaforoLabels[actividad.semaforo] || 'N/A';
-                      const semaforoColor = semaforoColors[actividad.semaforo] || semaforoColors.GRIS;
-
-                      return (
+                    actividades.map((actividad) => (
                         <tr
                           key={actividad.id}
                           className="transition-colors hover:bg-indigo-50/40"
                         >
                           <td className="px-8 py-5">
                             <div className="flex flex-col items-start">
-                              <span className="text-base font-black text-slate-800">{actividad.identificador || 'Sin asignar'}</span>
+                              <span className="text-base font-black text-slate-800">{actividad.identificador}</span>
                               <span
                                 className={`mt-1.5 rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ${
-                                  tipo === 'Auditoría' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-800'
+                                  actividad.tipoActividad === 'AUDITORIA' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-800'
                                 }`}
                               >
-                                {tipo}
+                                {actividad.tipoEtiqueta}
                               </span>
                             </div>
                           </td>
@@ -320,40 +297,30 @@ function JefaActividadesContent() {
                                 <svg className="mr-1.5 h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
                                 </svg>
-                                Término POA: {fechaCorta(actividad.fecha_termino)}
+                                Término POA: {actividad.fechaTermino}
                               </div>
                             </div>
                           </td>
 
                           <td className="px-8 py-5">
                             <div className="flex flex-col">
-                              <span className="text-sm font-bold text-slate-700">{centroClave}</span>
-                              <span className="mt-1 text-xs text-slate-500">{responsable}</span>
+                              <span className="text-sm font-bold text-slate-700">{actividad.asignacionPrincipal}</span>
+                              <span className="mt-1 text-xs text-slate-500">{actividad.asignacionSecundaria}</span>
                             </div>
                           </td>
 
                           <td className="px-8 py-5">
                             <span
-                              className={`inline-flex items-center rounded-lg border px-3 py-1.5 text-xs font-bold shadow-sm ${
-                                estado === 'DEVUELTA'
-                                  ? 'border-red-200 bg-red-50 text-red-700'
-                                  : estado === 'EN_PROGRESO'
-                                    ? 'border-blue-200 bg-blue-50 text-blue-700'
-                                    : estado === 'EN_REVISION'
-                                      ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
-                                      : estado === 'CONCLUIDA'
-                                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                                        : 'border-slate-200 bg-slate-100 text-slate-600'
-                              }`}
+                              className={`inline-flex items-center rounded-lg border px-3 py-1.5 text-xs font-bold shadow-sm ${actividad.estadoClase}`}
                             >
-                              {estadoEtiqueta}
+                              {actividad.estadoEtiqueta}
                             </span>
                           </td>
 
                           <td className="px-8 py-5">
                             <div className="flex items-center">
-                              <span className={`mr-2.5 inline-flex h-3.5 w-3.5 rounded-full ${semaforoColor}`} />
-                              <span className="text-sm font-bold text-slate-700">{semaforoEtiqueta}</span>
+                              <span className={`mr-2.5 inline-flex h-3.5 w-3.5 rounded-full ${actividad.semaforoClase}`} />
+                              <span className="text-sm font-bold text-slate-700">{actividad.semaforoEtiqueta}</span>
                             </div>
                           </td>
 
@@ -370,8 +337,7 @@ function JefaActividadesContent() {
                             </button>
                           </td>
                         </tr>
-                      );
-                    })
+                    ))
                   )}
                 </tbody>
               </table>

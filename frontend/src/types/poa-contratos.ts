@@ -8,6 +8,7 @@ export interface CabeceraPOAData {
   // --- Datos Visuales ---
   anioFiscal: string; // Ej: "2026"
   estadoActual: EstadoPOA; 
+  estadoEtiqueta: string;
   mensajeDevolucion?: string; // Si está DEVUELTA, mostrar por qué
   
   // --- Banderas Lógicas (Tú las calculas basado en el estado) ---

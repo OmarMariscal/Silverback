@@ -22,6 +22,7 @@ import {
   adaptarDetalleBancoUI,
   adaptarSubactividadesSugeridasUI,
   adaptarFormularioACrearDTO,
+  adaptarPoaActual,
 } from '../services/poa.adapter';
 import * as PoaApi from '../types/poa-api';
 
@@ -51,7 +52,7 @@ interface PoaState {
   // --- D. ACCIONES DE PANTALLAS 2 A 5 (100% de funciones conectadas) ---
   cargarBancoActividades: () => Promise<void>;
   cargarAuditores: () => Promise<void>;
-  seleccionarActividadBanco: (idBanco: string) => Promise<void>;
+  seleccionarActividadBanco: (idBanco: string) => Promise<Partial<DatosFormularioFicha> | null>;
   crearNuevaActividad: (datosForm: DatosFormularioFicha, idBanco?: string | null) => Promise<string | null>;
   editarFichaTecnica: (actividadId: string, datosForm: Partial<DatosFormularioFicha>) => Promise<boolean>;
   obtenerSubactividadesSugeridas: (idBanco: string) => Promise<void>;
@@ -79,9 +80,13 @@ export const usePoaStore = create<PoaState>((set, get) => ({
   cargarPoaInicial: async () => {
     set({ cargandoInicial: true, erroresValidacionPresentar: null, mensajeError: null });
     try {
-      const { poaId, cabecera, actividades } = await poaService.obtenerMiPoaActual();
-      
-      set({ poaId, cabecera, actividades, cargandoInicial: false });
+      const adaptado = adaptarPoaActual(await poaService.obtenerMiPoaActual());
+      set({
+        poaId: adaptado.poaId,
+        cabecera: adaptado.cabecera,
+        actividades: adaptado.actividades,
+        cargandoInicial: false,
+      });
     } catch (error) {
       console.error("Error al cargar el POA inicial", error);
       set({ cargandoInicial: false, mensajeError: 'No se pudo cargar el POA. Intenta nuevamente.' });
@@ -145,6 +150,7 @@ export const usePoaStore = create<PoaState>((set, get) => ({
         cabecera: state.cabecera ? { 
           ...state.cabecera, 
           estadoActual: "EN_REVISION", 
+          estadoEtiqueta: "En revisión",
           puedeEditar: false, 
           estaCargando: false 
         } : null,
@@ -187,6 +193,7 @@ export const usePoaStore = create<PoaState>((set, get) => ({
         cabecera: state.cabecera ? { 
           ...state.cabecera, 
           estadoActual: "BORRADOR", 
+          estadoEtiqueta: "Borrador",
           puedeEditar: true, 
           estaCargando: false 
         } : null,
@@ -240,9 +247,12 @@ export const usePoaStore = create<PoaState>((set, get) => ({
   seleccionarActividadBanco: async (idBanco: string) => {
     try {
       const res = await poaService.obtenerDetalleBancoActividad(idBanco);
-      set({ actividadBancoSeleccionada: adaptarDetalleBancoUI(res) });
+      const actividad = adaptarDetalleBancoUI(res);
+      set({ actividadBancoSeleccionada: actividad });
+      return actividad;
     } catch (error) {
       console.error("Error al obtener detalle del banco", error);
+      return null;
     }
   },
 
