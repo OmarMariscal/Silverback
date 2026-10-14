@@ -18,6 +18,7 @@ export const ModalEditarFichaTecnica: React.FC<FormularioFichaTecnicaProps> = ({
   listaAuditoresDisponibles,
   estaGuardando,
   onContinuarASubactividades,
+  onGuardar,
   onCancelar,
 }) => {
   const [formData, setFormData] = useState(() => crearFormularioInicial(valoresIniciales));
@@ -227,6 +228,16 @@ export const ModalEditarFichaTecnica: React.FC<FormularioFichaTecnicaProps> = ({
             Cancelar
           </button>
           
+          {onGuardar && (
+            <button
+              type="button"
+              onClick={() => void onGuardar(formData)}
+              disabled={estaGuardando}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-lg flex items-center disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {estaGuardando ? 'Guardando...' : 'Guardar'}
+            </button>
+          )}
           <button type="submit" form="form-ficha-tecnica" disabled={estaGuardando} className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-lg flex items-center disabled:opacity-50">
             {estaGuardando ? 'Guardando...' : 'Continuar a Sub-actividades'}
           </button>

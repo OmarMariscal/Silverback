@@ -186,7 +186,7 @@ export const usePoaStore = create<PoaState>((set, get) => ({
       set(state => ({
         cabecera: state.cabecera ? { 
           ...state.cabecera, 
-          estadoActual: "SIN_ENVIAR", 
+          estadoActual: "BORRADOR", 
           puedeEditar: true, 
           estaCargando: false 
         } : null,

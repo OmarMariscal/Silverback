@@ -22,7 +22,7 @@ import * as PoaApi from '../types/poa-api';
 export const adaptarPoaActual = (
   datosAPI: PoaApi.PoaActualDto
 ): { cabecera: CabeceraPOAData, actividades: TarjetaActividadPOAData[] } => {
-  const estadosValidos: EstadoPOA[] = ['SIN_ENVIAR', 'BORRADOR', 'EN_REVISION', 'DEVUELTA', 'ACEPTADA'];
+  const estadosValidos: EstadoPOA[] = ['BORRADOR', 'EN_REVISION', 'DEVUELTA', 'AUTORIZADA'];
   const estadoActual = estadosValidos.find((estado) => estado === datosAPI.estado);
 
   if (!estadoActual) {
@@ -32,14 +32,14 @@ export const adaptarPoaActual = (
   const cabeceraAdaptada: CabeceraPOAData = {
     anioFiscal: datosAPI.anio_fiscal.toString(),
     estadoActual,
-    puedeEditar: estadoActual === 'SIN_ENVIAR' || estadoActual === 'BORRADOR' || estadoActual === 'DEVUELTA',
+    puedeEditar: estadoActual === 'BORRADOR' || estadoActual === 'DEVUELTA',
     estaCargando: false,
   };
 
   const actividadesAdaptadas: TarjetaActividadPOAData[] = datosAPI.actividades_resumen.map((act) => ({
     idActividad: act.id,
     titulo: act.titulo,
-    participacionGlobalVisible: `${act.participacion_global}%`,
+    participacionGlobal: act.participacion_global,
     // Ahora toma la bandera 'es_rezagado' individual de cada actividad del backend
     esRezagada: act.es_rezagado ?? false,
 
@@ -50,7 +50,7 @@ export const adaptarPoaActual = (
     
     subactividades: [],
     estaCargandoDetalles: false,
-    ocultarBotonBorrar: estadoActual === 'EN_REVISION' || estadoActual === 'ACEPTADA',
+    ocultarBotonBorrar: estadoActual === 'EN_REVISION' || estadoActual === 'AUTORIZADA',
   }));
 
   return { cabecera: cabeceraAdaptada, actividades: actividadesAdaptadas };
@@ -85,6 +85,7 @@ export const adaptarFichaTecnicaUI = (
     metaProyecto: datosAPI.meta_del_proyecto,
     indicadores: datosAPI.indicadores,
     equipoAuditor: datosAPI.equipo_auditor.map((aud) => ({
+      id: aud.id,
       nombreCompleto: aud.nombre,
       cargoVisible: "Auditor Asignado"
     }))

@@ -2,7 +2,7 @@
 // La forma en que Rogelio y yo nos vamos a comunicar para pasarle datos a los componentes del POA y recibir de vuelta los cambios que el usuario hizo en cada apartado.
 // En palabras sencillas: Este archivo es como un "contrato" entre la UI y el resto de la app. Define qué datos se esperan, cómo se llaman y qué funciones se pueden invocar. Así, cuando Rogelio construye los componentes, sabe exactamente qué información necesita y cómo enviarla de vuelta al store o a los servicios.
 
-export type EstadoPOA = "SIN_ENVIAR" | "BORRADOR" | "EN_REVISION" | "DEVUELTA" | "ACEPTADA";
+export type EstadoPOA = "BORRADOR" | "EN_REVISION" | "DEVUELTA" | "AUTORIZADA";
 
 export interface CabeceraPOAData {
   // --- Datos Visuales ---
@@ -11,13 +11,14 @@ export interface CabeceraPOAData {
   mensajeDevolucion?: string; // Si está DEVUELTA, mostrar por qué
   
   // --- Banderas Lógicas (Tú las calculas basado en el estado) ---
-  puedeEditar: boolean; // true si es SIN_ENVIAR o DEVUELTA. Rogelio usará esto para ocultar botones.
+  puedeEditar: boolean; // true si es BORRADOR o DEVUELTA. Rogelio usará esto para ocultar botones.
   estaCargando: boolean; // Para que Rogelio ponga un spinner en el botón al enviar
   
 }
 
 // Estructura para listar a los auditores en la tarjeta expandida
 export interface EquipoAuditorItem {
+  id: string;
   nombreCompleto: string;
   cargoVisible: string; // Ej: "Auditor Sr." o "Auxiliar"
 }
@@ -45,7 +46,7 @@ export interface TarjetaActividadPOAProps {
   // --- Datos de la Actividad General ---
   idActividad: string; // UUID
   titulo: string;
-  participacionGlobalVisible: string; // Ej: "100% Contralor"
+  participacionGlobal: number;
   esRezagada: boolean; // Se lee esto del backend para que Rogelio pinte el icono rojo de fantasma
   
   // --- Fechas del Padre (que pediste al backend) ---
@@ -64,7 +65,8 @@ export interface TarjetaActividadPOAProps {
   estaCargandoDetalles: boolean;
   
   // --- Permisos de UI ---
-  ocultarBotonBorrar: boolean; // Habilitado solo si el POA está SIN_ENVIAR
+  puedeEditar: boolean;
+  ocultarBotonBorrar: boolean; // Habilitado solo si el POA está editable
   
   // --- Eventos ---
   onBorrarActividad: () => void; // Llama a DELETE actividades/id
@@ -75,7 +77,7 @@ export interface TarjetaActividadPOAProps {
 
 export type TarjetaActividadPOAData = Omit<
   TarjetaActividadPOAProps,
-  'onBorrarActividad' | 'onConfigurarFichaTecnica' | 'onExpandirTarjeta'
+  'puedeEditar' | 'onBorrarActividad' | 'onConfigurarFichaTecnica' | 'onExpandirTarjeta'
 >;
 
 export interface BancoActividadItemProps {
@@ -112,7 +114,8 @@ export interface FormularioFichaTecnicaProps {
   
   // --- Eventos ---
   // Cuando Rogelio valide que el formulario está lleno, avisa y pasa el objeto con los textos:
-  onContinuarASubactividades: (datosIngresados: DatosFormularioFicha) => void; 
+  onContinuarASubactividades: (datosIngresados: DatosFormularioFicha) => void | Promise<void>;
+  onGuardar?: (datosIngresados: DatosFormularioFicha) => void | Promise<void>;
   onCancelar: () => void; // Volver al POA
 }
 

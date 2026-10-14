@@ -86,6 +86,7 @@ export class PrismaActividadQueryRepository implements IActividadesQueryReposito
           select: {
             auditor: {
               select: {
+                id: true,
                 usuario: { select: { id: true, nombre_completo: true } },
               },
             },
@@ -106,7 +107,7 @@ export class PrismaActividadQueryRepository implements IActividadesQueryReposito
       indicadores: raw.indicadores ?? '',
 
       equipoAuditor: raw.auditores.map(({ auditor }) => ({
-        id: auditor.usuario.id,
+        id: auditor.id,
         nombre: auditor.usuario.nombre_completo,
       })),
     };

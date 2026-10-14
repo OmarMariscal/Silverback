@@ -73,7 +73,7 @@ export default function ContralorPoaPage() {
         objetivosParticulares: actividadActiva.fichaTecnica?.objetivosParticulares || '',
         metaProyecto: actividadActiva.fichaTecnica?.metaProyecto || '',
         indicadores: actividadActiva.fichaTecnica?.indicadores || '',
-        auditoresSeleccionadosIds: [],
+        auditoresSeleccionadosIds: actividadActiva.fichaTecnica?.equipoAuditor.map((auditor) => auditor.id) || [],
       }
     : undefined;
 
@@ -109,6 +109,25 @@ export default function ContralorPoaPage() {
       const exito = await editarFichaTecnica(actividadActivaId, datosIngresados);
       if (exito) setModalFichaAbierto(false);
       else alert('Error al guardar la Ficha Técnica.');
+    } finally {
+      setEstaGuardando(false);
+    }
+  };
+
+  const handleContinuarASubactividades = async (datosIngresados: DatosFormularioFicha) => {
+    if (!actividadActivaId) return;
+    setEstaGuardando(true);
+    try {
+      const exito = await editarFichaTecnica(actividadActivaId, datosIngresados);
+      if (!exito) {
+        alert('Error al guardar la Ficha Técnica.');
+        return;
+      }
+
+      await expandirTarjeta(actividadActivaId);
+      setActividadActivaTitulo(datosIngresados.titulo);
+      setModalFichaAbierto(false);
+      setModalSubactividadesAbierto(true);
     } finally {
       setEstaGuardando(false);
     }
@@ -247,7 +266,9 @@ export default function ContralorPoaPage() {
                   cabecera.estadoActual === 'EN_REVISION' ? 'bg-amber-500' : 'bg-yellow-500'
                 }`}
               />
-              <span className="text-sm font-semibold">Estado: {cabecera.estadoActual.replace('_', ' ')}</span>
+              <span className="text-sm font-semibold">
+                Estado: {cabecera.estadoActual === 'AUTORIZADA' ? 'Autorizada' : cabecera.estadoActual.replace('_', ' ')}
+              </span>
             </div>
             {cabecera.puedeEditar ? (
               <button
@@ -298,6 +319,7 @@ export default function ContralorPoaPage() {
             <TarjetaActividadPOA
               key={actividad.idActividad}
               {...actividad}
+              puedeEditar={cabecera.puedeEditar}
               consecutivoIndex={index}
               onAbrirModalSubactividades={handleAbrirModalSubactividades}
               onConfigurarFichaTecnica={() => handleAbrirModalFichaTecnica(actividad.idActividad)}
@@ -325,7 +347,8 @@ export default function ContralorPoaPage() {
             listaAuditoresDisponibles={auditoresDisponibles}
             estaGuardando={estaGuardando}
             onCancelar={() => setModalFichaAbierto(false)}
-            onContinuarASubactividades={handleGuardarFichaTecnica}
+            onGuardar={handleGuardarFichaTecnica}
+            onContinuarASubactividades={handleContinuarASubactividades}
           />
         )}
 
