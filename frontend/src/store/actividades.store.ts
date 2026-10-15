@@ -4,10 +4,15 @@
 
 import { create } from 'zustand';
 import { actividadesService } from '@/services/actividades.service';
-import { ActividadesDirectorioQuery, ActividadesDirectorioResponse } from '@/types/actividades-api';
-import { ActividadesDirectorioFiltros } from '@/types/actividades-contratos';
-import { CentroDataDto } from '@/types/poa-api';
+import type { ActividadesDirectorioQuery } from '@/types/actividades-api';
+import type {
+  ActividadDirectorioUI,
+  ActividadResumenUI,
+  ActividadesDirectorioFiltros,
+  CentroUI,
+} from '@/types/actividades-contratos';
 import { obtenerRolActivo } from '@/services/api';
+import { adaptarCentrosUI, adaptarDirectorioActividadesUI, adaptarResumenActividadUI } from '@/services/actividades.adapter';
 
 const filtrosIniciales: ActividadesDirectorioFiltros = {
   busqueda: '',
@@ -19,8 +24,12 @@ const filtrosIniciales: ActividadesDirectorioFiltros = {
 };
 
 interface ActividadesState {
-  actividades: ActividadesDirectorioResponse['data'];
-  centros: CentroDataDto[];
+  actividades: ActividadDirectorioUI[];
+  centros: CentroUI[];
+  actividadDetalle: ActividadResumenUI | null;
+  actividadDetalleSolicitadaId: string | null;
+  cargandoDetalle: boolean;
+  errorDetalle: string | null;
   filtros: ActividadesDirectorioFiltros;
   paginaActual: number;
   totalPaginas: number;
@@ -30,6 +39,7 @@ interface ActividadesState {
   mensajeError: string | null;
   cargarCentros: () => Promise<void>;
   cargarDirectorio: (busqueda?: string) => Promise<void>;
+  cargarResumenActividad: (actividadId: string) => Promise<void>;
   actualizarFiltro: (filtro: keyof ActividadesDirectorioFiltros, valor: string) => void;
   cambiarPagina: (pagina: number) => void;
   limpiarFiltros: () => void;
@@ -38,6 +48,10 @@ interface ActividadesState {
 export const useActividadesStore = create<ActividadesState>((set, get) => ({
   actividades: [],
   centros: [],
+  actividadDetalle: null,
+  actividadDetalleSolicitadaId: null,
+  cargandoDetalle: false,
+  errorDetalle: null,
   filtros: filtrosIniciales,
   paginaActual: 1,
   totalPaginas: 1,
@@ -49,8 +63,9 @@ export const useActividadesStore = create<ActividadesState>((set, get) => ({
   cargarCentros: async () => {
     try {
       const respuesta = await actividadesService.obtenerCentros();
-      set({ centros: respuesta.data });
-    } catch {
+      set({ centros: adaptarCentrosUI(respuesta.data) });
+    } catch (error: unknown) {
+      console.error('No se pudo cargar el catálogo de centros.', error);
       set({ mensajeError: 'No se pudo cargar el catálogo de centros.' });
     }
   },
@@ -73,9 +88,39 @@ export const useActividadesStore = create<ActividadesState>((set, get) => ({
     set({ estaCargando: true, mensajeError: null });
     try {
       const respuesta = await actividadesService.obtenerDirectorio(query);
-      set({ actividades: respuesta.data, paginaActual: respuesta.meta.pagina_actual, totalPaginas: respuesta.meta.total_paginas, totalRegistros: respuesta.meta.total_registros, limite: respuesta.meta.limite, estaCargando: false });
-    } catch {
+      set({
+        actividades: adaptarDirectorioActividadesUI(respuesta.data),
+        paginaActual: respuesta.meta.pagina_actual,
+        totalPaginas: respuesta.meta.total_paginas,
+        totalRegistros: respuesta.meta.total_registros,
+        limite: respuesta.meta.limite,
+        estaCargando: false,
+      });
+    } catch (error: unknown) {
+      console.error('No se pudo cargar el directorio de actividades.', error);
       set({ estaCargando: false, mensajeError: 'No se pudo cargar el directorio de actividades.' });
+    }
+  },
+
+  cargarResumenActividad: async (actividadId) => {
+    set({
+      actividadDetalle: null,
+      actividadDetalleSolicitadaId: actividadId,
+      cargandoDetalle: true,
+      errorDetalle: null,
+    });
+    try {
+      const respuesta = await actividadesService.obtenerResumen(actividadId);
+      if (get().actividadDetalleSolicitadaId !== actividadId) return;
+      set({
+        actividadDetalle: adaptarResumenActividadUI(respuesta),
+        cargandoDetalle: false,
+      });
+    } catch (error: unknown) {
+      console.error('No se pudo cargar el resumen de la actividad.', error);
+      if (get().actividadDetalleSolicitadaId === actividadId) {
+        set({ cargandoDetalle: false, errorDetalle: 'No se pudo cargar el detalle de la actividad.' });
+      }
     }
   },
 

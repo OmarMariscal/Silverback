@@ -1,12 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useActividadesStore } from '@/store/actividades.store';
-import { useLayoutStore } from '@/store/layout.store';
-import { adaptarDirectorioActividadesUI } from '@/services/actividades.adapter';
-import type { ActividadDirectorioItemProps } from '@/types/actividades-contratos';
-import { obtenerRolActivo } from '@/services/api';
+import type { ActividadDirectorioUI } from '@/types/actividades-contratos';
 import RoleShell from '@/modules/perfiles/role-shell';
 
 const estadoLabels: Record<string, string> = {
@@ -28,71 +25,43 @@ const semaforoLabels: Record<string, string> = {
   GRIS: 'N/A',
 };
 
-const semaforoColors: Record<string, string> = {
-  A_TIEMPO: 'bg-emerald-500',
-  VERDE: 'bg-emerald-500',
-  PRECAUCION: 'bg-amber-400',
-  AMARILLO: 'bg-amber-400',
-  CRITICO: 'bg-red-500',
-  ROJO: 'bg-red-500',
-  GRIS: 'bg-slate-300',
-};
-
-function fechaCorta(fecha: string) {
-  return new Intl.DateTimeFormat('es-MX', { month: 'short', year: 'numeric' }).format(new Date(fecha));
-}
-
-function FilaActividad({ actividad, onSeleccionar }: ActividadDirectorioItemProps) {
-  const estado = actividad.estado_operativo.codigo;
-  const esVistaJefatura = actividad.asignacion.tipo_vista === 'JEFA';
-  const asignacionPrincipal = esVistaJefatura
-    ? actividad.asignacion.centro_clave || 'Sin centro'
-    : `${actividad.asignacion.participacion_porcentaje ?? 0}%`;
-  const asignacionSecundaria = esVistaJefatura
-    ? actividad.asignacion.contralor || 'Sin contralor'
-    : actividad.asignacion.auditor_apoyo || 'Sin auditores asignados';
+function FilaActividad({
+  actividad,
+  onSeleccionar,
+}: {
+  actividad: ActividadDirectorioUI;
+  onSeleccionar: (id: string) => void;
+}) {
 
   return (
     <tr onClick={() => onSeleccionar(actividad.id)} className="group cursor-pointer transition hover:bg-indigo-50/40">
       <td className="px-6 py-5">
-        <strong className="block text-base text-slate-800">{actividad.identificador || 'Sin asignar'}</strong>
+        <strong className="block text-base text-slate-800">{actividad.identificador}</strong>
         <span
           className={`mt-2 inline-block rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-widest ${
-            actividad.tipo === 'AUDITORIA' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-800'
+            actividad.tipoActividad === 'AUDITORIA' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-800'
           }`}
         >
-          {actividad.tipo === 'AUDITORIA' ? 'Auditoría' : 'Revisión'}
+          {actividad.tipoEtiqueta}
         </span>
       </td>
       <td className="max-w-lg px-6 py-5">
         <strong className="block truncate text-base text-slate-800 group-hover:text-indigo-700">{actividad.titulo}</strong>
-        <span className="mt-2 block text-xs text-slate-500">Término POA: {fechaCorta(actividad.fecha_termino)}</span>
+        <span className="mt-2 block text-xs text-slate-500">Término POA: {actividad.fechaTermino}</span>
       </td>
       <td className="px-6 py-5 text-sm">
-        <strong className="block text-slate-700">{asignacionPrincipal}</strong>
-        <span className="mt-1 block max-w-56 truncate text-xs text-slate-500">{asignacionSecundaria}</span>
+        <strong className="block text-slate-700">{actividad.asignacionPrincipal}</strong>
+        <span className="mt-1 block max-w-56 truncate text-xs text-slate-500">{actividad.asignacionSecundaria}</span>
       </td>
       <td className="px-6 py-5">
-        <span
-          className={`inline-flex rounded-lg border px-3 py-1.5 text-xs font-bold ${
-            estado === 'DEVUELTA'
-              ? 'border-red-200 bg-red-50 text-red-700'
-              : estado === 'EN_PROGRESO'
-                ? 'border-blue-200 bg-blue-50 text-blue-700'
-                : estado === 'EN_REVISION'
-                  ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
-                  : estado === 'CONCLUIDA'
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                    : 'border-slate-200 bg-slate-50 text-slate-700'
-          }`}
-        >
-          {actividad.estado_operativo.etiqueta || estadoLabels[estado]}
+        <span className={`inline-flex rounded-lg border px-3 py-1.5 text-xs font-bold ${actividad.estadoClase}`}>
+          {actividad.estadoEtiqueta}
         </span>
       </td>
       <td className="px-6 py-5">
         <span className="flex items-center gap-2 text-sm font-bold text-slate-700">
-          <span className={`h-3 w-3 rounded-full ${semaforoColors[actividad.semaforo] || semaforoColors.GRIS}`} />
-          {semaforoLabels[actividad.semaforo] || actividad.semaforo}
+          <span className={`h-3 w-3 rounded-full ${actividad.semaforoClase}`} />
+          {actividad.semaforoEtiqueta}
         </span>
       </td>
       <td className="px-6 py-5 text-right text-xl text-slate-400 group-hover:text-indigo-600">›</td>
@@ -100,12 +69,11 @@ function FilaActividad({ actividad, onSeleccionar }: ActividadDirectorioItemProp
   );
 }
 
-export default function ContralorActividadesPage() {
+function ContralorActividadesContent() {
   const router = useRouter();
-  const setTituloPantalla = useLayoutStore((state) => state.setTituloPantalla);
+  const searchParams = useSearchParams();
   const {
     actividades,
-    centros,
     filtros,
     paginaActual,
     totalPaginas,
@@ -113,7 +81,6 @@ export default function ContralorActividadesPage() {
     limite,
     estaCargando,
     mensajeError,
-    cargarCentros,
     cargarDirectorio,
     actualizarFiltro,
     cambiarPagina,
@@ -122,12 +89,11 @@ export default function ContralorActividadesPage() {
   const [busqueda, setBusqueda] = useState(filtros.busqueda);
 
   useEffect(() => {
-    setTituloPantalla('Directorio de Actividades del Contralor');
-  }, [setTituloPantalla]);
-
-  useEffect(() => {
-    cargarCentros();
-  }, [cargarCentros]);
+    const estado = searchParams.get('estado_flujo') ?? '';
+    const semaforo = searchParams.get('semaforo') ?? '';
+    actualizarFiltro('estadoFlujo', Object.hasOwn(estadoLabels, estado) ? estado : '');
+    actualizarFiltro('semaforo', ['A_TIEMPO', 'CRITICO', 'PRECAUCION'].includes(semaforo) ? semaforo : '');
+  }, [searchParams, actualizarFiltro]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -140,7 +106,6 @@ export default function ContralorActividadesPage() {
   useEffect(() => {
     cargarDirectorio();
   }, [
-    filtros.centroUuid,
     filtros.tipoActividad,
     filtros.estadoFlujo,
     filtros.semaforo,
@@ -153,20 +118,15 @@ export default function ContralorActividadesPage() {
     () =>
       [
         filtros.busqueda ? `Búsqueda: ${filtros.busqueda}` : '',
-        filtros.centroUuid ? `Centro: ${centros.find((centro) => centro.id === filtros.centroUuid)?.clave || 'Seleccionado'}` : '',
         filtros.tipoActividad ? `Tipo: ${filtros.tipoActividad === 'AUDITORIA' ? 'Auditoría' : 'Revisión'}` : '',
         filtros.estadoFlujo ? `Estado: ${estadoLabels[filtros.estadoFlujo]}` : '',
         filtros.semaforo ? `Semáforo: ${semaforoLabels[filtros.semaforo]}` : '',
       ].filter(Boolean),
-    [filtros, centros]
+    [filtros]
   );
 
-  const esVistaJefatura = obtenerRolActivo() === 'JEFA';
-
-  const seleccionarFiltro = (nombre: 'centroUuid' | 'tipoActividad' | 'estadoFlujo' | 'semaforo', valor: string) =>
+  const seleccionarFiltro = (nombre: 'tipoActividad' | 'estadoFlujo' | 'semaforo', valor: string) =>
     actualizarFiltro(nombre, valor);
-
-  const filas = adaptarDirectorioActividadesUI(actividades, (id) => router.push(`/actividades/${id}`));
 
   return (
     <RoleShell
@@ -185,18 +145,11 @@ export default function ContralorActividadesPage() {
               className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
             />
             <select
-              value={esVistaJefatura ? filtros.centroUuid : ''}
-              disabled={!esVistaJefatura}
-              onChange={(event) => seleccionarFiltro('centroUuid', event.target.value)}
+              value=""
+              disabled
               className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <option value="">{esVistaJefatura ? 'Todos los Centros' : 'Centro único asignado'}</option>
-              {esVistaJefatura &&
-                centros.map((centro) => (
-                  <option key={centro.id} value={centro.id}>
-                    {centro.clave}
-                  </option>
-                ))}
+              <option value="">Centro único asignado</option>
             </select>
             <select
               value={filtros.tipoActividad}
@@ -252,6 +205,7 @@ export default function ContralorActividadesPage() {
                 onClick={() => {
                   limpiarFiltros();
                   setBusqueda('');
+                  router.replace('/contralor/actividades');
                 }}
                 className="text-xs font-bold text-slate-400 underline hover:text-indigo-600"
               >
@@ -267,7 +221,7 @@ export default function ContralorActividadesPage() {
           <table className="w-full min-w-[1100px] text-left">
             <thead className="border-b border-slate-200 bg-slate-50">
               <tr>
-                {['Identificador', 'Actividad y Fechas', esVistaJefatura ? 'Centro y Contralor' : 'Porcentaje de Participación', 'Estado Operativo', 'Semáforo', ''].map(
+                {['Identificador', 'Actividad y Fechas', 'Porcentaje de Participación', 'Estado Operativo', 'Semáforo', ''].map(
                   (titulo) => (
                     <th key={titulo} className="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                       {titulo}
@@ -283,8 +237,14 @@ export default function ContralorActividadesPage() {
                     Cargando actividades...
                   </td>
                 </tr>
-              ) : filas.length ? (
-                filas.map((fila) => <FilaActividad key={fila.actividad.id} {...fila} />)
+              ) : actividades.length ? (
+                actividades.map((actividad) => (
+                  <FilaActividad
+                    key={actividad.id}
+                    actividad={actividad}
+                    onSeleccionar={(id) => router.push(`/contralor/actividades/${id}`)}
+                  />
+                ))
               ) : (
                 <tr>
                   <td colSpan={6} className="p-12 text-center text-sm text-slate-500">
@@ -321,5 +281,13 @@ export default function ContralorActividadesPage() {
         </footer>
       </div>
     </RoleShell>
+  );
+}
+
+export default function ContralorActividadesPage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-slate-500">Cargando directorio...</p>}>
+      <ContralorActividadesContent />
+    </Suspense>
   );
 }

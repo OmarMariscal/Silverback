@@ -1,37 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { FormularioFichaTecnicaProps, DatosFormularioFicha } from '@/types/poa-contratos';
+
+const crearFormularioInicial = (
+  valoresIniciales?: DatosFormularioFicha,
+): DatosFormularioFicha => ({
+  titulo: valoresIniciales?.titulo || '',
+  justificacion: valoresIniciales?.justificacion || '',
+  objetivoGeneral: valoresIniciales?.objetivoGeneral || '',
+  objetivosParticulares: valoresIniciales?.objetivosParticulares || '',
+  metaProyecto: valoresIniciales?.metaProyecto || '',
+  indicadores: valoresIniciales?.indicadores || '',
+  auditoresSeleccionadosIds: valoresIniciales?.auditoresSeleccionadosIds || [],
+});
 
 export const ModalEditarFichaTecnica: React.FC<FormularioFichaTecnicaProps> = ({
   valoresIniciales,
   listaAuditoresDisponibles,
   estaGuardando,
   onContinuarASubactividades,
+  onGuardar,
   onCancelar,
 }) => {
-  const [formData, setFormData] = useState<DatosFormularioFicha>({
-    titulo: '',
-    justificacion: '',
-    objetivoGeneral: '',
-    objetivosParticulares: '',
-    metaProyecto: '',
-    indicadores: '',
-    auditoresSeleccionadosIds: [],
-  });
-
-  // Cargar datos iniciales
-  useEffect(() => {
-    if (valoresIniciales) {
-      setFormData({
-        titulo: valoresIniciales.titulo || '',
-        justificacion: valoresIniciales.justificacion || '',
-        objetivoGeneral: valoresIniciales.objetivoGeneral || '',
-        objetivosParticulares: valoresIniciales.objetivosParticulares || '',
-        metaProyecto: valoresIniciales.metaProyecto || '',
-        indicadores: valoresIniciales.indicadores || '',
-        auditoresSeleccionadosIds: valoresIniciales.auditoresSeleccionadosIds || [],
-      });
-    }
-  }, [valoresIniciales]);
+  const [formData, setFormData] = useState(() => crearFormularioInicial(valoresIniciales));
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -59,7 +49,6 @@ export const ModalEditarFichaTecnica: React.FC<FormularioFichaTecnicaProps> = ({
     e.preventDefault();
     onContinuarASubactividades({
       ...formData,
-      ...( { totalParticipantes, porcentajePorAuditor: porcentajeCalculadoNumero } as any )
     });
   };
 
@@ -239,6 +228,16 @@ export const ModalEditarFichaTecnica: React.FC<FormularioFichaTecnicaProps> = ({
             Cancelar
           </button>
           
+          {onGuardar && (
+            <button
+              type="button"
+              onClick={() => void onGuardar(formData)}
+              disabled={estaGuardando}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-lg flex items-center disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {estaGuardando ? 'Guardando...' : 'Guardar'}
+            </button>
+          )}
           <button type="submit" form="form-ficha-tecnica" disabled={estaGuardando} className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-lg flex items-center disabled:opacity-50">
             {estaGuardando ? 'Guardando...' : 'Continuar a Sub-actividades'}
           </button>

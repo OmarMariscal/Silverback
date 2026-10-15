@@ -7,7 +7,6 @@ import { ModalSubactividades } from '@/components/ui/ModalSubactividades';
 import { ModalEditarFichaTecnica } from '@/components/ui/ModalFichaTecnica';
 import { ModalBancoActividades } from '@/components/ui/ModalBancoActividades';
 import type { SubactividadFilaForm, SubactividadFilaProps, DatosFormularioFicha } from '@/types/poa-contratos';
-import { useLayoutStore } from '@/store/layout.store';
 import RoleShell from '@/modules/perfiles/role-shell';
 
 function propsAFilaForm(sub: SubactividadFilaProps): SubactividadFilaForm {
@@ -23,9 +22,14 @@ function propsAFilaForm(sub: SubactividadFilaProps): SubactividadFilaForm {
 
 export default function ContralorPoaPage() {
   const cabecera = usePoaStore((state) => state.cabecera);
+  const poaMensajeError = usePoaStore((state) => state.mensajeError);
   const actividades = usePoaStore((state) => state.actividades);
   const cargandoInicial = usePoaStore((state) => state.cargandoInicial);
   const cargarPoaInicial = usePoaStore((state) => state.cargarPoaInicial);
+  const enviarPoaARevision = usePoaStore((state) => state.enviarPoaARevision);
+  const cancelarEnvioPoa = usePoaStore((state) => state.cancelarEnvioPoa);
+  const erroresValidacionPresentar = usePoaStore((state) => state.erroresValidacionPresentar);
+  const limpiarErroresValidacion = usePoaStore((state) => state.limpiarErroresValidacion);
 
   const sugerenciasSubactividades = usePoaStore((state) => state.sugerenciasSubactividades);
   const sincronizarSubactividades = usePoaStore((state) => state.sincronizarSubactividades);
@@ -51,12 +55,6 @@ export default function ContralorPoaPage() {
   const [modalFichaAbierto, setModalFichaAbierto] = useState(false);
 
   useEffect(() => {
-    useLayoutStore.getState().setTituloPantalla(
-      cabecera ? `Plan Operativo Anual ${cabecera.anioFiscal}` : 'Plan Operativo Anual 2026'
-    );
-  }, [cabecera]);
-
-  useEffect(() => {
     cargarPoaInicial();
     cargarAuditores();
   }, [cargarPoaInicial, cargarAuditores]);
@@ -75,11 +73,12 @@ export default function ContralorPoaPage() {
         objetivosParticulares: actividadActiva.fichaTecnica?.objetivosParticulares || '',
         metaProyecto: actividadActiva.fichaTecnica?.metaProyecto || '',
         indicadores: actividadActiva.fichaTecnica?.indicadores || '',
-        auditoresSeleccionadosIds: [],
+        auditoresSeleccionadosIds: actividadActiva.fichaTecnica?.equipoAuditor.map((auditor) => auditor.id) || [],
       }
     : undefined;
 
   const handleAbrirModalSubactividades = (idActividad: string, titulo: string) => {
+    limpiarErroresValidacion();
     setActividadActivaId(idActividad);
     setActividadActivaTitulo(titulo);
     setModalSubactividadesAbierto(true);
@@ -115,6 +114,25 @@ export default function ContralorPoaPage() {
     }
   };
 
+  const handleContinuarASubactividades = async (datosIngresados: DatosFormularioFicha) => {
+    if (!actividadActivaId) return;
+    setEstaGuardando(true);
+    try {
+      const exito = await editarFichaTecnica(actividadActivaId, datosIngresados);
+      if (!exito) {
+        alert('Error al guardar la Ficha Técnica.');
+        return;
+      }
+
+      await expandirTarjeta(actividadActivaId);
+      setActividadActivaTitulo(datosIngresados.titulo);
+      setModalFichaAbierto(false);
+      setModalSubactividadesAbierto(true);
+    } finally {
+      setEstaGuardando(false);
+    }
+  };
+
   const [wizardCreacion, setWizardCreacion] = useState<{
     paso: number;
     fichaData: DatosFormularioFicha | null;
@@ -128,8 +146,8 @@ export default function ContralorPoaPage() {
   };
 
   const seleccionarDelBanco = async (idBanco: string) => {
-    await seleccionarActividadBanco(idBanco);
-    const detalle = usePoaStore.getState().actividadBancoSeleccionada;
+    const detalle = await seleccionarActividadBanco(idBanco);
+    if (!detalle) return;
     setWizardCreacion({
       paso: 2,
       bancoId: idBanco,
@@ -195,11 +213,28 @@ export default function ContralorPoaPage() {
     }
   };
 
-  if (cargandoInicial || !cabecera) {
+  if (cargandoInicial) {
     return (
       <RoleShell perfil="CONTRALOR" modulo="poa" title="Plan Operativo Anual" subtitle="Cargando información del POA...">
         <div className="flex items-center justify-center py-20 text-lg font-bold text-indigo-600 animate-pulse">
           Cargando información del POA...
+        </div>
+      </RoleShell>
+    );
+  }
+
+  if (!cabecera) {
+    return (
+      <RoleShell perfil="CONTRALOR" modulo="poa" title="Plan Operativo Anual" subtitle="Consulta y administra el POA de tu centro.">
+        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-rose-800">
+          <p>{poaMensajeError || 'No hay un POA disponible para esta sesión.'}</p>
+          <button
+            type="button"
+            onClick={() => void cargarPoaInicial()}
+            className="mt-3 rounded-lg bg-rose-700 px-4 py-2 text-sm font-bold text-white hover:bg-rose-800"
+          >
+            Reintentar
+          </button>
         </div>
       </RoleShell>
     );
@@ -231,8 +266,29 @@ export default function ContralorPoaPage() {
                   cabecera.estadoActual === 'EN_REVISION' ? 'bg-amber-500' : 'bg-yellow-500'
                 }`}
               />
-              <span className="text-sm font-semibold">Estado: {cabecera.estadoActual.replace('_', ' ')}</span>
+              <span className="text-sm font-semibold">
+                Estado: {cabecera.estadoEtiqueta}
+              </span>
             </div>
+            {cabecera.puedeEditar ? (
+              <button
+                type="button"
+                onClick={() => void enviarPoaARevision()}
+                disabled={cabecera.estaCargando}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {cabecera.estaCargando ? 'Enviando...' : 'Enviar a revisión'}
+              </button>
+            ) : cabecera.estadoActual === 'EN_REVISION' ? (
+              <button
+                type="button"
+                onClick={() => void cancelarEnvioPoa()}
+                disabled={cabecera.estaCargando}
+                className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-bold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {cabecera.estaCargando ? 'Cancelando...' : 'Cancelar envío'}
+              </button>
+            ) : null}
             <button
               onClick={abrirWizardCreacion}
               disabled={!cabecera.puedeEditar}
@@ -243,11 +299,27 @@ export default function ContralorPoaPage() {
           </div>
         </div>
 
+        {erroresValidacionPresentar && (
+          <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+            <p className="font-bold">El POA necesita ajustes antes de enviarse:</p>
+            <ul className="mt-2 list-inside list-disc">
+              {erroresValidacionPresentar.map((error, index) => <li key={`${index}-${error}`}>{error}</li>)}
+            </ul>
+          </div>
+        )}
+
+        {poaMensajeError && (
+          <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+            {poaMensajeError}
+          </p>
+        )}
+
         <div className="space-y-4">
           {actividades.map((actividad, index) => (
             <TarjetaActividadPOA
               key={actividad.idActividad}
               {...actividad}
+              puedeEditar={cabecera.puedeEditar}
               consecutivoIndex={index}
               onAbrirModalSubactividades={handleAbrirModalSubactividades}
               onConfigurarFichaTecnica={() => handleAbrirModalFichaTecnica(actividad.idActividad)}
@@ -270,11 +342,13 @@ export default function ContralorPoaPage() {
 
         {modalFichaAbierto && actividadActiva && (
           <ModalEditarFichaTecnica
+            key={actividadActivaId ?? 'actividad-nueva'}
             valoresIniciales={valoresInicialesFicha}
             listaAuditoresDisponibles={auditoresDisponibles}
             estaGuardando={estaGuardando}
             onCancelar={() => setModalFichaAbierto(false)}
-            onContinuarASubactividades={handleGuardarFichaTecnica}
+            onGuardar={handleGuardarFichaTecnica}
+            onContinuarASubactividades={handleContinuarASubactividades}
           />
         )}
 

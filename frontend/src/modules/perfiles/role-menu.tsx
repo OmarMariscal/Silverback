@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react';
 import type { RolUsuario } from '@/types/roles';
 
+export type ModuloUsuario = 'dashboard' | 'actividades' | 'poa';
+
 export type MenuItem = {
-  key: 'dashboard' | 'actividades' | 'poa';
+  key: ModuloUsuario;
   label: string;
   href: string;
-  roles: RolUsuario[];
   icon: ReactNode;
 };
 
@@ -40,48 +41,26 @@ export const MENU_CONFIG: Array<Omit<MenuItem, 'href'>> = [
   {
     key: 'dashboard',
     label: 'Dashboard',
-    roles: ['JEFA', 'CONTRALOR_GENERAL', 'CONTRALOR', 'AUDITOR'],
     icon: dashboardIcon,
   },
   {
     key: 'actividades',
     label: 'Actividades',
-    roles: ['JEFA', 'CONTRALOR_GENERAL', 'CONTRALOR', 'AUDITOR'],
     icon: actividadesIcon,
   },
   {
     key: 'poa',
     label: 'POA',
-    roles: ['JEFA', 'CONTRALOR_GENERAL', 'CONTRALOR'],
     icon: poaIcon,
   },
 ];
 
-export const getMenuItemsByRol = (rol: RolUsuario | string): MenuItem[] => {
-  const rolNormalizado = typeof rol === 'string' ? rol.toUpperCase() : rol;
-  const perfil = roleModuleMap[rolNormalizado as keyof typeof roleModuleMap];
-
-  if (!perfil) {
-    return MENU_CONFIG.map((item) => ({
-      ...item,
-      href: item.key === 'dashboard' ? '/dashboard' : item.key === 'actividades' ? '/actividades' : '/poa',
-    }));
-  }
-
-  return MENU_CONFIG
-    .filter((item) => item.roles.includes(rolNormalizado as RolUsuario))
-    .map((item) => ({
-      ...item,
-      href:
-        item.key === 'dashboard'
-          ? perfil.dashboard
-          : item.key === 'actividades'
-            ? perfil.actividades
-            : perfil.poa,
-    }));
-};
-
-export const roleModuleMap = {
+export const roleModuleMap: Record<RolUsuario, Record<ModuloUsuario, string>> = {
+  ADMIN: {
+    dashboard: '/admin/dashboard',
+    actividades: '/admin/actividades',
+    poa: '/admin/poa',
+  },
   JEFA: {
     dashboard: '/jefa/dashboard',
     actividades: '/jefa/actividades',
@@ -102,10 +81,35 @@ export const roleModuleMap = {
     actividades: '/auditor/actividades',
     poa: '/auditor/poa',
   },
-} as const;
+};
 
-export const resolveDefaultModulePath = (rol: RolUsuario | string): string => {
-  const rolNormalizado = typeof rol === 'string' ? rol.toUpperCase() : rol;
-  const perfil = roleModuleMap[rolNormalizado as keyof typeof roleModuleMap];
-  return perfil ? perfil.dashboard : '/dashboard';
+export const moduleApiSupport: Record<RolUsuario, Record<ModuloUsuario, boolean>> = {
+  ADMIN: { dashboard: false, actividades: false, poa: false },
+  JEFA: { dashboard: true, actividades: true, poa: false },
+  CONTRALOR_GENERAL: { dashboard: false, actividades: false, poa: false },
+  CONTRALOR: { dashboard: true, actividades: true, poa: true },
+  AUDITOR: { dashboard: false, actividades: false, poa: false },
+};
+
+export const getModulePath = (rol: RolUsuario, modulo: ModuloUsuario): string =>
+  roleModuleMap[rol][modulo];
+
+export const getMenuItemsByRol = (rol: RolUsuario): MenuItem[] =>
+  MENU_CONFIG.map((item) => ({
+    ...item,
+    href: getModulePath(rol, item.key),
+  }));
+
+export const resolveDefaultModulePath = (rol: RolUsuario): string =>
+  getModulePath(rol, 'dashboard');
+
+export const getModuleTitle = (modulo: ModuloUsuario): string => {
+  switch (modulo) {
+    case 'dashboard':
+      return 'Dashboard';
+    case 'actividades':
+      return 'Actividades';
+    case 'poa':
+      return 'POA';
+  }
 };

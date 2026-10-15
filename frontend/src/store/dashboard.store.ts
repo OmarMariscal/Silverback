@@ -6,12 +6,13 @@ import { create } from 'zustand';
 import { dashboardService } from '../services/dashboard.service';
 import { adaptarDashboardContralorUI, adaptarDashboardJefaUI } from '../services/dashboard.adapter';
 import { DashboardContralorUI, DashboardJefaUI } from '../types/dashboard-contratos';
-import { obtenerRolActivo } from '../services/api';
+import { MOCK_SESSION, obtenerRolActivo } from '../services/api';
+import type { RolUsuario } from '../types/roles';
 
 interface DashboardState {
   datosContralor: DashboardContralorUI | null;
   datosJefa: DashboardJefaUI | null;
-  rolActual: string;
+  rolActual: RolUsuario;
   cargando: boolean;
   error: string | null;
   cargarDashboard: () => Promise<void>;
@@ -20,8 +21,8 @@ interface DashboardState {
 export const useDashboardStore = create<DashboardState>((set) => ({
   datosContralor: null,
   datosJefa: null,
-  rolActual: obtenerRolActivo(),
-  cargando: false,
+  rolActual: MOCK_SESSION.role,
+  cargando: true,
   error: null,
   cargarDashboard: async () => {
     set({ cargando: true, error: null });
@@ -46,7 +47,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
         const adaptado = adaptarDashboardContralorUI(kpis, vencimientos, supervision);
         set({ datosContralor: adaptado, cargando: false });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error al cargar datos del dashboard:', err);
       set({ error: 'Error al sincronizar dashboard', cargando: false });
     }

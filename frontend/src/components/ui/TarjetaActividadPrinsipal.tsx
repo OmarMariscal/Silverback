@@ -12,13 +12,15 @@ export function TarjetaActividadPOA({
   idActividad,
   consecutivoIndex,
   titulo,
-  participacionGlobalVisible,
+  participacionGlobal,
   esRezagada,
   fechaInicioPadre,
   fechaTerminoPadre,
+  auditoresResumen,
   fichaTecnica,
   subactividades,
   estaCargandoDetalles,
+  puedeEditar,
   ocultarBotonBorrar,
   onAbrirModalSubactividades,
   onBorrarActividad,
@@ -35,9 +37,11 @@ export function TarjetaActividadPOA({
 
   const numConsecutivo = (consecutivoIndex + 1).toString().padStart(2, '0');
 
-  const auditoresTexto = fichaTecnica?.equipoAuditor && fichaTecnica.equipoAuditor.length > 0
-    ? fichaTecnica.equipoAuditor.map(a => a.nombreCompleto).join(', ')
-    : 'Sin auditores asignados';
+  const auditoresTexto = auditoresResumen && auditoresResumen.length > 0
+    ? auditoresResumen.join(', ')
+    : participacionGlobal === 100
+      ? 'Sin auditores asignados'
+      : 'Nombres de auditores no disponibles';
 
   return (
     <div 
@@ -81,7 +85,7 @@ export function TarjetaActividadPOA({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
                 </svg> 
-                {participacionGlobalVisible}
+                {participacionGlobal}%
               </span>
               
               <span className="flex items-center text-sm font-medium text-slate-600">
@@ -95,16 +99,18 @@ export function TarjetaActividadPOA({
         </div>
 
         <div className="flex items-center space-x-2 pl-4">
-          <button 
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onConfigurarFichaTecnica(); }}
-            className="text-slate-400 hover:text-indigo-600 p-2 rounded-full hover:bg-indigo-50 transition-colors" 
-            title="Editar Actividad"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-          </button>
+          {puedeEditar && (
+            <button 
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onConfigurarFichaTecnica(); }}
+              className="text-slate-400 hover:text-indigo-600 p-2 rounded-full hover:bg-indigo-50 transition-colors" 
+              title="Editar Actividad"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+          )}
 
           {!ocultarBotonBorrar && (
             <button 
@@ -209,16 +215,18 @@ export function TarjetaActividadPOA({
                   <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
                     Sub-actividades Específicas
                   </h4>
-                  <button 
-                    type="button"
-                    onClick={() => onAbrirModalSubactividades && onAbrirModalSubactividades(idActividad, titulo)}
-                    className="text-sm font-bold text-indigo-600 hover:text-indigo-800 flex items-center bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-lg transition-colors border border-indigo-100 cursor-pointer"
-                  >
-                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg> 
-                    Añadir Sub-actividad
-                  </button>
+                  {puedeEditar && (
+                    <button 
+                      type="button"
+                      onClick={() => onAbrirModalSubactividades && onAbrirModalSubactividades(idActividad, titulo)}
+                      className="text-sm font-bold text-indigo-600 hover:text-indigo-800 flex items-center bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-lg transition-colors border border-indigo-100 cursor-pointer"
+                    >
+                      <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg> 
+                      Añadir Sub-actividad
+                    </button>
+                  )}
                 </div>
                 
                 <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">

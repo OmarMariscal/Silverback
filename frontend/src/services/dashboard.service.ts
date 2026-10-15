@@ -2,27 +2,10 @@
 // Este archivo contiene funciones para interactuar con el backend de Emiliano y obtener datos específicos del dashboard, como KPIs, actividades próximas a vencer, bandeja de supervisión, etc.
 // En palabras sencillas: Este archivo es como un "puente" entre tu frontend y el backend de Emiliano. Cada función hace una llamada HTTP a un endpoint específico y devuelve los datos que necesitas para mostrar en la interfaz de usuario.
 
-import { api, obtenerRolActivo } from './api';
+import { api } from './api';
 import * as DashApi from '../types/dashboard-api';
 
 export const dashboardService = {
-  // --- KPIs DINÁMICOS SEGÚN ROL ---
-  obtenerKpisGenerales: async (): Promise<any> => {
-    try {
-      const rol = obtenerRolActivo();
-      if (rol === 'JEFA') {
-        const res = await api.get<DashApi.DashboardJefaDto>('/dashboard/jefa');
-        return res.data;
-      } else {
-        const res = await api.get<DashApi.DashboardContralorDto>('/dashboard/contralor/kpis');
-        return res.data;
-      }
-    } catch (error) {
-      console.error('Error al obtener KPIs del Dashboard:', error);
-      throw error;
-    }
-  },
-
   obtenerKpisContralor: async (): Promise<DashApi.DashboardContralorDto> => {
     try {
       const res = await api.get<DashApi.DashboardContralorDto>('/dashboard/contralor/kpis');

@@ -3,28 +3,39 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDashboardStore } from '@/store/dashboard.store';
-import { useLayoutStore } from '@/store/layout.store';
 import RoleShell from '@/modules/perfiles/role-shell';
+import { getModulePath } from '@/modules/perfiles/role-menu';
 
 export default function ContralorDashboardPage() {
   const router = useRouter();
-  const { datosContralor, rolActual, cargando, cargarDashboard } = useDashboardStore();
-
-  useEffect(() => {
-    useLayoutStore.getState().setTituloPantalla(
-        'Panel de Gestión - Contralor'
-    );
-  }, [rolActual]);
+  const { datosContralor, cargando, error, cargarDashboard } = useDashboardStore();
 
   useEffect(() => {
     cargarDashboard();
   }, [cargarDashboard]);
 
-  if (cargando || !datosContralor) {
+  if (cargando) {
     return (
       <RoleShell perfil="CONTRALOR" modulo="dashboard" title="Panel de Gestión - Contralor" subtitle="Cargando resumen operativo...">
         <div className="flex items-center justify-center py-32 text-lg font-bold text-indigo-600 animate-pulse">
           Cargando resumen operativo...
+        </div>
+      </RoleShell>
+    );
+  }
+
+  if (!datosContralor) {
+    return (
+      <RoleShell perfil="CONTRALOR" modulo="dashboard" title="Panel de Gestión - Contralor" subtitle="Resumen operativo del centro.">
+        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-rose-800">
+          <p>{error || 'No fue posible obtener los datos del dashboard.'}</p>
+          <button
+            type="button"
+            onClick={() => void cargarDashboard()}
+            className="mt-3 rounded-lg bg-rose-700 px-4 py-2 text-sm font-bold text-white hover:bg-rose-800"
+          >
+            Reintentar
+          </button>
         </div>
       </RoleShell>
     );
@@ -53,7 +64,7 @@ export default function ContralorDashboardPage() {
 
           <div className="mt-4 flex items-center space-x-3 md:mt-0">
             <button
-              onClick={() => router.push('/contralor/actividades')}
+              onClick={() => router.push(getModulePath('CONTRALOR', 'actividades'))}
               className="flex items-center rounded-xl bg-indigo-600 px-6 py-2.5 font-bold text-white shadow-md shadow-indigo-200 transition-all hover:bg-indigo-700"
             >
               Lista de Actividades Completa
@@ -66,7 +77,7 @@ export default function ContralorDashboardPage() {
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-4">
           <div
-            onClick={() => router.push('/contralor/actividades?estado_flujo=DEVUELTA')}
+            onClick={() => router.push(`${getModulePath('CONTRALOR', 'actividades')}?estado_flujo=DEVUELTA`)}
             className="group relative overflow-hidden rounded-2xl border border-indigo-100 bg-white p-8 shadow-sm transition-all hover:border-indigo-400 hover:shadow-md"
           >
             <div className="absolute right-0 top-0 h-32 w-32 rounded-bl-full bg-indigo-50/80 transition-transform group-hover:scale-110" />
@@ -89,7 +100,7 @@ export default function ContralorDashboardPage() {
           </div>
 
           <div
-            onClick={() => router.push('/contralor/actividades?semaforo=CRITICO')}
+            onClick={() => router.push(`${getModulePath('CONTRALOR', 'actividades')}?semaforo=CRITICO`)}
             className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all hover:border-red-300 hover:shadow-md"
           >
             <div className="absolute right-0 top-0 h-32 w-32 rounded-bl-full bg-red-50 transition-transform group-hover:scale-110" />
@@ -103,7 +114,7 @@ export default function ContralorDashboardPage() {
           </div>
 
           <div
-            onClick={() => router.push('/contralor/actividades?semaforo=PRECAUCION')}
+            onClick={() => router.push(`${getModulePath('CONTRALOR', 'actividades')}?semaforo=PRECAUCION`)}
             className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all hover:border-amber-300 hover:shadow-md"
           >
             <div className="absolute right-0 top-0 h-32 w-32 rounded-bl-full bg-amber-50 transition-transform group-hover:scale-110" />
@@ -117,7 +128,7 @@ export default function ContralorDashboardPage() {
           </div>
 
           <div
-            onClick={() => router.push('/contralor/actividades?estado_flujo=CONCLUIDA')}
+            onClick={() => router.push(`${getModulePath('CONTRALOR', 'actividades')}?estado_flujo=CONCLUIDA`)}
             className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all hover:border-emerald-300 hover:shadow-md"
           >
             <div className="absolute right-0 top-0 h-32 w-32 rounded-bl-full bg-emerald-50 transition-transform group-hover:scale-110" />
@@ -198,7 +209,7 @@ export default function ContralorDashboardPage() {
             </div>
             <div className="space-y-6">
               {proximosVencimientos.length > 0 ? (
-                proximosVencimientos.map((item: any) => (
+                proximosVencimientos.map((item) => (
                   <div key={item.id} className="flex items-start">
                     <div className="mt-1.5 flex-shrink-0">
                       <div
@@ -252,7 +263,7 @@ export default function ContralorDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {bandejaSupervision.map((item: any) => (
+                {bandejaSupervision.map((item) => (
                   <tr key={item.id} className="transition-colors hover:bg-slate-50/50">
                     <td className="px-6 py-4">
                       <span className="block font-bold text-slate-800">{item.titulo}</span>
