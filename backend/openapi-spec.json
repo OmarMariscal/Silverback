@@ -983,12 +983,12 @@
           }
         ],
         "responses": {
-          "default": {
+          "200": {
             "description": "Se regresa el estado de la POA de enviada a en progreso",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CancelarPoaDataDto"
+                  "$ref": "#/components/schemas/CancelarPoaResponseaDto"
                 }
               }
             }
@@ -2752,7 +2752,7 @@
           "detalles"
         ]
       },
-      "CancelarPoaDto": {
+      "CancelarPoaDataDto": {
         "type": "object",
         "properties": {
           "poa_id": {
@@ -2789,11 +2789,11 @@
           "mensaje"
         ]
       },
-      "CancelarPoaDataDto": {
+      "CancelarPoaResponseaDto": {
         "type": "object",
         "properties": {
           "data": {
-            "$ref": "#/components/schemas/CancelarPoaDto"
+            "$ref": "#/components/schemas/CancelarPoaDataDto"
           }
         },
         "required": [

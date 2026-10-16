@@ -5,6 +5,10 @@ import { PermisosGuard } from '@core/guards/roles.guard';
 import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
 import { Permisos } from '@domain/roles/permisos.enum';
 import { PoasService } from '@modules/poas/application/poas.service';
+import { DevolverPoaDto } from '@modules/poas/dto/request/poas-devolver.dto';
+import { AutorizarPoaResponseDto } from '@modules/poas/dto/response/poas-autorizar.response.dto';
+import { CancelarPoaResponseaDto } from '@modules/poas/dto/response/poas-cancelar.response.dto';
+import { DevolverPoaResponseDto } from '@modules/poas/dto/response/poas-devolver.response.dto';
 import {
   Body,
   Controller,
@@ -21,14 +25,10 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { CrearActividadesDto } from '../../dto/request/poa-actividades.dto';
-import { CancelarPoaDataDto } from '../../dto/request/poas-cancelar-data.dto';
 import { PresentarPoasDto } from '../../dto/request/poas-presentar.dto';
 import { CrearActividadesResponseDto } from '../../dto/response/poa-actividades.response.dto';
 import { PoaActualDto } from '../../dto/response/poa-actual.dto';
 import { PresentarPoasResponseErrorDto } from '../../dto/response/poas-presentar-response.dto';
-import { DevolverPoaResponseDto } from '@modules/poas/dto/response/poas-devolver.response.dto';
-import { DevolverPoaDto } from '@modules/poas/dto/request/poas-devolver.dto';
-import { AutorizarPoaResponseDto } from '@modules/poas/dto/response/poas-autorizar.response.dto';
 
 @ApiTags('POAs')
 @ApiBearerAuth()
@@ -104,14 +104,15 @@ export class PoasController {
       'Se cancela el proceso de envio de POA regresandola al estado anterior.',
   })
   @ApiResponse({
+    status: HttpStatus.OK,
     description: 'Se regresa el estado de la POA de enviada a en progreso',
-    type: CancelarPoaDataDto,
+    type: CancelarPoaResponseaDto,
   })
   @Post(':poaid/cancelar-envio')
   cancelarEnvio(
     @UsuarioActual() usuarioActual: SesionUsuario,
     @Param('poaid') poaId: string,
-  ) {
+  ): Promise<CancelarPoaResponseaDto> {
     return this.poaService.cancelarEnvio({ usuarioActual, poaId });
   }
 

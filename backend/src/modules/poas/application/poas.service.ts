@@ -11,21 +11,21 @@ import { TransactionHandle } from '@domain/shared/transaction.interface';
 import type { IActividadesQueryRepository } from '@modules/actividades/application/ports/actividades-query.repository.interface';
 import { ACTIVIDADES_QUERY_REPOSITORY_TOKEN } from '@modules/actividades/application/ports/actividades-query.repository.interface';
 import { Inject, Injectable } from '@nestjs/common';
-import { CancelarPoaDto } from '../dto/request/poas-cancelar.dto';
 import { PresentarPoasDto } from '../dto/request/poas-presentar.dto';
 import { CrearActividadesResponseDto } from '../dto/response/poa-actividades.response.dto';
 import { PoaActualDto } from '../dto/response/poa-actual.dto';
+import { AutorizarPoaResponseDto } from '../dto/response/poas-autorizar.response.dto';
+import { CancelarPoaResponseaDto } from '../dto/response/poas-cancelar.response.dto';
+import { DevolverPoaResponseDto } from '../dto/response/poas-devolver.response.dto';
 import { PoaResponseMapper } from '../infrastructure/mappers/poa-response.mapper';
 import { AgregarActividadCommand } from './ports/commands/agregar-actividad.command';
+import { AutorizarPoaCommand } from './ports/commands/autorizar-poa.command';
 import { CancelarEnvioCommand } from './ports/commands/cancelar-envio.command';
+import { DevolverPoaCommand } from './ports/commands/devolver-poa.command';
 import { PresentarPoaCommand } from './ports/commands/presentar-poa.command';
 import type { IPoaQueryRepository } from './ports/poa-query.repository.interface';
 import { POA_QUERY_REPOSITORY_TOKEN } from './ports/poa-query.repository.interface';
 import { GetPoaActualQuery } from './ports/queries/get-poa-actual.query';
-import { DevolverPoaCommand } from './ports/commands/devolver-poa.command';
-import { DevolverPoaResponseDto } from '../dto/response/poas-devolver.response.dto';
-import { AutorizarPoaCommand } from './ports/commands/autorizar-poa.command';
-import { AutorizarPoaResponseDto } from '../dto/response/poas-autorizar.response.dto';
 
 @Injectable()
 export class PoasService {
@@ -182,7 +182,9 @@ export class PoasService {
     );
   }
 
-  async cancelarEnvio(command: CancelarEnvioCommand): Promise<CancelarPoaDto> {
+  async cancelarEnvio(
+    command: CancelarEnvioCommand,
+  ): Promise<CancelarPoaResponseaDto> {
     // Deconstrucción del command
     const { usuarioActual, poaId } = command;
 
