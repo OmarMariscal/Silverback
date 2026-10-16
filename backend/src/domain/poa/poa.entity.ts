@@ -20,6 +20,7 @@ export class PoaEntity {
     private actividades: ActividadSnapshot[] = [],
 
     private fechaAprobado: Date | null = null,
+    private fechaDevolucion: Date | null = null,
     private ultimaSecuenciaActividad: number = 0,
 
     private idUsuarioDuenoPoa?: string,
@@ -96,6 +97,10 @@ export class PoaEntity {
 
   public getFechaAprobado(): Date | null {
     return this.fechaAprobado;
+  }
+
+  public getFechaDevolucion(): Date | null {
+    return this.fechaDevolucion;
   }
 
   public cargarSnapshotsActividades(snapshots: ActividadSnapshot[]): void {
@@ -223,7 +228,11 @@ export class PoaEntity {
   /**
    * Permiso Necesario: Permisos.GESTIONAR_SUPERVISION_POA
    */
-  public devolver(actorActual: Actor, retroalimentacion: string | null): void {
+  public devolver(
+    actorActual: Actor,
+    idUsuarioActual: string,
+    retroalimentacion: string | null,
+  ): void {
     // Solo una POA en estado EN_REVISION puede pasar al estado DEVUELTO
     this.validarEstadoInicial([EstadosPoa.EN_REVISION]);
 
@@ -234,6 +243,9 @@ export class PoaEntity {
       Permisos.GESTIONAR_SUPERVISION_POA,
       logAccion,
     );
+
+    // Inyectamos la validación Multitenant de la JEFA
+    this.validarTenencia(actorActual, idUsuarioActual);
 
     // Se tiene que devolver con al menos una observación
     if (retroalimentacion === null || retroalimentacion.length === 0) {
@@ -246,13 +258,18 @@ export class PoaEntity {
     // Autorizar el cambio de estado
     this.estado = EstadosPoa.DEVUELTA;
     this.mensajeResolucion = retroalimentacion;
+    this.fechaDevolucion = new Date();
   }
 
   /**
    * Permiso Necesario: Permisos.GESTIONAR_SUPERVISION_POA
    */
 
-  public autorizar(actorActual: Actor, fecha: Date): void {
+  public autorizar(
+    actorActual: Actor,
+    idUsuarioActual: string,
+    fecha: Date,
+  ): void {
     // Validar el estado inicial
     this.validarEstadoInicial([EstadosPoa.EN_REVISION]);
 
@@ -262,6 +279,9 @@ export class PoaEntity {
       Permisos.GESTIONAR_SUPERVISION_POA,
       logAccion,
     );
+
+    // Validación Multitenant de la JEFA
+    this.validarTenencia(actorActual, idUsuarioActual);
 
     // Actualizar el Estado
     this.estado = EstadosPoa.AUTORIZADA;

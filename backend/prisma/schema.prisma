@@ -133,6 +133,7 @@ model Poa {
   anio_fiscal  Int         
   estado       EstadoPoa   @default(BORRADOR)
   fecha_aprobado DateTime?
+  fecha_devolucion DateTime?    @db.Timestamptz()
   mensaje_resolucion   String?   @db.Text
 
   contralor_id String
