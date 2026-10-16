@@ -2,10 +2,12 @@ import { DateFormatterUtil } from '@core/utils/date-formater.utils';
 import { ActividadEntity } from '@domain/actividad/actividad.entity';
 import { EstadosPoa } from '@domain/poa/estados-poa.enum';
 import { PoaActualResult } from '@modules/poas/application/ports/results/poa-actual.result';
-import { CancelarPoaDto } from '@modules/poas/dto/request/poas-cancelar.dto';
 import { PresentarPoasDto } from '@modules/poas/dto/request/poas-presentar.dto';
 import { CrearActividadesResponseDto } from '@modules/poas/dto/response/poa-actividades.response.dto';
 import { PoaActualDto } from '@modules/poas/dto/response/poa-actual.dto';
+import { AutorizarPoaResponseDto } from '@modules/poas/dto/response/poas-autorizar.response.dto';
+import { CancelarPoaResponseaDto } from '@modules/poas/dto/response/poas-cancelar.response.dto';
+import { DevolverPoaResponseDto } from '@modules/poas/dto/response/poas-devolver.response.dto';
 
 export class PoaResponseMapper {
   static toPoaActualDto(rawPoa: PoaActualResult): PoaActualDto {
@@ -58,13 +60,45 @@ export class PoaResponseMapper {
     poaId: string,
     estadoAnterior: EstadosPoa,
     estadoNuevo: EstadosPoa,
-  ): CancelarPoaDto {
+  ): CancelarPoaResponseaDto {
+    return {
+      data: {
+        poa_id: poaId,
+        estado_anterior: estadoAnterior,
+        estado_nuevo: estadoNuevo,
+        fecha_cancelacion: new Date().toISOString(),
+        mensaje: 'Envio Cancelado con Éxito',
+      },
+    };
+  }
+
+  static toDevolverPoaResponse(
+    poaId: string,
+    estadoAnterior: EstadosPoa,
+    estadoNuevo: EstadosPoa,
+    fechaDevolucion: Date,
+  ): DevolverPoaResponseDto {
     return {
       poa_id: poaId,
       estado_anterior: estadoAnterior,
       estado_nuevo: estadoNuevo,
-      fecha_cancelacion: new Date().toISOString(),
-      mensaje: 'Envio Cancelado con Éxito',
+      fecha_devolucion: fechaDevolucion.toISOString(),
+      mensaje: 'El POA ha sido devuelto al contralor con observaciones',
+    };
+  }
+
+  static toAutorizarPoaResponse(
+    poaId: string,
+    estadoAnterior: EstadosPoa,
+    estadoNuevo: EstadosPoa,
+    fechaAutorizacion: Date,
+  ): AutorizarPoaResponseDto {
+    return {
+      poa_id: poaId,
+      estado_anterior: estadoAnterior,
+      estado_nuevo: estadoNuevo,
+      fecha_autorizacion: fechaAutorizacion.toISOString(),
+      mensaje: 'El POA ha sido autorizado exitosamente',
     };
   }
 }

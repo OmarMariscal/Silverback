@@ -5,6 +5,10 @@ import { PermisosGuard } from '@core/guards/roles.guard';
 import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
 import { Permisos } from '@domain/roles/permisos.enum';
 import { PoasService } from '@modules/poas/application/poas.service';
+import { DevolverPoaDto } from '@modules/poas/dto/request/poas-devolver.dto';
+import { AutorizarPoaResponseDto } from '@modules/poas/dto/response/poas-autorizar.response.dto';
+import { CancelarPoaResponseaDto } from '@modules/poas/dto/response/poas-cancelar.response.dto';
+import { DevolverPoaResponseDto } from '@modules/poas/dto/response/poas-devolver.response.dto';
 import {
   Body,
   Controller,
@@ -21,7 +25,6 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { CrearActividadesDto } from '../../dto/request/poa-actividades.dto';
-import { CancelarPoaDataDto } from '../../dto/request/poas-cancelar-data.dto';
 import { PresentarPoasDto } from '../../dto/request/poas-presentar.dto';
 import { CrearActividadesResponseDto } from '../../dto/response/poa-actividades.response.dto';
 import { PoaActualDto } from '../../dto/response/poa-actual.dto';
@@ -101,14 +104,52 @@ export class PoasController {
       'Se cancela el proceso de envio de POA regresandola al estado anterior.',
   })
   @ApiResponse({
+    status: HttpStatus.OK,
     description: 'Se regresa el estado de la POA de enviada a en progreso',
-    type: CancelarPoaDataDto,
+    type: CancelarPoaResponseaDto,
   })
   @Post(':poaid/cancelar-envio')
   cancelarEnvio(
     @UsuarioActual() usuarioActual: SesionUsuario,
     @Param('poaid') poaId: string,
-  ) {
+  ): Promise<CancelarPoaResponseaDto> {
     return this.poaService.cancelarEnvio({ usuarioActual, poaId });
+  }
+
+  @ApiOperation({
+    summary: 'Devolver el POA con observaciones (rol de JEFA)',
+    description:
+      'Permite a la jefatura devolver un POA al contralor indicando los motivos o correcciones necesarias',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: DevolverPoaResponseDto,
+  })
+  @RequirePermissions(Permisos.GESTIONAR_SUPERVISION_POA)
+  @Post(':poaid/devolver')
+  devolverPoa(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('poaid') poaId: string,
+    @Body() dto: DevolverPoaDto,
+  ): Promise<DevolverPoaResponseDto> {
+    return this.poaService.devolverPoa({ usuarioActual, poaId, dto });
+  }
+
+  @ApiOperation({
+    summary: 'Autorizar POA (rol de JEFA',
+    description:
+      'Permite a la jefatura aprobar y autorizar un POA que se encuentra en revisión',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: AutorizarPoaResponseDto,
+  })
+  @RequirePermissions(Permisos.GESTIONAR_SUPERVISION_POA)
+  @Post(':poaid/autorizar')
+  autorizarPoa(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('poaid') poaId: string,
+  ): Promise<AutorizarPoaResponseDto> {
+    return this.poaService.autorizarPoa({ usuarioActual, poaId });
   }
 }
