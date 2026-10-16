@@ -241,3 +241,113 @@ export interface CentroDto {
   data: CentroDataDto[];
 }
 
+// ========================================================
+// 16. SUPERVISIÓN Y DICTAMEN DE POAs (ROL: JEFA)
+// ========================================================
+
+export type EstadoPoaAPI =
+  | 'BORRADOR'
+  | 'EN_REVISION'
+  | 'DEVUELTA'
+  | 'AUTORIZADO'
+  | 'AUTORIZADA';
+
+// GET /api/v1/poas/supervision/centros?historic_limit=3
+export interface KpisGlobalesPoasDto {
+  total_centros: number;
+  por_autorizar: number;
+  devueltas: number;
+  autorizadas: number;
+}
+
+export interface PoaResumenAnioActualDto {
+  id: string;
+  anio_fiscal: number;
+  estado: EstadoPoaAPI | string;
+  fecha_envio: string | null;
+  porcentaje_avance_global: number | null;
+}
+
+export interface ContralorActualCentroDto {
+  nombre_completo: string;
+  estatus: string;
+}
+
+export interface CentroSupervisionPoaDto {
+  id: string;
+  clave: string;
+  nombre: string;
+  // Soporta tanto string simple ("Mtro. Braulio Vicente") como objeto estructurado ({ nombre_completo, estatus })
+  contralor?: string;
+  contralor_actual?: ContralorActualCentroDto;
+  anios_historicos: number[];
+  poa_resumen_anio_actual: PoaResumenAnioActualDto;
+}
+
+export interface SupervisionCentrosPoaResponseDto {
+  kpis_globales: KpisGlobalesPoasDto;
+  centros: CentroSupervisionPoaDto[];
+}
+
+export interface SupervisionCentrosQueryParams {
+  historic_limit?: number;
+}
+
+// GET /api/v1/centros/:centroId/poa?anio=2026
+export interface ActividadResumenSupervisionDto {
+  id: string;
+  folio: string;
+  titulo: string;
+  fecha_inicio: string;
+  fecha_termino: string;
+  porcentaje_participacion?: number;
+  porcentaje_global?: number;
+  auditores: string[];
+}
+
+export interface PoaDetalleSupervisionDto {
+  id: string;
+  anio_fiscal: number;
+  estado: EstadoPoaAPI | string;
+  mensaje_resolucion: string | null;
+  fecha_enviado: string;
+  centro: {
+    clave: string;
+    nombre: string;
+  };
+  contralor: {
+    nombre_completo: string;
+  };
+}
+
+export interface CentroPoaDetalleResponseDto {
+  poa: PoaDetalleSupervisionDto;
+  actividades: ActividadResumenSupervisionDto[];
+}
+
+export interface CentroPoaQueryParams {
+  anio?: number;
+}
+
+// POST /poas/:poaId/devolver
+export interface DevolverPoaRequestDto {
+  observaciones: string;
+}
+
+export interface DevolverPoaResponseDto {
+  poa_id: string;
+  estado_anterior: string;
+  estado_nuevo: string;
+  fecha_devolucion: string;
+  mensaje: string;
+}
+
+// POST /poas/:poaId/autorizar
+export interface AutorizarPoaResponseDto {
+  poa_id: string;
+  estado_anterior: string;
+  estado_nuevo: string;
+  fecha_autorizacion: string;
+  mensaje: string;
+}
+
