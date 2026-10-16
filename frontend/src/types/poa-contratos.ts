@@ -152,7 +152,7 @@ export interface PantallaSubactividadesProps {
   subactividadesIniciales: SubactividadFilaForm[];
   
   // --- LAS OPCIONES DEL BANCO ---
-  // Es opcional (?) porque tu archivo endpoints.txt dice que si es una 
+  // Es opcional (?) porque si es una 
   // "actividad personalizada" NO mandas a llamar a este endpoint.
   sugerenciasBanco?: SubactividadSugerida[]; 
   
@@ -160,4 +160,154 @@ export interface PantallaSubactividadesProps {
   
   onGuardarSincronizacion: (todasLasFilas: SubactividadFilaForm[]) => void; 
   onRegresarAFicha: () => void; 
+}
+
+// ========================================================
+// SUPERVISIÓN Y DICTAMEN DE POAs (ROL: JEFA) - CONTRATOS UI
+// ========================================================
+
+export type FiltroEstadoPoaJefa =
+  | 'TODOS'
+  | 'POR_AUTORIZAR'
+  | 'DEVUELTAS'
+  | 'AUTORIZADAS';
+
+export type ModoVisualizacionSupervision = 'INCRUSTADA' | 'PANTALLA_COMPLETA';
+
+// KPIs de la barra superior
+export interface KpisSupervisionPoasUI {
+  totalCentros: number;
+  porAutorizar: number;
+  devueltas: number;
+  autorizadas: number;
+}
+
+// Resumen del POA asociado a una tarjeta de Centro Universitario
+export interface PoaResumenCentroUI {
+  idPoa: string;
+  anioFiscal: number;
+  estado: EstadoPOA;
+  estadoEtiqueta: string;
+  estadoBadgeColor: 'purple' | 'amber' | 'emerald' | 'slate';
+  fechaTexto: string;
+  etiquetaFecha: string; // Ej: "Recibido para dictamen:", "Devuelto el:", "Autorizado el:"
+  porcentajeAvanceGlobal: number | null; // e.g. 68 para 68%, o null
+}
+
+// Props para cada Tarjeta de Centro en la cuadrícula comprimida / slider
+export interface TarjetaCentroPoaProps {
+  idCentro: string;
+  clave: string; // Ej: "CUCEI"
+  nombre: string; // Ej: "Ciencias Exactas e Ingenierías"
+  contralorNombre: string; // Ej: "Mtro. Braulio Vicente"
+  contralorEstatus: string; // Ej: "Activo"
+  aniosHistoricos: number[]; // Ej: [2026, 2025, 2024]
+  anioSeleccionado: number;
+  poaResumen: PoaResumenCentroUI;
+  estaSeleccionado: boolean; // True si es el centro actualmente en inspección
+  onSeleccionarCentro: (idCentro: string) => void;
+  onCambiarAnio: (idCentro: string, anio: number) => void;
+}
+
+// Fila de Actividad del Acordeón en el Inspector de POA
+export interface ActividadSupervisionPoaProps {
+  idActividad: string;
+  folio: string; // Ej: "05", "06"
+  titulo: string;
+  fechaInicioFormateada: string; // Ej: "Ene 2026"
+  fechaTerminoFormateada: string; // Ej: "Dic 2026"
+  rangoFechasTexto: string; // Ej: "Ene 2026 — Dic 2026"
+  porcentajeAvance: number; // Ej: 50
+  auditores: string[]; // Ej: ["Lic. Auditor Auxiliar"]
+
+  // Lazy loading y acordeón
+  estaExpandida: boolean;
+  estaCargandoDetalles: boolean;
+  fichaTecnica?: FichaTecnicaExpandida;
+  subactividades?: SubactividadFilaProps[];
+
+  onToggleExpandir: () => void;
+}
+
+// Barra flotante inferior de acciones de dictamen
+export interface BarraDictamenPoaProps {
+  centroClave: string; // Ej: "CUCEI"
+  anioFiscal: number; // Ej: 2026
+  estadoPoa: EstadoPOA;
+  puedeDictaminar: boolean; // True si está en revisión o devuelta
+  estaDictaminando: boolean; // Spinner mientras se ejecuta autorizar o devolver
+  onAbrirModalDevolver: () => void;
+  onAutorizarPoa: () => void | Promise<void>;
+}
+
+// Modal pop-up para devolver POA con observaciones
+export interface ModalDevolverPoaProps {
+  estaAbierto: boolean;
+  centroClave: string; // Ej: "CUCEI"
+  centroNombre: string;
+  anioFiscal: number; // Ej: 2026
+  contralorNombre: string;
+  observaciones: string;
+  errorValidacion?: string | null;
+  estaEnviando: boolean;
+  onChangeObservaciones: (texto: string) => void;
+  onCerrar: () => void;
+  onConfirmarDevolucion: () => void | Promise<void>;
+}
+
+// Inspector de POA (sección profunda de revisión de actividades y ficha técnica)
+export interface InspectorPoaSupervisionProps {
+  idCentro: string;
+  centroClave: string;
+  centroNombre: string;
+  contralorNombre: string;
+  idPoa: string;
+  anioFiscal: number;
+  estadoPoa: EstadoPOA;
+  estadoEtiqueta: string;
+  mensajeResolucion?: string | null;
+  totalActividades: number;
+
+  actividades: ActividadSupervisionPoaProps[];
+
+  // Modo de visualización (incrustada vs pantalla completa)
+  modoVisualizacion: ModoVisualizacionSupervision;
+  onCambiarModoVisualizacion?: (modo: ModoVisualizacionSupervision) => void;
+  onAlternarModoVisualizacion?: () => void;
+
+  barraDictamen: BarraDictamenPoaProps;
+  modalDevolver: ModalDevolverPoaProps;
+
+  estaCargandoPoa: boolean;
+  mensajeError?: string | null;
+}
+
+// Props para la pantalla completa / layout de pestaña de inspección de POA
+export interface PantallaCompletaPoaSupervisionProps {
+  inspectorProps: InspectorPoaSupervisionProps;
+  onRegresarACuadricula: () => void;
+}
+
+// ViewModel general que orquesta toda la pantalla de Supervisión de POAs
+export interface SupervisionPoasViewModel {
+  kpis: KpisSupervisionPoasUI;
+  filtroEstadoActivo: FiltroEstadoPoaJefa;
+  busquedaTexto: string;
+  anioGlobalSeleccionado: number;
+  aniosDisponibles: number[];
+
+  centros: TarjetaCentroPoaProps[];
+  idCentroSeleccionado: string | null;
+
+  poaSeleccionada: InspectorPoaSupervisionProps | null;
+  modoVisualizacion: ModoVisualizacionSupervision;
+
+  estaCargandoCentros: boolean;
+  mensajeError: string | null;
+
+  onCambiarFiltroEstado: (filtro: FiltroEstadoPoaJefa) => void;
+  onCambiarBusqueda: (busqueda: string) => void;
+  onCambiarAnioGlobal: (anio: number) => void;
+  onSeleccionarCentro: (idCentro: string) => void;
+  onAlternarModoVisualizacion: () => void;
 }
