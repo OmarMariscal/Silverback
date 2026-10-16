@@ -1005,6 +1005,90 @@
         ]
       }
     },
+    "/api/v1/poas/{poaid}/devolver": {
+      "post": {
+        "description": "Permite a la jefatura devolver un POA al contralor indicando los motivos o correcciones necesarias",
+        "operationId": "PoasController_devolverPoa",
+        "parameters": [
+          {
+            "name": "poaid",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DevolverPoaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DevolverPoaResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Devolver el POA con observaciones (rol de JEFA)",
+        "tags": [
+          "POAs"
+        ]
+      }
+    },
+    "/api/v1/poas/{poaid}/autorizar": {
+      "post": {
+        "description": "Permite a la jefatura aprobar y autorizar un POA que se encuentra en revisión",
+        "operationId": "PoasController_autorizarPoa",
+        "parameters": [
+          {
+            "name": "poaid",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutorizarPoaResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Autorizar POA (rol de JEFA",
+        "tags": [
+          "POAs"
+        ]
+      }
+    },
     "/api/v1/catalogos/banco-actividades": {
       "get": {
         "operationId": "CatalogoController_getBancoActividades",
@@ -2714,6 +2798,93 @@
         },
         "required": [
           "data"
+        ]
+      },
+      "DevolverPoaDto": {
+        "type": "object",
+        "properties": {
+          "observaciones": {
+            "type": "string",
+            "description": "Observaciones de la Jefatura para justificar la devolución",
+            "example": "Faltan justificar los montos asignados a viáticos"
+          }
+        },
+        "required": [
+          "observaciones"
+        ]
+      },
+      "DevolverPoaResponseDto": {
+        "type": "object",
+        "properties": {
+          "poa_id": {
+            "type": "string",
+            "description": "UUID de la POA devuelta",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          },
+          "estado_anterior": {
+            "type": "string",
+            "description": "Estado anterior de la POA",
+            "example": "EN_REVISION"
+          },
+          "estado_nuevo": {
+            "type": "string",
+            "description": "Estado actual de la POA",
+            "example": "DEVUELTA"
+          },
+          "fecha_devolucion": {
+            "type": "string",
+            "description": "Fecha de la devolución de la POA (Fecha de Ejecución)",
+            "example": "2026-08-11T16:15:00.000Z"
+          },
+          "mensaje": {
+            "type": "string",
+            "description": "Mensaje de estado del endpoint",
+            "example": "El POA ha sido devuelto al contralor con observaciones"
+          }
+        },
+        "required": [
+          "poa_id",
+          "estado_anterior",
+          "estado_nuevo",
+          "fecha_devolucion",
+          "mensaje"
+        ]
+      },
+      "AutorizarPoaResponseDto": {
+        "type": "object",
+        "properties": {
+          "poa_id": {
+            "type": "string",
+            "description": "UUID de la POA",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          },
+          "estado_anterior": {
+            "type": "string",
+            "description": "Estado nterior de la POA",
+            "example": "EN_REVISION"
+          },
+          "estado_nuevo": {
+            "type": "string",
+            "description": "Estado actual de la POA",
+            "example": "AUTORIZADA"
+          },
+          "fecha_autorizacion": {
+            "type": "string",
+            "description": "Fecha de autorización de la POA (Fecha de Ejecución)",
+            "example": "2026-08-10T09:30:00.000Z"
+          },
+          "mensaje": {
+            "type": "string",
+            "description": "Mensaje de la operación",
+            "example": "El POA ha sido autorizado correctamente"
+          }
+        },
+        "required": [
+          "poa_id",
+          "estado_anterior",
+          "estado_nuevo",
+          "fecha_autorizacion",
+          "mensaje"
         ]
       },
       "BancoActividadesDto": {

@@ -26,6 +26,9 @@ import { PresentarPoasDto } from '../../dto/request/poas-presentar.dto';
 import { CrearActividadesResponseDto } from '../../dto/response/poa-actividades.response.dto';
 import { PoaActualDto } from '../../dto/response/poa-actual.dto';
 import { PresentarPoasResponseErrorDto } from '../../dto/response/poas-presentar-response.dto';
+import { DevolverPoaResponseDto } from '@modules/poas/dto/response/poas-devolver.response.dto';
+import { DevolverPoaDto } from '@modules/poas/dto/request/poas-devolver.dto';
+import { AutorizarPoaResponseDto } from '@modules/poas/dto/response/poas-autorizar.response.dto';
 
 @ApiTags('POAs')
 @ApiBearerAuth()
@@ -110,5 +113,42 @@ export class PoasController {
     @Param('poaid') poaId: string,
   ) {
     return this.poaService.cancelarEnvio({ usuarioActual, poaId });
+  }
+
+  @ApiOperation({
+    summary: 'Devolver el POA con observaciones (rol de JEFA)',
+    description:
+      'Permite a la jefatura devolver un POA al contralor indicando los motivos o correcciones necesarias',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: DevolverPoaResponseDto,
+  })
+  @RequirePermissions(Permisos.GESTIONAR_SUPERVISION_POA)
+  @Post(':poaid/devolver')
+  devolverPoa(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('poaid') poaId: string,
+    @Body() dto: DevolverPoaDto,
+  ): Promise<DevolverPoaResponseDto> {
+    return this.poaService.devolverPoa({ usuarioActual, poaId, dto });
+  }
+
+  @ApiOperation({
+    summary: 'Autorizar POA (rol de JEFA',
+    description:
+      'Permite a la jefatura aprobar y autorizar un POA que se encuentra en revisión',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: AutorizarPoaResponseDto,
+  })
+  @RequirePermissions(Permisos.GESTIONAR_SUPERVISION_POA)
+  @Post(':poaid/autorizar')
+  autorizarPoa(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('poaid') poaId: string,
+  ): Promise<AutorizarPoaResponseDto> {
+    return this.poaService.autorizarPoa({ usuarioActual, poaId });
   }
 }
