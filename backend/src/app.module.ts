@@ -8,6 +8,7 @@ import { PoasModule } from './modules/poas/poas.module';
 import { CatalogoModule } from './modules/catalogo/catalogo.module';
 import { AuditoresModule } from './modules/auditores/auditores.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { CentrosModule } from './modules/centros/centros.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     CatalogoModule,
     AuditoresModule,
     DashboardModule,
+    CentrosModule,
   ],
   controllers: [AppController],
   providers: [AppService],

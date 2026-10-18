@@ -22,11 +22,10 @@ import { PresentarPoaCommand } from './ports/commands/presentar-poa.command';
 import type { IPoaQueryRepository } from './ports/poa-query.repository.interface';
 import { POA_QUERY_REPOSITORY_TOKEN } from './ports/poa-query.repository.interface';
 import { GetPoaActualQuery } from './ports/queries/get-poa-actual.query';
-import { CalculadorSupervisionPoa } from '@domain/poa/calculador-supervision-poa.domain-service';
+import { CalculadoraKpiService } from '@domain/kpi/calculador-kpi..domain-service';
 import { SupervisionCentrosResponseDto } from '../dto/response/supervision-centros.response.dto';
 import { GetSupervisionCentrosQuery } from './ports/queries/get-supervision-centros.query';
-import { PoaDeCentroResponseDto } from '../dto/response/poa-de-centro.response.dto';
-import { GetPoaDeCentroQuery } from './ports/queries/get-poa-de-centro.query';
+
 
 @Injectable()
 export class PoasService {
@@ -74,34 +73,11 @@ export class PoasService {
       historicLimit,
     });
 
-    const kpis = CalculadorSupervisionPoa.calcularKpisGlobales(
+    const kpis = CalculadoraKpiService.calcularKpisSupervisionPoa(
       centros.map((centro) => centro.poaAnioActual?.estado ?? null),
     );
 
     return PoaResponseMapper.toSupervisionCentrosDto(kpis, centros);
-  }
-
-    async getPoaDeCentro(
-    query: GetPoaDeCentroQuery,
-  ): Promise<PoaDeCentroResponseDto> {
-    const { usuarioActual, centroId } = query;
-    const anioFiscal = query.anio ?? new Date().getFullYear();
-
-    const poa = await this.poaQueryRepository.obtenerPoaDeCentro({
-      jefaUsuarioId: usuarioActual.usuario_id,
-      centroId,
-      anioFiscal,
-    });
-
-    if (!poa) {
-      throw new RecursoNoEncontradoException(
-        `POA ${anioFiscal} del centro`,
-        centroId,
-        usuarioActual.usuario_id,
-      );
-    }
-
-    return PoaResponseMapper.toPoaDeCentroDto(poa);
   }
 
   async agregarActividad(

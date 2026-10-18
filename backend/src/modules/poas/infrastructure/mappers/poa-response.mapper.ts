@@ -6,14 +6,11 @@ import { CancelarPoaDto } from '@modules/poas/dto/request/poas-cancelar.dto';
 import { PresentarPoasDto } from '@modules/poas/dto/request/poas-presentar.dto';
 import { CrearActividadesResponseDto } from '@modules/poas/dto/response/poa-actividades.response.dto';
 import { PoaActualDto } from '@modules/poas/dto/response/poa-actual.dto';
-import {
-  CalculadorSupervisionPoa,
-  KpisSupervisionPoa,
-} from '@domain/poa/calculador-supervision-poa.domain-service';
+import { CalculadoraKpiService } from '@domain/kpi/calculador-kpi..domain-service';
+import { KpiSupervisionPoaResult } from '@domain/kpi/interfaces/kpi-supervision-poa-result.interface';
 import { SupervisionCentroResult } from '@modules/poas/application/ports/results/supervision-centro.result';
 import { SupervisionCentrosResponseDto } from '@modules/poas/dto/response/supervision-centros.response.dto';
-import { PoaDeCentroResult } from '@modules/poas/application/ports/results/poa-de-centro.result';
-import { PoaDeCentroResponseDto } from '@modules/poas/dto/response/poa-de-centro.response.dto';
+
 
 export class PoaResponseMapper {
   static toPoaActualDto(rawPoa: PoaActualResult): PoaActualDto {
@@ -49,7 +46,7 @@ export class PoaResponseMapper {
   }
 
     static toSupervisionCentrosDto(
-    kpis: KpisSupervisionPoa,
+    kpis: KpiSupervisionPoaResult,
     centros: SupervisionCentroResult[],
   ): SupervisionCentrosResponseDto {
     return {
@@ -66,7 +63,6 @@ export class PoaResponseMapper {
         contralor_actual: centro.contralorActual
           ? {
               nombre_completo: centro.contralorActual.nombreCompleto,
-              // hardcodeado hasta decidir si se agrega Contralor.activo en BD
               estatus: 'Activo',
             }
           : null,
@@ -76,9 +72,8 @@ export class PoaResponseMapper {
               id: centro.poaAnioActual.id,
               anio_fiscal: centro.poaAnioActual.anioFiscal,
               estado: centro.poaAnioActual.estado,
-              // hardcodeado hasta decidir si se agrega Poa.fecha_envio en BD
               fecha_envio: null,
-              porcentaje_avance_global: CalculadorSupervisionPoa.calcularAvance(
+              porcentaje_avance_global: CalculadoraKpiService.calcularAvanceSupervisionPoa(
                 centro.poaAnioActual.estado,
                 centro.poaAnioActual.porcentajesActividades,
               ),
@@ -88,35 +83,6 @@ export class PoaResponseMapper {
     };
   }
 
-    static toPoaDeCentroDto(result: PoaDeCentroResult): PoaDeCentroResponseDto {
-    const fecha = (valor: Date | null): string | null =>
-      valor ? DateFormatterUtil.toAnioMesDia(valor) : null;
-
-    return {
-      poa: {
-        id: result.id,
-        anio_fiscal: result.anioFiscal,
-        estado: result.estado,
-        mensaje_resolucion: result.mensajeResolucion,
-        // TODO(equipo): null hasta decidir si se agrega Poa.fecha_envio en BD
-        fecha_envio: null,
-        centro: {
-          clave: result.centro.clave,
-          nombre: result.centro.nombre,
-        },
-        contralor: { nombre_completo: result.contralor.nombreCompleto },
-      },
-      actividades: result.actividades.map((act) => ({
-        id: act.id,
-        folio: act.folio,
-        titulo: act.titulo,
-        fecha_inicio: fecha(act.fechaInicio),
-        fecha_termino: fecha(act.fechaTermino),
-        porcentaje_global: act.porcentajeGlobal,
-        auditores: act.auditoresNombres,
-      })),
-    };
-  }
 
   static toPresentarPoaDto(
     poaId: string,

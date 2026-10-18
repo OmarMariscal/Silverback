@@ -2,8 +2,7 @@ import { FiltrosMiPoa } from './filtros/mi-poa.filter.interface';
 import { FiltrosSupervisionCentros } from './filtros/supervision-centros.filter';
 import { PoaActualResult } from './results/poa-actual.result';
 import { SupervisionCentroResult } from './results/supervision-centro.result';
-import { FiltrosPoaDeCentro } from './filtros/poa-de-centro.filter';
-import { PoaDeCentroResult } from './results/poa-de-centro.result';
+import { FiltrosPoaDeCentro } from '../../../centros/application/ports/filtros/poa-de-centro.filter';
 
 export const POA_QUERY_REPOSITORY_TOKEN = Symbol('POA_QUERY_REPOSITORY_TOKEN');
 
@@ -29,15 +28,5 @@ export interface IPoaQueryRepository {
     filtros: FiltrosSupervisionCentros,
   ): Promise<SupervisionCentroResult[]>;
 
-    /**
-   * Endpoint: GET /api/v1/centros/:centroId/poa
-   * Propósito: Detalle de la POA de un centro (por año) para la Jefatura.
-   * Reglas: Solo si el centro tiene un contralor asignado a la Jefa; si no,
-   * devuelve null igual que cuando no existe (no revela qué centros existen).
-   *
-   * @returns La POA con sus actividades o null si no existe / no es de su jurisdicción.
-   */
-  obtenerPoaDeCentro(
-    filtros: FiltrosPoaDeCentro,
-  ): Promise<PoaDeCentroResult | null>;
+
 }
