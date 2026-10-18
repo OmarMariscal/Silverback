@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { EstadosPoa } from '@domain/poa/estados-poa.enum';
 
-export class CancelarPoaDto {
+export class CancelarPoaDataDto {
   @ApiProperty({
     description: 'ID de la POA a cancelar',
     type: String,

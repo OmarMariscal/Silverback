@@ -21,6 +21,7 @@ export class PoaMapper implements Mapper<PoaEntity, PrismaPoa> {
       raw.mensaje_resolucion,
       [], // Hidratación superficial por defecto. La vcreación de snapshots no le corresponde al mapper.
       raw.fecha_aprobado,
+      raw.fecha_devolucion,
       raw.ultima_secuencia_actividad,
     );
 
@@ -40,6 +41,7 @@ export class PoaMapper implements Mapper<PoaEntity, PrismaPoa> {
       anio_fiscal: entity.getAnioFiscal(),
       estado: traducirEstadoPoaAPrisma(entity.getEstadosPoa()),
       fecha_aprobado: entity.getFechaAprobado(),
+      fecha_devolucion: entity.getFechaDevolucion(),
       mensaje_resolucion: entity.getMensajeResolucion(),
       contralor_id: entity.getContralorId(),
       centro_id: entity.getCentroUniversitarioId(),

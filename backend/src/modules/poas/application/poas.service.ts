@@ -11,13 +11,17 @@ import { TransactionHandle } from '@domain/shared/transaction.interface';
 import type { IActividadesQueryRepository } from '@modules/actividades/application/ports/actividades-query.repository.interface';
 import { ACTIVIDADES_QUERY_REPOSITORY_TOKEN } from '@modules/actividades/application/ports/actividades-query.repository.interface';
 import { Inject, Injectable } from '@nestjs/common';
-import { CancelarPoaDto } from '../dto/request/poas-cancelar.dto';
 import { PresentarPoasDto } from '../dto/request/poas-presentar.dto';
 import { CrearActividadesResponseDto } from '../dto/response/poa-actividades.response.dto';
 import { PoaActualDto } from '../dto/response/poa-actual.dto';
+import { AutorizarPoaResponseDto } from '../dto/response/poas-autorizar.response.dto';
+import { CancelarPoaResponseaDto } from '../dto/response/poas-cancelar.response.dto';
+import { DevolverPoaResponseDto } from '../dto/response/poas-devolver.response.dto';
 import { PoaResponseMapper } from '../infrastructure/mappers/poa-response.mapper';
 import { AgregarActividadCommand } from './ports/commands/agregar-actividad.command';
+import { AutorizarPoaCommand } from './ports/commands/autorizar-poa.command';
 import { CancelarEnvioCommand } from './ports/commands/cancelar-envio.command';
+import { DevolverPoaCommand } from './ports/commands/devolver-poa.command';
 import { PresentarPoaCommand } from './ports/commands/presentar-poa.command';
 import type { IPoaQueryRepository } from './ports/poa-query.repository.interface';
 import { POA_QUERY_REPOSITORY_TOKEN } from './ports/poa-query.repository.interface';
@@ -178,7 +182,9 @@ export class PoasService {
     );
   }
 
-  async cancelarEnvio(command: CancelarEnvioCommand): Promise<CancelarPoaDto> {
+  async cancelarEnvio(
+    command: CancelarEnvioCommand,
+  ): Promise<CancelarPoaResponseaDto> {
     // Deconstrucción del command
     const { usuarioActual, poaId } = command;
 
@@ -208,6 +214,88 @@ export class PoasService {
           poaId,
           estadoAnterior,
           poa.getEstadosPoa(),
+        );
+      },
+    );
+  }
+
+  async devolverPoa(
+    command: DevolverPoaCommand,
+  ): Promise<DevolverPoaResponseDto> {
+    const { usuarioActual, poaId, dto } = command;
+
+    return this.unitOfWork.ejecutarTransaccion(
+      async (tx: TransactionHandle) => {
+        // 1. Obtener el Agregado Raíz
+        const poa = await this.poaRepository.obtenerPorId(poaId, tx);
+        if (!poa) {
+          throw new RecursoNoEncontradoException(
+            'POA',
+            poaId,
+            usuarioActual.usuario_id,
+          );
+        }
+
+        const estadoAnterior = poa.getEstadosPoa();
+
+        //2. Mutación y validación en Dominio (Inyectando tenencia y observaciones)
+        poa.devolver(
+          usuarioActual.actor,
+          usuarioActual.usuario_id,
+          dto.observaciones,
+        );
+
+        //3. Persistencia de los cambios
+        await this.poaRepository.guardar(poa, tx);
+
+        //4. Retorno usando el Mapper
+        return PoaResponseMapper.toDevolverPoaResponse(
+          poaId,
+          estadoAnterior,
+          poa.getEstadosPoa(),
+          poa.getFechaDevolucion()!, // Garantizado por la entidad
+        );
+      },
+    );
+  }
+
+  async autorizarPoa(
+    command: AutorizarPoaCommand,
+  ): Promise<AutorizarPoaResponseDto> {
+    const { usuarioActual, poaId } = command;
+
+    return this.unitOfWork.ejecutarTransaccion(
+      async (tx: TransactionHandle) => {
+        //1 Obtener el agregado raíz
+        const poa = await this.poaRepository.obtenerPorId(poaId, tx);
+
+        if (!poa) {
+          throw new RecursoNoEncontradoException(
+            'POA',
+            poaId,
+            usuarioActual.usuario_id,
+          );
+        }
+
+        const estadoAnterior = poa.getEstadosPoa();
+        const fechaAprobacion = new Date();
+
+        //2. Mutación y validación en Dominio
+        poa.autorizar(
+          usuarioActual.actor,
+          usuarioActual.usuario_id,
+          fechaAprobacion,
+        );
+
+        //3. Persistencia de los cambios
+        await this.poaRepository.guardar(poa, tx);
+
+        //4. Retorno usando el Mapper
+        return PoaResponseMapper.toAutorizarPoaResponse(
+          poaId,
+          estadoAnterior,
+          poa.getEstadosPoa(),
+          poa.getFechaAprobado()!, // Garantizado por Domino
         );
       },
     );
