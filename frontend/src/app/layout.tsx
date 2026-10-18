@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sistema Integral de Auditoría",
+  title: "Sistema Integral de Monitoreo de Auditorías",
   description: "Plataforma de gestión de auditorías y control interno",
 };
 

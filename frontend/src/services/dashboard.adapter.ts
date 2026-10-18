@@ -110,6 +110,67 @@ export const adaptarDashboardContralorUI = (
   };
 };
 
+/**
+ * Convierte una fecha ISO o timestamp en tiempo relativo amigable (ej: "Hace 25 min", "Hace 2 horas", "Ayer")
+ */
+export const formatearTiempoTranscurrido = (
+  fechaIsoOString?: string | null
+): string => {
+  if (!fechaIsoOString) return 'Sin fecha de envío';
+
+  // Si ya viene formateado tipo "Hace 2 días", "Ayer" o "Hoy"
+  const strLower = fechaIsoOString.toLowerCase();
+  if (
+    strLower.startsWith('hace') ||
+    strLower === 'hoy' ||
+    strLower === 'ayer'
+  ) {
+    return fechaIsoOString;
+  }
+
+  const fecha = new Date(fechaIsoOString);
+  if (Number.isNaN(fecha.getTime())) return fechaIsoOString;
+
+  const ahora = new Date();
+  const diffMs = ahora.getTime() - fecha.getTime();
+
+  // Si la fecha es casi idéntica o desfasada por segundos en el futuro
+  if (diffMs < 0 && diffMs > -60000) {
+    return 'Hace un momento';
+  }
+
+  const diffSegundos = Math.max(0, Math.floor(diffMs / 1000));
+  const diffMinutos = Math.floor(diffSegundos / 60);
+  const diffHoras = Math.floor(diffMinutos / 60);
+  const diffDias = Math.floor(diffHoras / 24);
+
+  if (diffMinutos < 1) {
+    return 'Hace un momento';
+  }
+  if (diffMinutos < 60) {
+    return `Hace ${diffMinutos} min`;
+  }
+  if (diffHoras < 24) {
+    return `Hace ${diffHoras} ${diffHoras === 1 ? 'hora' : 'horas'}`;
+  }
+  if (diffDias === 1) {
+    return 'Ayer';
+  }
+  if (diffDias < 7) {
+    return `Hace ${diffDias} días`;
+  }
+  if (diffDias < 30) {
+    const semanas = Math.floor(diffDias / 7);
+    return `Hace ${semanas} ${semanas === 1 ? 'semana' : 'semanas'}`;
+  }
+  const meses = Math.floor(diffDias / 30);
+  if (meses < 12) {
+    return `Hace ${meses} ${meses === 1 ? 'mes' : 'meses'}`;
+  }
+  const anios = Math.floor(meses / 12);
+  return `Hace ${anios} ${anios === 1 ? 'año' : 'años'}`;
+};
+
 export const adaptarDashboardJefaUI = (
   kpisDto: DashApi.DashboardJefaDto,
   rezagoDto: DashApi.RezagoResponseDto,
@@ -181,17 +242,27 @@ export const adaptarDashboardJefaUI = (
       actividadesPrecaucion: r.distribucion.actividades_precaucion,
       total: r.distribucion.total,
     })),
-    directorio: (directorioDto.data || []).map((d) => ({
-      id: d.id,
-      identificador: d.identificador || 'S/N',
-      tipo: d.tipo,
-      titulo: d.titulo,
-      centroClave: d.asignacion?.centro_clave || 'Red',
-      contralor: d.asignacion?.contralor || 'Sin asignar',
-      estadoEtiqueta: d.estado_operativo?.etiqueta || d.estado_operativo?.codigo || 'En proceso',
-      fechaTermino: d.fecha_termino,
-      fechaEnviado: d.fecha_envio,
-      semaforo: d.semaforo,
-    })),
+    directorio: (directorioDto.data || []).map((d) => {
+      const contralorNombre =
+        d.asignacion?.contralor === 'Mtro. Contralor CUCEI'
+          ? 'Mtro. Braulio Vicente'
+          : d.asignacion?.contralor || 'Sin asignar';
+
+      return {
+        id: d.id,
+        identificador: d.identificador || 'S/N',
+        tipo: d.tipo,
+        titulo: d.titulo,
+        centroClave: d.asignacion?.centro_clave || 'Red',
+        contralor: contralorNombre,
+        estadoEtiqueta:
+          d.estado_operativo?.etiqueta ||
+          d.estado_operativo?.codigo ||
+          'En proceso',
+        fechaTermino: d.fecha_termino,
+        fechaEnviado: formatearTiempoTranscurrido(d.fecha_envio),
+        semaforo: d.semaforo,
+      };
+    }),
   };
-};
+};

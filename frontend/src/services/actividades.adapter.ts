@@ -72,7 +72,11 @@ export const adaptarDirectorioActividadesUI = (
         ? actividad.asignacion.centro_clave || 'Sin centro'
         : `${actividad.asignacion.participacion_porcentaje ?? 0}%`,
       asignacionSecundaria: esVistaJefatura
-        ? actividad.asignacion.contralor || actividad.asignacion.auditor_apoyo || 'Sin responsable'
+        ? (actividad.asignacion.contralor === 'Mtro. Contralor CUCEI'
+            ? 'Mtro. Braulio Vicente'
+            : actividad.asignacion.contralor) ||
+          actividad.asignacion.auditor_apoyo ||
+          'Sin responsable'
         : actividad.asignacion.auditor_apoyo || 'Sin auditores asignados',
       estadoCodigo,
       estadoEtiqueta:
