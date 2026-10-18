@@ -3,21 +3,15 @@
 // En palabras sencillas: Este archivo es como un "puente" entre la UI y el backend. Cada función es un camino que lleva datos desde la API hasta los componentes de la UI, y viceversa. Si los datos vienen en un formato raro, usamos adaptadores para traducirlos a algo que la UI pueda entender fácilmente.
 
 import { api } from './api';
-import { adaptarPoaActual } from './poa.adapter';
 import * as PoaApi from '../types/poa-api';
 
 export const poaService = {
   
   // 1. Obtener el POA actual
-  obtenerMiPoaActual: async () => {
+  obtenerMiPoaActual: async (): Promise<PoaApi.PoaActualDto> => {
     try {
-      // 💡 GENÉRICO AÑADIDO <PoaApi.PoaActualDto>
       const respuesta = await api.get<PoaApi.PoaActualDto>('/poas/mi-poa-actual');
-      const adaptado = adaptarPoaActual(respuesta.data);
-      return {
-        poaId: respuesta.data.id,
-        ...adaptado
-      };
+      return respuesta.data;
     } catch (error) {
       console.error("Error al obtener el POA actual:", error);
       throw error; 
@@ -157,18 +151,7 @@ export const poaService = {
     }
   },
 
-  // 13. Obtener subactividades seleccionadas
-  obtenerSubactividadesSelect: async (actividadId: string): Promise<PoaApi.SubActividadesSelectResponse> => {
-    try {
-      const respuesta = await api.get<PoaApi.SubActividadesSelectResponse>(`/actividades/${actividadId}/sub-actividades-select`);
-      return respuesta.data;
-    } catch (error) {
-      console.error("Error al obtener subactividades select:", error);
-      throw error;
-    }
-  },
-
-  // 14. Creación masiva de subactividades (Bulk)
+  // 13. Creación masiva de subactividades (Bulk)
   crearSubactividadesBulk: async (
     actividadId: string, 
     payload: PoaApi.SubActividadesBulkRequest
@@ -182,7 +165,7 @@ export const poaService = {
     }
   },
 
-  // 15. Eliminar una actividad
+  // 14. Eliminar una actividad
   eliminarActividad: async (actividadId: string): Promise<PoaApi.EliminacionCorrecta> => {
     try {
       const respuesta = await api.delete<PoaApi.EliminacionCorrecta>(`/actividades/${actividadId}`);
@@ -193,14 +176,4 @@ export const poaService = {
     }
   },
 
-  // 16. Obtener catálogo de centros universitarios
-  obtenerCentros: async (): Promise<PoaApi.CentroDto> => {
-    try {
-      const respuesta = await api.get<PoaApi.CentroDto>('/catalogos/centros');
-      return respuesta.data;
-    } catch (error) {
-      console.error("Error al obtener catálogo de centros:", error);
-      throw error;
-    }
-  }
 };

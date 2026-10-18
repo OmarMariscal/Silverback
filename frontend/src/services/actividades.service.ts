@@ -3,10 +3,21 @@
 // En palabras sencillas: Este archivo es como un "puente" entre tu frontend y el backend. Cada función hace una llamada a un endpoint y devuelve los datos que necesitas para mostrar en la interfaz de usuario.
 
 import { api } from './api';
-import { ActividadesDirectorioQuery, ActividadesDirectorioResponse } from '@/types/actividades-api';
+import {
+  ActividadResumenResponse,
+  ActividadesDirectorioQuery,
+  ActividadesDirectorioResponse,
+} from '@/types/actividades-api';
 import { CentroDto } from '@/types/poa-api';
 
 export const actividadesService = {
+  obtenerResumen: async (actividadId: string): Promise<ActividadResumenResponse> => {
+    const respuesta = await api.get<ActividadResumenResponse>(
+      `/actividades/${actividadId}/resumen`,
+    );
+    return respuesta.data;
+  },
+
   obtenerDirectorio: async (
     query: ActividadesDirectorioQuery,
   ): Promise<ActividadesDirectorioResponse> => {

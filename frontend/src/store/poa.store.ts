@@ -3,9 +3,10 @@
 // En palabras sencillas: Este store es como una "bóveda" donde guardamos toda la información del POA y las funciones para modificarla. Los componentes de la UI pueden "abrir" esta bóveda para leer datos o "pedir" que se hagan cambios, y el store se encarga de actualizar todo de manera ordenada y eficiente.
 
 import { create } from 'zustand';
+import axios from 'axios';
 import { 
-  CabeceraPOAProps, 
-  TarjetaActividadPOAProps, 
+  CabeceraPOAData, 
+  TarjetaActividadPOAData, 
   BancoActividadItemProps, 
   OpcionAuditorProps, 
   DatosFormularioFicha,
@@ -20,30 +21,26 @@ import {
   adaptarCatalogoAuditores,
   adaptarDetalleBancoUI,
   adaptarSubactividadesSugeridasUI,
-  adaptarSubactividadesSelectUI,
   adaptarFormularioACrearDTO,
-  SubactividadSelectUI
+  adaptarPoaActual,
 } from '../services/poa.adapter';
 import * as PoaApi from '../types/poa-api';
 
 interface PoaState {
   // --- A. ESTADO DE PANTALLA 1 (POA Actual) ---
   poaId: string | null;
-  cabecera: CabeceraPOAProps | null;
-  actividades: TarjetaActividadPOAProps[];
+  cabecera: CabeceraPOAData | null;
+  actividades: TarjetaActividadPOAData[];
   cargandoInicial: boolean;
   erroresValidacionPresentar: string[] | null;
+  mensajeError: string | null;
 
   // --- B. ESTADO DE PANTALLAS 2, 3, 4 Y 5 ---
   bancoActividades: BancoActividadItemProps[];
   cargandoBanco: boolean;
   auditoresDisponibles: OpcionAuditorProps[];
-  cargandoAuditores: boolean;
   actividadBancoSeleccionada: Partial<DatosFormularioFicha> | null;
   sugerenciasSubactividades: SubactividadSugerida[];
-  subactividadesSelect: SubactividadSelectUI[]; // Conectada Pantalla 4
-  cargandoSubactividadesSelect: boolean;
-  centrosUniversitarios: PoaApi.CentroDataDto[];
 
   // --- C. ACCIONES DE PANTALLA 1 ---
   cargarPoaInicial: () => Promise<void>;
@@ -55,12 +52,10 @@ interface PoaState {
   // --- D. ACCIONES DE PANTALLAS 2 A 5 (100% de funciones conectadas) ---
   cargarBancoActividades: () => Promise<void>;
   cargarAuditores: () => Promise<void>;
-  cargarCentros: () => Promise<void>;
-  seleccionarActividadBanco: (idBanco: string) => Promise<void>;
+  seleccionarActividadBanco: (idBanco: string) => Promise<Partial<DatosFormularioFicha> | null>;
   crearNuevaActividad: (datosForm: DatosFormularioFicha, idBanco?: string | null) => Promise<string | null>;
   editarFichaTecnica: (actividadId: string, datosForm: Partial<DatosFormularioFicha>) => Promise<boolean>;
   obtenerSubactividadesSugeridas: (idBanco: string) => Promise<void>;
-  cargarSubactividadesSelect: (actividadId: string) => Promise<void>;
   crearSubactividadesMasivas: (actividadId: string, filas: SubactividadFilaForm[]) => Promise<boolean>;
   sincronizarSubactividades: (actividadId: string, filas: SubactividadFilaForm[]) => Promise<boolean>;
   limpiarErroresValidacion: () => void;
@@ -71,36 +66,30 @@ export const usePoaStore = create<PoaState>((set, get) => ({
   poaId: null,
   cabecera: null,
   actividades: [],
-  cargandoInicial: false,
+  cargandoInicial: true,
   erroresValidacionPresentar: null,
+  mensajeError: null,
 
   bancoActividades: [],
   cargandoBanco: false,
   auditoresDisponibles: [],
-  cargandoAuditores: false,
   actividadBancoSeleccionada: null,
   sugerenciasSubactividades: [],
-  subactividadesSelect: [],
-  cargandoSubactividadesSelect: false,
-  centrosUniversitarios: [],
 
   // 1. Cargar POA Inicial (Guarda poaId e inyecta eventos en cabecera)
   cargarPoaInicial: async () => {
-    set({ cargandoInicial: true, erroresValidacionPresentar: null });
+    set({ cargandoInicial: true, erroresValidacionPresentar: null, mensajeError: null });
     try {
-      const { poaId, cabecera, actividades } = await poaService.obtenerMiPoaActual();
-      
-      // Inyectamos las llamadas del store a la cabecera visual
-      const cabeceraConEventos: CabeceraPOAProps = {
-        ...cabecera,
-        onEnviarRevision: () => get().enviarPoaARevision(),
-        onCancelarEnvio: () => get().cancelarEnvioPoa()
-      };
-
-      set({ poaId, cabecera: cabeceraConEventos, actividades, cargandoInicial: false });
+      const adaptado = adaptarPoaActual(await poaService.obtenerMiPoaActual());
+      set({
+        poaId: adaptado.poaId,
+        cabecera: adaptado.cabecera,
+        actividades: adaptado.actividades,
+        cargandoInicial: false,
+      });
     } catch (error) {
       console.error("Error al cargar el POA inicial", error);
-      set({ cargandoInicial: false });
+      set({ cargandoInicial: false, mensajeError: 'No se pudo cargar el POA. Intenta nuevamente.' });
     }
   },
 
@@ -161,18 +150,21 @@ export const usePoaStore = create<PoaState>((set, get) => ({
         cabecera: state.cabecera ? { 
           ...state.cabecera, 
           estadoActual: "EN_REVISION", 
+          estadoEtiqueta: "En revisión",
           puedeEditar: false, 
           estaCargando: false 
         } : null,
         actividades: state.actividades.map(a => ({ ...a, ocultarBotonBorrar: true }))
       }));
       alert(res.mensaje);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error al presentar el POA", error);
       
-      if (error.response?.status === 422) {
-        const errorData: PoaApi.PresentarPoasResponseErrorDto = error.response.data;
-        set({ erroresValidacionPresentar: errorData.detalles });
+      if (
+        axios.isAxiosError<PoaApi.PresentarPoasResponseErrorDto>(error) &&
+        error.response?.status === 422
+      ) {
+        set({ erroresValidacionPresentar: error.response.data.detalles });
       } else {
         alert("Ocurrió un error al enviar el POA a revisión.");
       }
@@ -200,7 +192,8 @@ export const usePoaStore = create<PoaState>((set, get) => ({
       set(state => ({
         cabecera: state.cabecera ? { 
           ...state.cabecera, 
-          estadoActual: "SIN_ENVIAR", 
+          estadoActual: "BORRADOR", 
+          estadoEtiqueta: "Borrador",
           puedeEditar: true, 
           estaCargando: false 
         } : null,
@@ -234,43 +227,36 @@ export const usePoaStore = create<PoaState>((set, get) => ({
     try {
       const res = await poaService.obtenerBancoActividades();
       set({ bancoActividades: adaptarBancoActividadesUI(res), cargandoBanco: false });
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error('Error al cargar el banco de actividades', error);
       set({ cargandoBanco: false });
     }
   },
 
   // 7. Cargar Auditores
   cargarAuditores: async () => {
-    set({ cargandoAuditores: true });
     try {
       const res = await poaService.obtenerAuditores();
-      set({ auditoresDisponibles: adaptarCatalogoAuditores(res), cargandoAuditores: false });
-    } catch (error) {
-      set({ cargandoAuditores: false });
+      set({ auditoresDisponibles: adaptarCatalogoAuditores(res) });
+    } catch (error: unknown) {
+      console.error('Error al cargar auditores disponibles', error);
     }
   },
 
-  // 8. Cargar Centros
-  cargarCentros: async () => {
-    try {
-      const res = await poaService.obtenerCentros();
-      set({ centrosUniversitarios: res.data });
-    } catch (error) {
-      console.error("Error al cargar centros", error);
-    }
-  },
-
-  // 9. Seleccionar Actividad del Banco
+  // 8. Seleccionar Actividad del Banco
   seleccionarActividadBanco: async (idBanco: string) => {
     try {
       const res = await poaService.obtenerDetalleBancoActividad(idBanco);
-      set({ actividadBancoSeleccionada: adaptarDetalleBancoUI(res) });
+      const actividad = adaptarDetalleBancoUI(res);
+      set({ actividadBancoSeleccionada: actividad });
+      return actividad;
     } catch (error) {
       console.error("Error al obtener detalle del banco", error);
+      return null;
     }
   },
 
-  // 10. Crear Nueva Actividad (Garantiza poaId real)
+  // 9. Crear Nueva Actividad (Garantiza poaId real)
   crearNuevaActividad: async (datosForm: DatosFormularioFicha, idBanco?: string | null) => {
     const { poaId } = get();
     if (!poaId) {
@@ -290,7 +276,7 @@ export const usePoaStore = create<PoaState>((set, get) => ({
     }
   },
 
-  // 11. Editar Ficha Técnica
+  // 10. Editar Ficha Técnica
   editarFichaTecnica: async (actividadId: string, datosForm: Partial<DatosFormularioFicha>) => {
     try {
       const payload: PoaApi.ActividadesPatchFichaTecnicaRequest = {
@@ -314,7 +300,7 @@ export const usePoaStore = create<PoaState>((set, get) => ({
     }
   },
 
-  // 12. Obtener Sugerencias del Banco
+  // 11. Obtener Sugerencias del Banco
   obtenerSubactividadesSugeridas: async (idBanco: string) => {
     try {
       const res = await poaService.obtenerSubactividadesSugeridas(idBanco);
@@ -324,19 +310,7 @@ export const usePoaStore = create<PoaState>((set, get) => ({
     }
   },
 
-  // 13. Cargar Subactividades Select (Pantalla 4 - Conectada)
-  cargarSubactividadesSelect: async (actividadId: string) => {
-    set({ cargandoSubactividadesSelect: true });
-    try {
-      const res = await poaService.obtenerSubactividadesSelect(actividadId);
-      set({ subactividadesSelect: adaptarSubactividadesSelectUI(res), cargandoSubactividadesSelect: false });
-    } catch (error) {
-      console.error("Error al obtener subactividades select", error);
-      set({ cargandoSubactividadesSelect: false });
-    }
-  },
-
-  // 14. Creación Masiva Bulk
+  // 12. Creación Masiva Bulk
   crearSubactividadesMasivas: async (actividadId: string, filas: SubactividadFilaForm[]) => {
     try {
       const payload: PoaApi.SubActividadesBulkRequest = {
@@ -358,7 +332,7 @@ export const usePoaStore = create<PoaState>((set, get) => ({
     }
   },
 
-  // 15. Sincronización en lote Sync
+  // 13. Sincronización en lote Sync
   sincronizarSubactividades: async (actividadId: string, filas: SubactividadFilaForm[]) => {
     try {
       const payloadSync: PoaApi.SubActividadesSyncRequest = {
@@ -380,6 +354,6 @@ export const usePoaStore = create<PoaState>((set, get) => ({
     }
   },
 
-  // 16. Limpiar Errores 422
+  // 14. Limpiar Errores 422
   limpiarErroresValidacion: () => set({ erroresValidacionPresentar: null })
 }));

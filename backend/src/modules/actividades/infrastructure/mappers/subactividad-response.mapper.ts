@@ -117,7 +117,7 @@ export class SubActividadResponseMapper {
     // Si fue devuelta, aplicamos tu regla semántica
     if (estado === EstadosActividades.DEVUELTA) {
       const esAuditoria = tipo === 'AUDITORIA';
-      const plural = esAuditoria ? 'observaciones' : 'revisiones';
+      const plural = esAuditoria ? 'observaciones' : 'recomendaciones';
       const singular = esAuditoria ? 'observación' : 'revisión';
 
       return `Devuelto con ${conteo} ${conteo === 1 ? singular : plural}`;

@@ -3,7 +3,7 @@
 // En palabras sencillas: Este archivo es como un "centro de control" para todas las llamadas HTTP que hagamos al backend. Configura cómo se hacen las peticiones y qué hacer si algo sale mal, como cuando el token de sesión expira.
 
 import axios, { InternalAxiosRequestConfig } from 'axios';
-import type { RolUsuario } from '@/types/roles';
+import { normalizarRolUsuario, type RolUsuario } from '@/types/roles';
 
 // Sesión única del mock de desarrollo. Cambiar aquí el rol y el usuario
 // mantiene sincronizados los headers y la visualización del frontend.
@@ -14,10 +14,8 @@ export const MOCK_SESSION: { role: RolUsuario; userId: string } = {
 
 export const obtenerRolActivo = (): RolUsuario => {
   if (typeof window !== 'undefined') {
-    const rolGuardado = localStorage.getItem('mock_role');
-    if (rolGuardado === 'JEFA' || rolGuardado === 'CONTRALOR' || rolGuardado === 'AUDITOR') {
-      return rolGuardado;
-    }
+    const rolGuardado = normalizarRolUsuario(localStorage.getItem('mock_role'));
+    if (rolGuardado) return rolGuardado;
   }
   return MOCK_SESSION.role;
 };
