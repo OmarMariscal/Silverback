@@ -16,6 +16,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -29,6 +30,11 @@ import { PresentarPoasDto } from '../../dto/request/poas-presentar.dto';
 import { CrearActividadesResponseDto } from '../../dto/response/poa-actividades.response.dto';
 import { PoaActualDto } from '../../dto/response/poa-actual.dto';
 import { PresentarPoasResponseErrorDto } from '../../dto/response/poas-presentar-response.dto';
+import {
+  HISTORIC_LIMIT_POR_DEFECTO,
+  SupervisionCentrosQueryDto,
+} from '../../dto/request/supervision-centros.query.dto';
+import { SupervisionCentrosResponseDto } from '../../dto/response/supervision-centros.response.dto';
 
 @ApiTags('POAs')
 @ApiBearerAuth()
@@ -54,6 +60,27 @@ export class PoasController {
     return await this.poaService.getPoaActual({ usuarioActual });
   }
 
+  @ApiOperation({
+    summary: 'Directorio de supervisión de POAs por centro universitario',
+    description:
+      'Devuelve los centros bajo la jurisdicción de la Jefa con el resumen de su POA del año vigente y KPIs globales para los filtros de la vista.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: SupervisionCentrosResponseDto,
+  })
+  @RequirePermissions(Permisos.GESTIONAR_SUPERVISION_POA)
+  @Get('supervision/centros')
+  async getSupervisionCentros(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Query() query: SupervisionCentrosQueryDto,
+  ): Promise<SupervisionCentrosResponseDto> {
+    return await this.poaService.getSupervisionCentros({
+      usuarioActual,
+      historicLimit: query.historic_limit ?? HISTORIC_LIMIT_POR_DEFECTO,
+    });
+  }
+  
   @ApiOperation({
     summary: 'Agregar actividades',
     description: 'Recibe los datos para crear actividades dentro de la POA',

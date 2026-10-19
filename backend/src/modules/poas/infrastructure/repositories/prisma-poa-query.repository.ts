@@ -4,6 +4,9 @@ import { FiltrosMiPoa } from '@modules/poas/application/ports/filtros/mi-poa.fil
 import { IPoaQueryRepository } from '@modules/poas/application/ports/poa-query.repository.interface';
 import { PoaActualResult } from '@modules/poas/application/ports/results/poa-actual.result';
 import { Injectable } from '@nestjs/common';
+import { FiltrosSupervisionCentros } from '@modules/poas/application/ports/filtros/supervision-centros.filter';
+import { SupervisionCentroResult } from '@modules/poas/application/ports/results/supervision-centro.result';
+import { FiltrosPoaDeCentro } from '@modules/centros/application/ports/filtros/poa-de-centro.filter';
 
 @Injectable()
 export class PoaQueryRepository implements IPoaQueryRepository {
@@ -89,4 +92,98 @@ export class PoaQueryRepository implements IPoaQueryRepository {
       })),
     };
   }
-}
+
+    async obtenerSupervisionCentros(
+    filtros: FiltrosSupervisionCentros,
+  ): Promise<SupervisionCentroResult[]> {
+    const { jefaUsuarioId, anioFiscal, historicLimit } = filtros;
+
+    // 1. Centros bajo la jurisdicción de la Jefa, con sus contralores y
+    //    el año/estado de todas sus POAs (ligero: sin actividades).
+    const centros = await this.prisma.centroUniversitario.findMany({
+      where: {
+        contralores: { some: { jefa: { usuario_id: jefaUsuarioId } } },
+      },
+      orderBy: { clave: 'asc' },
+      select: {
+        id: true,
+        clave: true,
+        nombre: true,
+        contralores: {
+          orderBy: { id: 'asc' },
+          select: {
+            id: true,
+            usuario: { select: { nombre_completo: true } },
+          },
+        },
+        poas: {
+          orderBy: [{ anio_fiscal: 'desc' }, { id: 'asc' }],
+          select: {
+            id: true,
+            anio_fiscal: true,
+            estado: true,
+            contralor_id: true,
+          },
+        },
+      },
+    });
+
+    // 2. POA vigente de cada centro (la del año fiscal pedido).
+    const poaVigentePorCentro = new Map<
+      string,
+      (typeof centros)[number]['poas'][number]
+    >();
+    for (const centro of centros) {
+      const vigente = centro.poas.find((p) => p.anio_fiscal === anioFiscal);
+      if (vigente) poaVigentePorCentro.set(centro.id, vigente);
+    }
+
+    // 3. Avance de las actividades de las POAs vigentes: UNA sola consulta.
+    const idsPoasVigentes = [...poaVigentePorCentro.values()].map((p) => p.id);
+    const actividades =
+      idsPoasVigentes.length === 0
+        ? []
+        : await this.prisma.actividad.findMany({
+            where: { poa_id: { in: idsPoasVigentes } },
+            select: { poa_id: true, porcentaje_global: true },
+          });
+
+    const avancePorPoa = new Map<string, number[]>();
+    for (const act of actividades) {
+      const lista = avancePorPoa.get(act.poa_id) ?? [];
+      lista.push(act.porcentaje_global ?? 0);
+      avancePorPoa.set(act.poa_id, lista);
+    }
+
+    // 4. Ensamblado del resultado
+    return centros.map((centro) => {
+      const poa = poaVigentePorCentro.get(centro.id);
+
+      // Sin marca "activo" en BD, el contralor actual es el dueño de la POA
+      // vigente o, si no hay POA, el único contralor que tenga el centro.
+      const contralor =
+        centro.contralores.find((c) => c.id === poa?.contralor_id) ??
+        (centro.contralores.length === 1 ? centro.contralores[0] : undefined);
+
+      return {
+        id: centro.id,
+        clave: centro.clave,
+        nombre: centro.nombre,
+        contralorActual: contralor
+          ? { nombreCompleto: contralor.usuario.nombre_completo }
+          : null,
+        aniosHistoricos: [
+          ...new Set(centro.poas.map((p) => p.anio_fiscal)),
+        ].slice(0, historicLimit),
+        poaAnioActual: poa
+          ? {
+              id: poa.id,
+              anioFiscal: poa.anio_fiscal,
+              estado: traducirEstadoPoaADominio(poa.estado),
+              porcentajesActividades: avancePorPoa.get(poa.id) ?? [],
+            }
+          : null,
+      };
+    });
+  }
+ }

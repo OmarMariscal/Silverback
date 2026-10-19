@@ -5,6 +5,11 @@ import { PoaActualResult } from '@modules/poas/application/ports/results/poa-act
 import { PresentarPoasDto } from '@modules/poas/dto/request/poas-presentar.dto';
 import { CrearActividadesResponseDto } from '@modules/poas/dto/response/poa-actividades.response.dto';
 import { PoaActualDto } from '@modules/poas/dto/response/poa-actual.dto';
+import { CalculadoraKpiService } from '@domain/kpi/calculador-kpi..domain-service';
+import { KpiSupervisionPoaResult } from '@domain/kpi/interfaces/kpi-supervision-poa-result.interface';
+import { SupervisionCentroResult } from '@modules/poas/application/ports/results/supervision-centro.result';
+import { SupervisionCentrosResponseDto } from '@modules/poas/dto/response/supervision-centros.response.dto';
+
 import { AutorizarPoaResponseDto } from '@modules/poas/dto/response/poas-autorizar.response.dto';
 import { CancelarPoaResponseaDto } from '@modules/poas/dto/response/poas-cancelar.response.dto';
 import { DevolverPoaResponseDto } from '@modules/poas/dto/response/poas-devolver.response.dto';
@@ -41,6 +46,45 @@ export class PoaResponseMapper {
       mensaje: 'Actividad Guardada Exitosamente',
     };
   }
+
+    static toSupervisionCentrosDto(
+    kpis: KpiSupervisionPoaResult,
+    centros: SupervisionCentroResult[],
+  ): SupervisionCentrosResponseDto {
+    return {
+      kpis_globales: {
+        total_centros: kpis.totalCentros,
+        por_autorizar: kpis.porAutorizar,
+        devueltas: kpis.devueltas,
+        autorizadas: kpis.autorizadas,
+      },
+      centros: centros.map((centro) => ({
+        id: centro.id,
+        clave: centro.clave,
+        nombre: centro.nombre,
+        contralor_actual: centro.contralorActual
+          ? {
+              nombre_completo: centro.contralorActual.nombreCompleto,
+              estatus: 'Activo',
+            }
+          : null,
+        anios_historicos: centro.aniosHistoricos,
+        poa_resumen_anio_actual: centro.poaAnioActual
+          ? {
+              id: centro.poaAnioActual.id,
+              anio_fiscal: centro.poaAnioActual.anioFiscal,
+              estado: centro.poaAnioActual.estado,
+              fecha_envio: null,
+              porcentaje_avance_global: CalculadoraKpiService.calcularAvanceSupervisionPoa(
+                centro.poaAnioActual.estado,
+                centro.poaAnioActual.porcentajesActividades,
+              ),
+            }
+          : null,
+      })),
+    };
+  }
+
 
   static toPresentarPoaDto(
     poaId: string,

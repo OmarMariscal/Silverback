@@ -26,6 +26,10 @@ import { PresentarPoaCommand } from './ports/commands/presentar-poa.command';
 import type { IPoaQueryRepository } from './ports/poa-query.repository.interface';
 import { POA_QUERY_REPOSITORY_TOKEN } from './ports/poa-query.repository.interface';
 import { GetPoaActualQuery } from './ports/queries/get-poa-actual.query';
+import { CalculadoraKpiService } from '@domain/kpi/calculador-kpi..domain-service';
+import { SupervisionCentrosResponseDto } from '../dto/response/supervision-centros.response.dto';
+import { GetSupervisionCentrosQuery } from './ports/queries/get-supervision-centros.query';
+
 
 @Injectable()
 export class PoasService {
@@ -60,6 +64,24 @@ export class PoasService {
     }
     // Retorno del DTO vía el mapper
     return PoaResponseMapper.toPoaActualDto(poaActual);
+  }
+
+    async getSupervisionCentros(
+    query: GetSupervisionCentrosQuery,
+  ): Promise<SupervisionCentrosResponseDto> {
+    const { usuarioActual, historicLimit } = query;
+
+    const centros = await this.poaQueryRepository.obtenerSupervisionCentros({
+      jefaUsuarioId: usuarioActual.usuario_id,
+      anioFiscal: new Date().getFullYear(),
+      historicLimit,
+    });
+
+    const kpis = CalculadoraKpiService.calcularKpisSupervisionPoa(
+      centros.map((centro) => centro.poaAnioActual?.estado ?? null),
+    );
+
+    return PoaResponseMapper.toSupervisionCentrosDto(kpis, centros);
   }
 
   async agregarActividad(
