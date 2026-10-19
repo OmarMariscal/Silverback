@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { HeaderPOA } from '@/components/ui/HeaderPoa';
@@ -14,6 +14,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [logoError, setLogoError] = useState(false);
   const rolActivo = useLayoutStore((state) => state.rolUsuario);
   const setUsuarioSesion = useLayoutStore((state) => state.setUsuarioSesion);
 
@@ -29,12 +30,23 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden">
       <aside className="w-36 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-        <div className="py-8 flex flex-col items-center border-b border-slate-100">
-          <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-black text-4xl shadow-lg shadow-indigo-200 mb-3">
-            C
+        <div className="py-6 px-2 flex flex-col items-center border-b border-slate-100">
+          <div className="w-24 h-20 rounded-2xl flex items-center justify-center mb-3 overflow-hidden">
+            {!logoError ? (
+              <img
+                src="/logo.png"
+                alt="Logo SIMA"
+                className="w-full h-full object-contain"
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+              <div className="w-16 h-16 bg-[#15274D] rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-md">
+                SIMA
+              </div>
+            )}
           </div>
-          <span className="text-sm font-black text-slate-800 tracking-tight leading-none text-center">
-            SISTEMA<br />INTEGRAL
+          <span className="text-[11px] font-black tracking-tight leading-snug text-center px-1 text-[#15274D]">
+            Sistema Integral de Monitoreo de Auditorías
           </span>
         </div>
 

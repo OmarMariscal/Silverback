@@ -223,7 +223,10 @@ export class SubActividadResponseMapper {
 
         // Blindaje contra zonas horarias
         fecha_termino: DateFormatterUtil.toAnioMesDia(raw.fecha_termino),
-        fecha_envio: DateFormatterUtil.toAnioMesDia(raw.fecha_envio),
+        fecha_envio: raw.fecha_envio
+          ? raw.fecha_envio.toISOString()
+          : '',
+        // Nota Angel: Se decidió no formatear la fecha de envío para que el frontend pueda mostrar el tiempo transcurrido desde el envío y poder mostrar "Enviado hace 3 días/horas/min" o "Enviado: Hace un momento" según corresponda.
 
         // Inyección del polimorfismo
         asignacion: this.construirAsignacion(raw, rolUsuario),

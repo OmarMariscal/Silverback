@@ -167,3 +167,8 @@ export const adaptarFormularioACrearDTO = (
     }
   };
 };
+
+// ========================================================
+// RE-EXPORTS DE SUPERVISIÓN Y DICTAMEN DE POAs (ROL: JEFA)
+// ========================================================
+export * from './poa-supervision.adapter';

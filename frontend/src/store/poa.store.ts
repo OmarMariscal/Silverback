@@ -357,3 +357,8 @@ export const usePoaStore = create<PoaState>((set, get) => ({
   // 14. Limpiar Errores 422
   limpiarErroresValidacion: () => set({ erroresValidacionPresentar: null })
 }));
+
+// ========================================================
+// RE-EXPORTS DE SUPERVISIÓN Y DICTAMEN DE POAs (ROL: JEFA)
+// ========================================================
+export { usePoaSupervisionStore, useJefaPoaStore } from './poa-supervision.store';

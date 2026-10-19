@@ -176,4 +176,74 @@ export const poaService = {
     }
   },
 
+  // ========================================================
+  // SUPERVISIÓN Y DICTAMEN DE POAs (ROL: JEFA)
+  // ========================================================
+
+  // 15. Obtener lista de centros y KPIs para supervisión
+  obtenerCentrosSupervision: async (
+    historicLimit = 3
+  ): Promise<PoaApi.SupervisionCentrosPoaResponseDto> => {
+    try {
+      const respuesta = await api.get<PoaApi.SupervisionCentrosPoaResponseDto>(
+        `/poas/supervision/centros?historic_limit=${historicLimit}`
+      );
+      return respuesta.data;
+    } catch (error) {
+      console.error('Error al obtener centros para supervisión de POAs:', error);
+      throw error;
+    }
+  },
+
+  // 16. Obtener POA de un centro universitario por año
+  obtenerPoaPorCentro: async (
+    centroId: string,
+    anio?: number
+  ): Promise<PoaApi.CentroPoaDetalleResponseDto> => {
+    try {
+      const queryAnio = anio ? `?anio=${anio}` : '';
+      const respuesta = await api.get<PoaApi.CentroPoaDetalleResponseDto>(
+        `/centros/${centroId}/poa${queryAnio}`
+      );
+      return respuesta.data;
+    } catch (error) {
+      console.error(`Error al obtener POA del centro ${centroId}:`, error);
+      throw error;
+    }
+  },
+
+  // 17. Devolver POA con observaciones
+  devolverPoaConObservaciones: async (
+    poaId: string,
+    payload: PoaApi.DevolverPoaRequestDto
+  ): Promise<PoaApi.DevolverPoaResponseDto> => {
+    try {
+      const respuesta = await api.post<PoaApi.DevolverPoaResponseDto>(
+        `/poas/${poaId}/devolver`,
+        payload
+      );
+      return respuesta.data;
+    } catch (error) {
+      console.error(`Error al devolver POA ${poaId} con observaciones:`, error);
+      throw error;
+    }
+  },
+
+  // 18. Autorizar POA
+  autorizarPoa: async (
+    poaId: string
+  ): Promise<PoaApi.AutorizarPoaResponseDto> => {
+    try {
+      const respuesta = await api.post<PoaApi.AutorizarPoaResponseDto>(
+        `/poas/${poaId}/autorizar`
+      );
+      return respuesta.data;
+    } catch (error) {
+      console.error(`Error al autorizar POA ${poaId}:`, error);
+      throw error;
+    }
+  },
+
 };
+
+export { poaSupervisionService } from './poa-supervision.service';
