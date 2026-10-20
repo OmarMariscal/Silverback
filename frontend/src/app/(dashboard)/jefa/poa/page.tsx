@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState} from 'react';
 import { useJefaPoaStore } from '@/store/poa-supervision.store';
+import ModalDevolverPoa from '@/components/ui/ModalDevolverPoa';
 
 export default function JefaSupervisionPoaPage() {
   const store = useJefaPoaStore();
@@ -9,6 +10,7 @@ export default function JefaSupervisionPoaPage() {
   // Extraemos las vistas computadas para la UI
   const centros = store.obtenerCentrosFiltradosUI();
   const inspector = store.obtenerInspectorPoaUI();
+  const [fichaExpandida, setFichaExpandida] = useState(false);
 
   // Cargar datos al montar el componente
   useEffect(() => {
@@ -19,6 +21,8 @@ export default function JefaSupervisionPoaPage() {
     return <div className="p-8 text-center text-slate-500 font-bold">Cargando centros y POAs...</div>;
   }
 
+  const centroSeleccionadoVisible = inspector && centros.some(c => c.idCentro === inspector.idCentro);
+
   return (
     <main className="flex-1 overflow-y-auto p-8 space-y-6">
       <div className="max-w-[1400px] mx-auto space-y-6">
@@ -26,7 +30,7 @@ export default function JefaSupervisionPoaPage() {
         {/* Barra Superior: Filtros Rápidos + Buscador */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <div className="flex items-center space-x-2">
-            <button 
+            <button
               onClick={() => store.setFiltroEstado('TODOS')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all ${
                 store.filtroEstado === 'TODOS' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -104,7 +108,7 @@ export default function JefaSupervisionPoaPage() {
               >
                 {/* Etiqueta Superior Derecha (Dependiendo del estado) */}
                 {centro.poaResumen.estado === 'EN_REVISION' && (
-                   <div className="absolute top-0 right-0 bg-purple-600 text-white text-[10px] font-extrabold uppercase px-3 py-1 rounded-bl-lg tracking-wider">
+                   <div className="absolute top-0 right-0 bg-purple-600 text-white text-[10px] font-extrabold uppercase px-3 py-1 rounded-bl-lg rounded-tr-lg tracking-wider">
                      Dictamen Pendiente
                    </div>
                 )}
@@ -186,9 +190,8 @@ export default function JefaSupervisionPoaPage() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
           </button>
         </div>
-
-        {/* COMPONENTE 2: INSPECTOR PROFUNDO DE POA */}
-        {inspector ? (
+        
+        {centroSeleccionadoVisible ? (
           <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative">
             
             {/* Header de Contexto del POA Seleccionado */}
@@ -267,40 +270,48 @@ export default function JefaSupervisionPoaPage() {
                             <div className="bg-slate-50/50 rounded-xl border border-slate-200/80 p-5 space-y-4">
                               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">FICHA TÉCNICA DE LA ACTIVIDAD</span>
                               
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
-                                <div>
-                                  <span className="font-bold text-slate-700 block mb-1">Justificación</span>
-                                  <p className="text-slate-500 leading-relaxed">{actividad.fichaTecnica.justificacion}</p>
+                              <div className={`relative transition-all duration-300 ${fichaExpandida ? 'max-h-none' : 'max-h-20 overflow-hidden'}`}>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+                                  <div>
+                                    <span className="font-bold text-slate-700 block mb-1">Justificación</span>
+                                    <p className="text-slate-500 leading-relaxed">{actividad.fichaTecnica.justificacion}</p>
+                                  </div>
+                                  <div>
+                                    <span className="font-bold text-slate-700 block mb-1">Objetivo General</span>
+                                    <p className="text-slate-500 leading-relaxed">{actividad.fichaTecnica.objetivoGeneral}</p>
+                                  </div>
+                                  <div>
+                                    <span className="font-bold text-slate-700 block mb-1">Objetivos Particulares</span>
+                                    <p className="text-slate-500 leading-relaxed whitespace-pre-line">{actividad.fichaTecnica.objetivosParticulares}</p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <span className="font-bold text-slate-700 block mb-1">Objetivo General</span>
-                                  <p className="text-slate-500 leading-relaxed">{actividad.fichaTecnica.objetivoGeneral}</p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs pt-3 border-t border-slate-200/60">
+                                  <div>
+                                    <span className="font-bold text-slate-700 block mb-1">Meta del Proyecto</span>
+                                    <p className="text-slate-500">{actividad.fichaTecnica.metaProyecto}</p>
+                                  </div>
+                                  <div>
+                                    <span className="font-bold text-slate-700 block mb-1">Indicadores</span>
+                                    <p className="text-slate-500">{actividad.fichaTecnica.indicadores}</p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <span className="font-bold text-slate-700 block mb-1">Objetivos Particulares</span>
-                                  <p className="text-slate-500 leading-relaxed whitespace-pre-line">{actividad.fichaTecnica.objetivosParticulares}</p>
-                                </div>
+
+                                {!fichaExpandida && (
+                                  <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                                )}
                               </div>
 
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs pt-3 border-t border-slate-200/60">
-                                <div>
-                                  <span className="font-bold text-slate-700 block mb-1">Meta del Proyecto</span>
-                                  <p className="text-slate-500">{actividad.fichaTecnica.metaProyecto}</p>
-                                </div>
-                                <div>
-                                  <span className="font-bold text-slate-700 block mb-1">Indicadores</span>
-                                  <p className="text-slate-500">{actividad.fichaTecnica.indicadores}</p>
-                                </div>
-                              </div>
-
-                              <div className="text-center pt-2">
-                                <button 
-                                  onClick={() => actividad.onToggleExpandir()}
-                                  className="text-indigo-600 hover:text-indigo-800 text-[11px] font-bold uppercase tracking-wider transition-colors"
-                                >
-                                  Colapsar Ficha Técnica
-                                </button>
-                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setFichaExpandida(!fichaExpandida)}
+                                className="w-full mt-4 pt-4 border-t border-slate-100 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center justify-center uppercase tracking-wider cursor-pointer"
+                              >
+                                {fichaExpandida ? 'Colapsar Ficha Técnica' : 'Expandir Ficha Técnica'}
+                                <svg className={`w-4 h-4 ml-1 transition-transform duration-200 ${fichaExpandida ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </button>
                             </div>
                           )}
 
@@ -392,6 +403,7 @@ export default function JefaSupervisionPoaPage() {
         )}
 
       </div>
+      <ModalDevolverPoa />
     </main>
   );
 }
