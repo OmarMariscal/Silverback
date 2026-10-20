@@ -874,6 +874,47 @@
         ]
       }
     },
+    "/api/v1/poas/supervision/centros": {
+      "get": {
+        "description": "Devuelve los centros bajo la jurisdicción de la Jefa con el resumen de su POA del año vigente y KPIs globales para los filtros de la vista.",
+        "operationId": "PoasController_getSupervisionCentros",
+        "parameters": [
+          {
+            "name": "historic_limit",
+            "required": false,
+            "in": "query",
+            "description": "Número máximo de años históricos (anios_historicos) a mostrar por centro",
+            "schema": {
+              "minimum": 1,
+              "maximum": 10,
+              "default": 3,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupervisionCentrosResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Directorio de supervisión de POAs por centro universitario",
+        "tags": [
+          "POAs"
+        ]
+      }
+    },
     "/api/v1/poas/{poaid}/actividades": {
       "post": {
         "description": "Recibe los datos para crear actividades dentro de la POA",
@@ -1330,6 +1371,65 @@
         "summary": "Centros con rezago",
         "tags": [
           "Dashboard"
+        ]
+      }
+    },
+    "/api/v1/centros/{centroId}/poa": {
+      "get": {
+        "description": "Devuelve la POA del centro para el año indicado (o el vigente) con sus actividades. Solo centros bajo la jurisdicción de la Jefa.",
+        "operationId": "CentrosController_getPoaDeCentro",
+        "parameters": [
+          {
+            "name": "centroId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "anio",
+            "required": false,
+            "in": "query",
+            "description": "Año fiscal de la POA. Si se omite, se usa el año vigente.",
+            "schema": {
+              "minimum": 2000,
+              "maximum": 2100,
+              "example": 2026,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoaDeCentroResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El centro no tiene POA ese año o no es de su jurisdicción",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Detalle de la POA de un centro universitario",
+        "tags": [
+          "Centros"
         ]
       }
     }
@@ -2577,6 +2677,175 @@
           "actividades_resumen"
         ]
       },
+      "SupervisionKpisGlobalesDto": {
+        "type": "object",
+        "properties": {
+          "total_centros": {
+            "type": "number",
+            "description": "Centros bajo la jurisdicción de la Jefa",
+            "example": 15
+          },
+          "por_autorizar": {
+            "type": "number",
+            "description": "Centros con POA del año vigente en revisión",
+            "example": 3
+          },
+          "devueltas": {
+            "type": "number",
+            "description": "Centros con POA del año vigente devuelta",
+            "example": 2
+          },
+          "autorizadas": {
+            "type": "number",
+            "description": "Centros con POA del año vigente autorizada",
+            "example": 9
+          }
+        },
+        "required": [
+          "total_centros",
+          "por_autorizar",
+          "devueltas",
+          "autorizadas"
+        ]
+      },
+      "SupervisionContralorActualDto": {
+        "type": "object",
+        "properties": {
+          "nombre_completo": {
+            "type": "string",
+            "example": "Lic. Carlos Mendoza"
+          },
+          "estatus": {
+            "type": "string",
+            "enum": [
+              "Activo",
+              "Inactivo"
+            ],
+            "example": "Activo"
+          }
+        },
+        "required": [
+          "nombre_completo",
+          "estatus"
+        ]
+      },
+      "SupervisionPoaResumenDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "poa-uuid-cucei-2026"
+          },
+          "anio_fiscal": {
+            "type": "number",
+            "example": 2026
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "BORRADOR",
+              "EN_REVISION",
+              "DEVUELTA",
+              "AUTORIZADA"
+            ],
+            "example": "EN_REVISION"
+          },
+          "fecha_envio": {
+            "type": "string",
+            "description": "Momento en que el contralor presentó la POA (ISO 8601). Null si nunca se ha enviado.",
+            "nullable": true,
+            "example": "2026-09-11T09:30:00.000Z"
+          },
+          "porcentaje_avance_global": {
+            "type": "number",
+            "description": "Promedio de avance de las actividades. Solo se calcula para POAs autorizadas.",
+            "nullable": true,
+            "example": 68
+          }
+        },
+        "required": [
+          "id",
+          "anio_fiscal",
+          "estado",
+          "fecha_envio",
+          "porcentaje_avance_global"
+        ]
+      },
+      "SupervisionCentroDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "centro-uuid-cucei"
+          },
+          "clave": {
+            "type": "string",
+            "example": "CUCEI"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Centro Universitario de Ciencias Exactas e Ingenierías"
+          },
+          "contralor_actual": {
+            "description": "Contralor vigente del centro. Null si el centro no tiene uno activo.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SupervisionContralorActualDto"
+              }
+            ]
+          },
+          "anios_historicos": {
+            "description": "Años con POA, del más reciente al más antiguo (limitado por historic_limit)",
+            "example": [
+              2026,
+              2025,
+              2024
+            ],
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "poa_resumen_anio_actual": {
+            "description": "Resumen de la POA del año vigente. Null si el centro no tiene POA este año.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SupervisionPoaResumenDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "clave",
+          "nombre",
+          "contralor_actual",
+          "anios_historicos",
+          "poa_resumen_anio_actual"
+        ]
+      },
+      "SupervisionCentrosResponseDto": {
+        "type": "object",
+        "properties": {
+          "kpis_globales": {
+            "$ref": "#/components/schemas/SupervisionKpisGlobalesDto"
+          },
+          "centros": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupervisionCentroDto"
+            }
+          }
+        },
+        "required": [
+          "kpis_globales",
+          "centros"
+        ]
+      },
       "EquipoAuditorDto": {
         "type": "object",
         "properties": {
@@ -3582,6 +3851,160 @@
         },
         "required": [
           "data"
+        ]
+      },
+      "PoaDeCentroCentroDto": {
+        "type": "object",
+        "properties": {
+          "clave": {
+            "type": "string",
+            "example": "CUCEI"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Centro Universitario de Ciencias Exactas e Ingenierías"
+          }
+        },
+        "required": [
+          "clave",
+          "nombre"
+        ]
+      },
+      "PoaDeCentroContralorDto": {
+        "type": "object",
+        "properties": {
+          "nombre_completo": {
+            "type": "string",
+            "example": "Mtro. Braulio Vicente"
+          }
+        },
+        "required": [
+          "nombre_completo"
+        ]
+      },
+      "PoaDeCentroPoaDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "poa-uuid-cucei-2026"
+          },
+          "anio_fiscal": {
+            "type": "number",
+            "example": 2026
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "BORRADOR",
+              "EN_REVISION",
+              "DEVUELTA",
+              "AUTORIZADA"
+            ],
+            "example": "EN_REVISION"
+          },
+          "mensaje_resolucion": {
+            "type": "string",
+            "description": "Mensaje de la Jefatura al devolver o autorizar la POA",
+            "nullable": true,
+            "example": null
+          },
+          "fecha_envio": {
+            "type": "string",
+            "description": "Momento en que el contralor presentó la POA (ISO 8601). Null si nunca se ha enviado.",
+            "nullable": true,
+            "example": "2026-01-01T09:30:00.000Z"
+          },
+          "centro": {
+            "$ref": "#/components/schemas/PoaDeCentroCentroDto"
+          },
+          "contralor": {
+            "description": "Contralor dueño de la POA",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PoaDeCentroContralorDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "anio_fiscal",
+          "estado",
+          "mensaje_resolucion",
+          "fecha_envio",
+          "centro",
+          "contralor"
+        ]
+      },
+      "PoaDeCentroActividadDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "act-uuid-05"
+          },
+          "folio": {
+            "type": "string",
+            "example": "05"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Revisión de asistencia del Personal Académico"
+          },
+          "fecha_inicio": {
+            "type": "string",
+            "description": "Formato AAAA-MM-DD",
+            "nullable": true,
+            "example": "2026-01-15"
+          },
+          "fecha_termino": {
+            "type": "string",
+            "description": "Formato AAAA-MM-DD",
+            "nullable": true,
+            "example": "2026-12-31"
+          },
+          "porcentaje_global": {
+            "type": "number",
+            "description": "Avance global de la actividad (0 a 100)",
+            "example": 50
+          },
+          "auditores": {
+            "example": [
+              "Lic. Auditor Auxiliar"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "folio",
+          "titulo",
+          "fecha_inicio",
+          "fecha_termino",
+          "porcentaje_global",
+          "auditores"
+        ]
+      },
+      "PoaDeCentroResponseDto": {
+        "type": "object",
+        "properties": {
+          "poa": {
+            "$ref": "#/components/schemas/PoaDeCentroPoaDto"
+          },
+          "actividades": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PoaDeCentroActividadDto"
+            }
+          }
+        },
+        "required": [
+          "poa",
+          "actividades"
         ]
       },
       "ActividadesDirectorioAsignacionJefa": {

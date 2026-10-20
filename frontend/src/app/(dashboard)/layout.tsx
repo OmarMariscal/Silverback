@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { HeaderPOA } from '@/components/ui/HeaderPoa';
-import { obtenerRolActivo } from '@/services/api';
 import { getMenuItemsByRol } from '@/modules/perfiles/role-menu';
 import { useLayoutStore } from '@/store/layout.store';
 
@@ -16,11 +15,6 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [logoError, setLogoError] = useState(false);
   const rolActivo = useLayoutStore((state) => state.rolUsuario);
-  const setUsuarioSesion = useLayoutStore((state) => state.setUsuarioSesion);
-
-  useEffect(() => {
-    setUsuarioSesion('Mtro. Braulio Vicente', obtenerRolActivo(), 'CUCEI');
-  }, [setUsuarioSesion]);
 
   const menuItems = getMenuItemsByRol(rolActivo);
 
