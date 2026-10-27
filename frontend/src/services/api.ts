@@ -11,7 +11,7 @@ import { normalizarRolUsuario, type RolUsuario } from '@/types/roles';
 // la visualización del layout, los menús y las llamadas a la API.
 // =========================================================================
 export const MOCK_SESSION: { role: RolUsuario; userId: string } = {
-  role: 'CONTRALOR',
+  role: 'CONTRALOR', // Cambiar a 'JEFA', 'CONTRALOR', 'AUDITOR' o 'ADMIN' según el rol que quieras simular
   userId: 'a8f99f0d-c949-4feb-b849-44a5305e2f45',
 };
 

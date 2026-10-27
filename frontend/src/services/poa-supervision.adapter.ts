@@ -257,6 +257,7 @@ export const adaptarInspectorPoaSupervisionUI = (
   handlers?: {
     onToggleExpandirActividad?: (actividadId: string) => void;
     onAlternarModoVisualizacion?: () => void;
+    onCerrarInspector?: () => void;
     onCambiarModoVisualizacion?: (modo: ModoVisualizacionSupervision) => void;
     onAbrirModalDevolver?: () => void;
     onAutorizarPoa?: () => void | Promise<void>;
@@ -287,7 +288,7 @@ export const adaptarInspectorPoaSupervisionUI = (
     centroClave: poa.centro?.clave || '',
     anioFiscal: poa.anio_fiscal,
     estadoPoa: meta.estado,
-    puedeDictaminar: meta.estado === 'EN_REVISION' || meta.estado === 'DEVUELTA',
+    puedeDictaminar: meta.estado === 'EN_REVISION',
     estaDictaminando: Boolean(handlers?.estaDictaminando),
     onAbrirModalDevolver: () => handlers?.onAbrirModalDevolver?.(),
     onAutorizarPoa: () => handlers?.onAutorizarPoa?.(),
@@ -317,7 +318,7 @@ export const adaptarInspectorPoaSupervisionUI = (
     idPoa: poa.id,
     anioFiscal: poa.anio_fiscal,
     estadoPoa: meta.estado,
-    estadoEtiqueta: `ESTADO: ${meta.estadoEtiqueta.toUpperCase()}`,
+    estadoEtiqueta: meta.estadoEtiqueta,
     mensajeResolucion: poa.mensaje_resolucion,
     totalActividades: detalleDto.actividades?.length || 0,
     actividades: actividadesUI,
@@ -325,6 +326,7 @@ export const adaptarInspectorPoaSupervisionUI = (
     onCambiarModoVisualizacion: (modo) =>
       handlers?.onCambiarModoVisualizacion?.(modo),
     onAlternarModoVisualizacion: () => handlers?.onAlternarModoVisualizacion?.(),
+    onCerrarInspector: () => handlers?.onCerrarInspector?.(),
     barraDictamen,
     modalDevolver,
     estaCargandoPoa: Boolean(handlers?.estaCargandoPoa),

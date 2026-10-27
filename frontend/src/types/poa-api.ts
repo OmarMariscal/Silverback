@@ -21,6 +21,7 @@ export interface PoaActualDto {
   estado: string;
   fecha_inicio: string;
   fecha_termino: string;
+  mensaje_resolucion?: string | null;
   // es_rezagado: eliminado de aquí, ya no es global
   actividades_resumen: ActividadesResumenDto[];
 }

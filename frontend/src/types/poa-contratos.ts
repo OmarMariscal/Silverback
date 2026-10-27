@@ -274,6 +274,7 @@ export interface InspectorPoaSupervisionProps {
   modoVisualizacion: ModoVisualizacionSupervision;
   onCambiarModoVisualizacion?: (modo: ModoVisualizacionSupervision) => void;
   onAlternarModoVisualizacion?: () => void;
+  onCerrarInspector?: () => void;
 
   barraDictamen: BarraDictamenPoaProps;
   modalDevolver: ModalDevolverPoaProps;

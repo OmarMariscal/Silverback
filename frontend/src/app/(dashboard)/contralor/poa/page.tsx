@@ -299,6 +299,32 @@ export default function ContralorPoaPage() {
           </div>
         </div>
 
+                {cabecera.mensajeDevolucion && (
+          <div role="alert" className="rounded-xl border border-rose-300 bg-rose-50 p-5 shadow-sm flex items-start space-x-3.5">
+            <div className="p-2 rounded-lg bg-rose-100 text-rose-700 shrink-0">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-rose-900">
+                  Observaciones de la Jefatura de Auditoría (POA Devuelta):
+                </h4>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700 bg-rose-200/60 px-2 py-0.5 rounded">
+                  Requiere Atención
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-rose-800 leading-relaxed font-medium">
+                {cabecera.mensajeDevolucion}
+              </p>
+              <p className="mt-2 text-xs text-rose-600">
+                Realiza las correcciones pertinentes en las actividades de abajo y vuelve a presentar el POA a revisión con el botón <strong>&quot;Enviar a revisión&quot;</strong>.
+              </p>
+            </div>
+          </div>
+        )}
+
         {erroresValidacionPresentar && (
           <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
             <p className="font-bold">El POA necesita ajustes antes de enviarse:</p>
