@@ -1,12 +1,13 @@
 // frontend/src/store/layout.store.ts
 // Este archivo define el store global para la gestión del layout de la aplicación,
 // incluyendo el título de la pantalla actual, información del usuario autenticado (nombre, cargo, rol, avatar),
-// y acciones reactivas para actualizar esta información cuando el backend responde o cuando cambia la sesión.
+// y acciones reactivas para actualizar esta información cuando el backend responde o cuando cambia MOCK_SESSION en api.ts.
 
 import { create } from 'zustand';
 import type { RolUsuario } from '../types/roles';
 import { normalizarRolUsuario } from '../types/roles';
 import { authService, type UsuarioSesion } from '../services/auth.service';
+import { MOCK_SESSION } from '../services/api';
 
 export const MAPA_ROLES: Record<string, string> = {
   ADMIN: 'Administrador',
@@ -19,7 +20,7 @@ export const MAPA_ROLES: Record<string, string> = {
 /**
  * Genera el texto del cargo del usuario.
  * Centros como CUCEI o CUVALLES aplican exclusivamente a Contralores y Auditores de Centro.
- * La Jefa y roles directivos o de administración no llevan sufijo de centro particular.
+ * La Jefa y administradores no llevan sufijo de centro particular.
  */
 export const formatearCargoUsuario = (
   rol: RolUsuario,
@@ -59,8 +60,8 @@ interface LayoutState {
   sincronizarUsuarioSesion: (params?: SincronizarUsuarioParams) => void;
 }
 
-// Inicialización dinámica y no-hardcodeada basada en la sesión activa
-const sesionInicial: UsuarioSesion = authService.obtenerUsuarioSesion();
+// Inicialización dinámica vinculada directamente a la sesión activa en MOCK_SESSION
+const sesionInicial: UsuarioSesion = authService.obtenerUsuarioSesion(MOCK_SESSION.role);
 
 export const useLayoutStore = create<LayoutState>((set, get) => ({
   tituloPantallaActual: 'Plan Operativo Anual 2026',
@@ -90,47 +91,26 @@ export const useLayoutStore = create<LayoutState>((set, get) => ({
   },
 
   actualizarCentroUsuario: (nuevoCentroClave: string) => {
-    const { rolUsuario, nombreUsuario, urlImagenPerfil } = get();
+    const { rolUsuario } = get();
     const cargoFinal = formatearCargoUsuario(rolUsuario, nuevoCentroClave);
 
     set({
       centroClave: nuevoCentroClave,
       cargoUsuario: cargoFinal,
     });
-
-    // Mantener la sesión guardada sincronizada con el centro real
-    authService.guardarUsuarioSesion({
-      id: sesionInicial.id,
-      nombre_completo: nombreUsuario,
-      rol: rolUsuario,
-      centro_clave: nuevoCentroClave,
-      avatar_url: urlImagenPerfil,
-    });
   },
 
   sincronizarUsuarioSesion: (params) => {
-    if (!params) {
-      const sesionActual = authService.obtenerUsuarioSesion();
-      set({
-        nombreUsuario: sesionActual.nombre_completo,
-        cargoUsuario: formatearCargoUsuario(sesionActual.rol, sesionActual.centro_clave),
-        rolUsuario: sesionActual.rol,
-        centroClave: sesionActual.centro_clave,
-        urlImagenPerfil: sesionActual.avatar_url,
-      });
-      return;
-    }
-
-    const rolDeterminado = params.rol
-      ? normalizarRolUsuario(params.rol) || get().rolUsuario
-      : get().rolUsuario;
+    const rolDeterminado = params?.rol
+      ? normalizarRolUsuario(params.rol) || MOCK_SESSION.role
+      : MOCK_SESSION.role;
 
     const sesionBase = authService.obtenerUsuarioSesion(rolDeterminado);
 
-    const nombreFinal = params.nombre || sesionBase.nombre_completo;
+    const nombreFinal = params?.nombre || sesionBase.nombre_completo;
     const centroFinal =
-      params.centroClave !== undefined ? params.centroClave : sesionBase.centro_clave;
-    const avatarFinal = params.avatarUrl || sesionBase.avatar_url;
+      params?.centroClave !== undefined ? params.centroClave : sesionBase.centro_clave;
+    const avatarFinal = params?.avatarUrl || sesionBase.avatar_url;
 
     const cargoFinal = formatearCargoUsuario(rolDeterminado, centroFinal);
 

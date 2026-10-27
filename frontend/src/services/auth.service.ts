@@ -4,13 +4,12 @@
 // ⚠️ IMPORTANTE PARA EL EQUIPO:
 // 1. Actualmente NO se obliga a pasar por ninguna pantalla de login ni se bloquea el acceso.
 // 2. El sistema toma el Rol, ID y datos del usuario directamente de lo que esté configurado
-//    en `MOCK_SESSION` (o JWT) en `services/api.ts`, o de la ruta por la que navegue el usuario.
-// 3. Si en el futuro se proporciona un JWT hardcodeado en `api.ts` o en localStorage,
-//    este servicio lo decodifica automáticamente para extraer su rol y datos reales.
-// 4. La función `iniciarSesion()` está preparada y documentada abajo para cuando se implemente
+//    en `MOCK_SESSION` en `services/api.ts`. Al cambiar `MOCK_SESSION` y guardar, el cambio
+//    se refleja de inmediato en toda la aplicación.
+// 3. La función `iniciarSesion()` está preparada y documentada abajo para cuando se implemente
 //    el formulario de inicio de sesión definitivo en frontend y backend.
 
-import { api, obtenerRolActivo } from './api';
+import { api, MOCK_SESSION, obtenerRolActivo, obtenerUsuarioIdActivo } from './api';
 import { normalizarRolUsuario, type RolUsuario } from '@/types/roles';
 
 export interface UsuarioSesion {
@@ -41,7 +40,7 @@ export interface AuthLoginResponseDto {
 
 /**
  * Catálogo de usuarios por defecto para desarrollo (coincidentes con seed.ts y jwt.guard.ts del backend)
- * Se utilizan de inmediato según el rol activo configurado en `api.ts`, sin requerir login.
+ * Se utilizan de inmediato según el rol activo configurado en `MOCK_SESSION` de `api.ts`.
  */
 export const USUARIOS_MOCK_POR_DEFECTO: Record<RolUsuario, UsuarioSesion> = {
   JEFA: {
@@ -86,7 +85,7 @@ const CLAVE_STORAGE_TOKEN = 'jwt_token';
 
 /**
  * Decodifica el payload de un token JWT en base64 sin dependencias externas.
- * Permite leer datos reales si se hardcodea o inyecta un JWT en `localStorage` o `api.ts`.
+ * Permite leer datos reales si se inyecta un JWT en `localStorage`.
  */
 function decodificarJwtPayload(token: string): Record<string, unknown> | null {
   try {
@@ -107,81 +106,64 @@ function decodificarJwtPayload(token: string): Record<string, unknown> | null {
 
 export const authService = {
   /**
-   * Obtiene la sesión del usuario actual sin forzar ningún login.
+   * Obtiene la sesión del usuario actual.
    *
-   * Orden de resolución:
-   * 1. Si existe un JWT en localStorage, intenta decodificar su payload (rol, usuario_id, centro_id).
-   * 2. Si existe un objeto `usuario_sesion` en localStorage, lo utiliza.
-   * 3. Fallback de desarrollo: resuelve el usuario de `USUARIOS_MOCK_POR_DEFECTO` correspondiente
-   *    al rol activo de `api.ts` (JEFA -> Dra. Titular, CONTRALOR -> Mtro. Braulio, etc.).
+   * En desarrollo: Toma directamente `MOCK_SESSION.role` o el rol solicitado.
+   * En producción (con login): Lee el token JWT / sesión de localStorage.
    */
   obtenerUsuarioSesion: (rolSugerido?: RolUsuario): UsuarioSesion => {
+    // Si no se pide un rol explícito, el rol base es el configurado en MOCK_SESSION
+    const rolDeterminado = rolSugerido || obtenerRolActivo() || MOCK_SESSION.role;
+    const mock = USUARIOS_MOCK_POR_DEFECTO[rolDeterminado] || USUARIOS_MOCK_POR_DEFECTO.CONTRALOR;
+
     if (typeof window !== 'undefined') {
-      // Intento 1: Decodificar JWT si existe en localStorage
-      try {
-        const token = localStorage.getItem(CLAVE_STORAGE_TOKEN);
-        if (token) {
+      const token = localStorage.getItem(CLAVE_STORAGE_TOKEN);
+      // Solo si existe un token real de login procesamos la sesión guardada
+      if (token) {
+        try {
           const payload = decodificarJwtPayload(token);
           if (payload) {
             const rolJwt = normalizarRolUsuario(String(payload.rol || payload.role || ''));
             if (rolJwt && (!rolSugerido || rolSugerido === rolJwt)) {
-              const base = USUARIOS_MOCK_POR_DEFECTO[rolJwt];
               return {
-                id: String(payload.usuario_id || payload.sub || base.id),
-                nombre_completo: String(payload.nombre_completo || payload.name || base.nombre_completo),
+                id: String(payload.usuario_id || payload.sub || mock.id),
+                nombre_completo: String(payload.nombre_completo || payload.name || mock.nombre_completo),
                 rol: rolJwt,
-                centro_id: (payload.centro_id as string) || base.centro_id,
-                centro_clave: (payload.centro_clave as string) || base.centro_clave,
+                centro_id: (payload.centro_id as string) || mock.centro_id,
+                centro_clave: (payload.centro_clave as string) || mock.centro_clave,
                 perfil_id: (payload.perfil_id as string) || undefined,
               };
             }
           }
-        }
-      } catch (e) {
-        console.warn('No se pudo decodificar JWT de localStorage:', e);
-      }
 
-      // Intento 2: Sesión en formato JSON en localStorage
-      try {
-        const guardado = localStorage.getItem(CLAVE_STORAGE_USUARIO);
-        if (guardado) {
-          const parsed = JSON.parse(guardado) as UsuarioSesion;
-          const rolNormalizado = normalizarRolUsuario(parsed.rol);
-          if (rolNormalizado) {
-            if (!rolSugerido || rolSugerido === rolNormalizado) {
-              return {
-                ...parsed,
-                rol: rolNormalizado,
-              };
+          const guardado = localStorage.getItem(CLAVE_STORAGE_USUARIO);
+          if (guardado) {
+            const parsed = JSON.parse(guardado) as UsuarioSesion;
+            const rolNormalizado = normalizarRolUsuario(parsed.rol);
+            if (rolNormalizado && (!rolSugerido || rolSugerido === rolNormalizado)) {
+              return { ...parsed, rol: rolNormalizado };
             }
           }
+        } catch (e) {
+          console.warn('No se pudo resolver la sesión almacenada:', e);
         }
-      } catch (e) {
-        console.warn('No se pudo parsear usuario_sesion de localStorage:', e);
       }
     }
 
-    // Intento 3: Fallback seguro de desarrollo según `obtenerRolActivo()` de `api.ts`
-    const rolDeterminado = rolSugerido || obtenerRolActivo();
-    const mock = USUARIOS_MOCK_POR_DEFECTO[rolDeterminado] || USUARIOS_MOCK_POR_DEFECTO.JEFA;
-
-    const idActivo = typeof window !== 'undefined' ? localStorage.getItem('mock_user_id') : null;
     return {
       ...mock,
-      id: idActivo || mock.id,
+      id: obtenerUsuarioIdActivo() || mock.id,
     };
   },
 
   /**
-   * Guarda o actualiza los datos del usuario en localStorage y sincroniza variables mock.
+   * Guarda o actualiza los datos del usuario en localStorage solo cuando sea relevante.
    */
   guardarUsuarioSesion: (usuario: UsuarioSesion): void => {
     if (typeof window === 'undefined') return;
 
     try {
       localStorage.setItem(CLAVE_STORAGE_USUARIO, JSON.stringify(usuario));
-      localStorage.setItem('mock_role', usuario.rol);
-      localStorage.setItem('mock_user_id', usuario.id);
       if (usuario.centro_clave) {
         localStorage.setItem('mock_centro', usuario.centro_clave);
       }

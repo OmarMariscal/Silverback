@@ -2,46 +2,40 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { HeaderPOA } from '@/components/ui/HeaderPoa';
-import { getMenuItemsByRol } from '@/modules/perfiles/role-menu';
+import { getMenuItemsByRol, resolveDefaultModulePath } from '@/modules/perfiles/role-menu';
 import { useLayoutStore } from '@/store/layout.store';
-import { authService } from '@/services/auth.service';
-import type { RolUsuario } from '@/types/roles';
+import { obtenerRolActivo } from '@/services/api';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   const pathname = usePathname();
   const [logoError, setLogoError] = useState(false);
   const rolActivo = useLayoutStore((state) => state.rolUsuario);
 
   useEffect(() => {
-    // Sincronizar dinámicamente la sesión del usuario según la ruta o el estado del sistema
-    let rolDetectado: RolUsuario | undefined;
-    if (pathname.startsWith('/jefa')) {
-      rolDetectado = 'JEFA';
-    } else if (pathname.startsWith('/contralor-general')) {
-      rolDetectado = 'CONTRALOR_GENERAL';
-    } else if (pathname.startsWith('/contralor')) {
-      rolDetectado = 'CONTRALOR';
-    } else if (pathname.startsWith('/auditor')) {
-      rolDetectado = 'AUDITOR';
-    } else if (pathname.startsWith('/admin')) {
-      rolDetectado = 'ADMIN';
-    }
+    // Sincronizar el header del layout con el rol activo configurado en api.ts
+    const rolSesion = obtenerRolActivo();
+    useLayoutStore.getState().sincronizarUsuarioSesion({ rol: rolSesion });
 
-    if (rolDetectado) {
-      const sesionActual = authService.obtenerUsuarioSesion(rolDetectado);
-      authService.guardarUsuarioSesion(sesionActual);
-    }
+    // Si el desarrollador cambió MOCK_SESSION en api.ts (ej. de JEFA a CONTRALOR),
+    // y se encuentra en una ruta que pertenece al rol anterior (/jefa/...),
+    // lo redirige suavemente a la ruta por defecto del rol activo (/contralor/dashboard).
+    const esRutaJefa = pathname.startsWith('/jefa');
+    const esRutaContralor =
+      pathname.startsWith('/contralor') && !pathname.startsWith('/contralor-general');
 
-    useLayoutStore.getState().sincronizarUsuarioSesion(
-      rolDetectado ? { rol: rolDetectado } : undefined
-    );
-  }, [pathname]);
+    if (rolSesion === 'CONTRALOR' && esRutaJefa) {
+      router.replace(resolveDefaultModulePath('CONTRALOR'));
+    } else if (rolSesion === 'JEFA' && esRutaContralor) {
+      router.replace(resolveDefaultModulePath('JEFA'));
+    }
+  }, [pathname, router]);
 
   const menuItems = getMenuItemsByRol(rolActivo);
 
