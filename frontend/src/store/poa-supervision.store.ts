@@ -385,7 +385,7 @@ export const usePoaSupervisionStore = create<PoaSupervisionState>((set, get) => 
     set({ estaDevolviendo: true, errorObservaciones: null });
 
     try {
-      const respuesta = await poaSupervisionService.devolverPoaConObservaciones(
+      await poaSupervisionService.devolverPoaConObservaciones(
         poaId,
         { observaciones }
       );

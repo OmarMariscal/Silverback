@@ -22,7 +22,8 @@ export default function RoleShell({
 }: RoleShellProps) {
   useEffect(() => {
     useLayoutStore.getState().setTituloPantalla(title);
-  }, [title]);
+    useLayoutStore.getState().sincronizarUsuarioSesion({ rol: perfil });
+  }, [title, perfil]);
 
   const label = {
     ADMIN: 'Administrador',
