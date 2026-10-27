@@ -7,6 +7,8 @@ export interface PoaActualResult {
   anioFiscal: number;
   fechaInicio: Date | null;
   fechaTermino: Date | null;
+  mensajeResolucion?: string | null;
+  fechaDevolucion?: Date | null;
 
   //Resumen de las actividades
   actividadesResumen: PoaActividadResumenResult[];

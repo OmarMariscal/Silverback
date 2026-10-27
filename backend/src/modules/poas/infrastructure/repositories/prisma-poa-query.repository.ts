@@ -26,6 +26,8 @@ export class PoaQueryRepository implements IPoaQueryRepository {
         id: true,
         estado: true,
         anio_fiscal: true,
+        mensaje_resolucion: true,
+        fecha_devolucion: true,
         actividades: {
           select: {
             id: true,
@@ -79,6 +81,8 @@ export class PoaQueryRepository implements IPoaQueryRepository {
       anioFiscal: poaData.anio_fiscal,
       fechaInicio: fechaInicioGlobal,
       fechaTermino: fechaTerminoGlobal,
+      mensajeResolucion: poaData.mensaje_resolucion,
+      fechaDevolucion: poaData.fecha_devolucion,
 
       actividadesResumen: poaData.actividades.map((act) => ({
         id: act.id,
@@ -93,7 +97,7 @@ export class PoaQueryRepository implements IPoaQueryRepository {
     };
   }
 
-    async obtenerSupervisionCentros(
+  async obtenerSupervisionCentros(
     filtros: FiltrosSupervisionCentros,
   ): Promise<SupervisionCentroResult[]> {
     const { jefaUsuarioId, anioFiscal, historicLimit } = filtros;
@@ -186,4 +190,4 @@ export class PoaQueryRepository implements IPoaQueryRepository {
       };
     });
   }
- }
+}
