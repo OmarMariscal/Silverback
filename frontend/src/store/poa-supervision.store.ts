@@ -81,6 +81,7 @@ interface PoaSupervisionState {
   setBusquedaTexto: (texto: string) => void;
   setAnioGlobal: (anio: number) => void;
   seleccionarCentro: (idCentro: string) => Promise<void>;
+  deseleccionarCentro: () => void;
   cambiarAnioCentro: (idCentro: string, anio: number) => Promise<void>;
   cargarPoaCentro: (idCentro: string, anio?: number) => Promise<void>;
 
@@ -162,8 +163,8 @@ export const usePoaSupervisionStore = create<PoaSupervisionState>((set, get) => 
       const centros = respuesta.centros || [];
 
       // Seleccionar por defecto el primer centro si no había uno seleccionado
-      const primerCentroId = centros.length > 0 ? centros[0].id : null;
-      const idSeleccionado = get().idCentroSeleccionado || primerCentroId;
+      // Al entrar no autoseleccionamos ningun centro: la jefa ve todas las tarjetas
+      const idSeleccionado = get().idCentroSeleccionado;
 
       set({
         kpis: kpisAdaptados,
@@ -212,6 +213,15 @@ export const usePoaSupervisionStore = create<PoaSupervisionState>((set, get) => 
     set({ idCentroSeleccionado: idCentro });
     const anio = get().aniosPorCentro[idCentro] || get().anioGlobal;
     await get().cargarPoaCentro(idCentro, anio);
+  },
+
+  // 5b. Deseleccionar centro (cerrar inspector de POA)
+  deseleccionarCentro: () => {
+    set({
+      idCentroSeleccionado: null,
+      poaDetalle: null,
+      modoVisualizacion: 'INCRUSTADA',
+    });
   },
 
   // 6. Cambiar el año histórico consultado de una tarjeta de centro
@@ -385,7 +395,7 @@ export const usePoaSupervisionStore = create<PoaSupervisionState>((set, get) => 
     set({ estaDevolviendo: true, errorObservaciones: null });
 
     try {
-      const respuesta = await poaSupervisionService.devolverPoaConObservaciones(
+      await poaSupervisionService.devolverPoaConObservaciones(
         poaId,
         { observaciones }
       );
@@ -544,6 +554,7 @@ export const usePoaSupervisionStore = create<PoaSupervisionState>((set, get) => 
       {
         onToggleExpandirActividad: (id) => void state.toggleExpandirActividad(id),
         onAlternarModoVisualizacion: () => state.alternarModoVisualizacion(),
+        onCerrarInspector: () => state.deseleccionarCentro(),
         onCambiarModoVisualizacion: (modo) => state.setModoVisualizacion(modo),
         onAbrirModalDevolver: () => state.abrirModalDevolver(),
         onAutorizarPoa: () => void state.autorizarPoaActual(),

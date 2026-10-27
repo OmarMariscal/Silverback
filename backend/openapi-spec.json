@@ -2660,6 +2660,12 @@
             "description": "Fecha de termino de la POA",
             "example": "Dic 2026"
           },
+          "mensaje_resolucion": {
+            "type": "string",
+            "description": "Mensaje u observaciones de la resolucion cuando el POA es devuelto",
+            "nullable": true,
+            "example": "Ajustar las fechas de las actividades del segundo trimestre"
+          },
           "actividades_resumen": {
             "description": "Lista de actividades de manera resumida",
             "type": "array",

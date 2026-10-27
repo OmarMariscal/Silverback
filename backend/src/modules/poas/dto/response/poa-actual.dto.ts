@@ -38,6 +38,15 @@ export class PoaActualDto {
   fecha_termino: string;
 
   @ApiProperty({
+    description: 'Mensaje u observaciones de la resolucion cuando el POA es devuelto',
+    type: String,
+    nullable: true,
+    required: false,
+    example: 'Ajustar las fechas de las actividades del segundo trimestre',
+  })
+  mensaje_resolucion?: string | null;
+
+  @ApiProperty({
     description: 'Lista de actividades de manera resumida',
     type: [ActividadesResumenDto],
   })

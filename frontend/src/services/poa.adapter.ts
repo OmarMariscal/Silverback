@@ -33,6 +33,7 @@ export const adaptarPoaActual = (
     anioFiscal: datosAPI.anio_fiscal.toString(),
     estadoActual,
     estadoEtiqueta: estadoActual === 'AUTORIZADA' ? 'Autorizada' : estadoActual.replace('_', ' '),
+    mensajeDevolucion: datosAPI.mensaje_resolucion || undefined,
     puedeEditar: estadoActual === 'BORRADOR' || estadoActual === 'DEVUELTA',
     estaCargando: false,
   };

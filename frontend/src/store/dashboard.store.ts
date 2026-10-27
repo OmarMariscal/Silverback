@@ -8,6 +8,7 @@ import { adaptarDashboardContralorUI, adaptarDashboardJefaUI } from '../services
 import { DashboardContralorUI, DashboardJefaUI } from '../types/dashboard-contratos';
 import { MOCK_SESSION, obtenerRolActivo } from '../services/api';
 import type { RolUsuario } from '../types/roles';
+import { useLayoutStore } from './layout.store';
 
 interface DashboardState {
   datosContralor: DashboardContralorUI | null;
@@ -31,6 +32,9 @@ export const useDashboardStore = create<DashboardState>((set) => ({
       set({ rolActual: rol });
 
       if (rol === 'JEFA') {
+        // Sincronizar el layout para la Jefa (Dra. Titular de la Contraloría / Jefa de Auditoría)
+        useLayoutStore.getState().sincronizarUsuarioSesion({ rol: 'JEFA' });
+
         const [kpisJefa, rezago, directorio] = await Promise.all([
           dashboardService.obtenerKpisJefa(),
           dashboardService.obtenerCentrosConRezago(),
@@ -44,6 +48,14 @@ export const useDashboardStore = create<DashboardState>((set) => ({
           dashboardService.obtenerProximasAVencer(4),
           dashboardService.obtenerBandejaSupervision(1, 5),
         ]);
+
+        // Sincronizar el layout consumiendo el centro universitario real que entrega el servidor
+        const centroClaveReal = kpis.centro_universitario?.clave;
+        useLayoutStore.getState().sincronizarUsuarioSesion({
+          rol: 'CONTRALOR',
+          centroClave: centroClaveReal,
+        });
+
         const adaptado = adaptarDashboardContralorUI(kpis, vencimientos, supervision);
         set({ datosContralor: adaptado, cargando: false });
       }

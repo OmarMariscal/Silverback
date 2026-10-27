@@ -22,6 +22,7 @@ export class PoaResponseMapper {
       estado: rawPoa.estado,
       fecha_inicio: DateFormatterUtil.toMesAnioCorto(rawPoa.fechaInicio),
       fecha_termino: DateFormatterUtil.toMesAnioCorto(rawPoa.fechaTermino),
+      mensaje_resolucion: rawPoa.mensajeResolucion ?? null,
       actividades_resumen: rawPoa.actividadesResumen.map((sub) => {
         const divisores = sub.auditoresNombres.length + 1;
         const participacion = Math.round((100 / divisores) * 100) / 100;

@@ -5,25 +5,43 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
 import { normalizarRolUsuario, type RolUsuario } from '@/types/roles';
 
-// Sesión única del mock de desarrollo. Cambiar aquí el rol y el usuario
-// mantiene sincronizados los headers y la visualización del frontend.
+// =========================================================================
+// SESIÓN ÚNICA DEL MOCK DE DESARROLLO
+// Cambiar aquí el rol y el usuario mantiene sincronizados los headers,
+// la visualización del layout, los menús y las llamadas a la API.
+// =========================================================================
 export const MOCK_SESSION: { role: RolUsuario; userId: string } = {
-  role: 'JEFA',
-  userId: '11111111-1111-4111-8111-111111111111',
+  role: 'CONTRALOR', // Cambiar a 'JEFA', 'CONTRALOR', 'AUDITOR' o 'ADMIN' según el rol que quieras simular
+  userId: 'a8f99f0d-c949-4feb-b849-44a5305e2f45',
 };
 
+/**
+ * Obtiene el rol activo. En desarrollo sin login, `MOCK_SESSION.role`
+ * es la fuente de verdad directa para reflejar los cambios de inmediato al guardar.
+ */
 export const obtenerRolActivo = (): RolUsuario => {
   if (typeof window !== 'undefined') {
-    const rolGuardado = normalizarRolUsuario(localStorage.getItem('mock_role'));
-    if (rolGuardado) return rolGuardado;
+    const token = localStorage.getItem('jwt_token');
+    // Solo si hay un token real de login se respeta la sesión guardada en storage
+    if (token) {
+      const rolGuardado = normalizarRolUsuario(localStorage.getItem('mock_role'));
+      if (rolGuardado) return rolGuardado;
+    }
   }
   return MOCK_SESSION.role;
 };
 
+/**
+ * Obtiene el ID del usuario activo. En desarrollo sin login, `MOCK_SESSION.userId`
+ * es la fuente de verdad directa.
+ */
 export const obtenerUsuarioIdActivo = (): string => {
   if (typeof window !== 'undefined') {
-    const idGuardado = localStorage.getItem('mock_user_id');
-    if (idGuardado) return idGuardado;
+    const token = localStorage.getItem('jwt_token');
+    if (token) {
+      const idGuardado = localStorage.getItem('mock_user_id');
+      if (idGuardado) return idGuardado;
+    }
   }
   return MOCK_SESSION.userId;
 };
