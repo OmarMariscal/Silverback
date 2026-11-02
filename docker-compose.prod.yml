@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+    env_file: .env.production
+    networks:
+      - silverback_prod
+
+  api:
+    image: ghcr.io/omarmariscal/silverback-api:latest
+    restart: always
+    env_file: .env.production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    networks:
+      - silverback_prod
+
+  web:
+    image: ghcr.io/omarmariscal/silverback-web:latest
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: https://api.tudominio.com/api/v1 # Cambiar por la URL de la máquina virtual cuando se nos asigne
+    ports:
+      - "80:3000" 
+    networks:
+      - silverback_prod
+
+volumes:
+  pgdata_prod:
+
+networks:
+  silverback_prod:
