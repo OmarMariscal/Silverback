@@ -12,6 +12,7 @@
     "install:all": "npm install",
     "db:migrate": "npm exec --workspace=backend prisma migrate dev",
     "db:generate": "npm exec --workspace=backend prisma generate",
-    "db:sync": "npm run db:migrate && npm run db:generate"
+    "db:sync": "npm run db:migrate && npm run db:generate",
+    "db:studio": "prisma studio --config backend/prisma.config.ts --url postgresql://postgres:root@localhost:5432/silverback?schema=public --port 5556"
   }
 }
