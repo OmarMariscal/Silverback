@@ -187,21 +187,100 @@ model ActividadAuditor {
 }
 
 model SubActividad {
-  id                    String        @id @default(uuid())
-  numero_orden          String        
-  indice_orden          Int           @default(0)
-  descripcion_tarea     String        @db.Text
-  estado_operativo      EstadoSubActividad @default(SIN_EMPEZAR)
-  mensaje_observacion   String?       @db.Text
-  fecha_inicio          DateTime
-  fecha_termino         DateTime
-  fecha_envio           DateTime?
-  semanas_totales       Int           
-  tipo                  TipoActividad
-  
-  actividad_id          String
-  actividad             Actividad     @relation(fields: [actividad_id], references: [id], onDelete: Cascade)
-
+  id                     String              @id @default(uuid())
+  numero_orden           String
+  indice_orden           Int                 @default(0)
+  descripcion_tarea      String              @db.Text
+  estado_operativo       EstadoSubActividad  @default(SIN_EMPEZAR)
+  mensaje_observacion    String?             @db.Text // deprecado
+  fecha_inicio           DateTime
+  fecha_termino          DateTime
+  fecha_envio            DateTime?           // SE MANTIENE (Desnormalizado: fecha de última entrega para sorting en Directorio/Supervisión)
+  semanas_totales        Int
+  tipo                   TipoActividad
+  actividad_id           String
+  actividad              Actividad           @relation(fields: [actividad_id], references: [id], onDelete: Cascade)
   banco_sub_actividad_id String?
-  banco_sub_actividad    BancoSubActividad? @relation(fields: [banco_sub_actividad_id], references: [id])
+  banco_sub_actividad    BancoSubActividad?  @relation(fields: [banco_sub_actividad_id], references: [id])
+
+  // Nuevas relaciones para el Módulo de Ejecución e Histórico
+  entregas               EntregaSubActividad[]
+  evidencias             Evidencia[]         
+}
+
+// ==========================================
+// BLOQUE 4: Subida a S3 | Módulo del Contralor
+// ==========================================
+
+// ENUMS PARA HISTÓRICO, REVISIÓN Y S3
+
+enum EstadoDictamen {
+  EN_REVISION
+  DEVUELTA_CON_OBSERVACIONES
+  APROBADA
+}
+
+enum EstadoSolvencia {
+  PENDIENTE
+  NO_SOLVENTADA
+  PARCIALMENTE_SOLVENTADA
+  SOLVENTADA
+}
+
+enum EstadoArchivoEvidencia {
+  PENDIENTE // Pre-firma generada, esperando confirmación de subida a S3
+  BORRADOR  // Confirmado en S3, visible en el buzón antes de enviar la versión
+  ENVIADO   // Consolidado e inmutable dentro de una EntregaSubActividad
+}
+
+
+// Modificaciones a la tabla de subactividad
+
+
+model EntregaSubActividad {
+  id                  String          @id @default(uuid())
+  sub_actividad_id    String
+  version             Int             // Secuencial por subactividad (1, 2, 3...)
+  estado_dictamen     EstadoDictamen  @default(EN_REVISION)
+  comentarios_entrega String?         @db.Text
+  fecha_envio         DateTime        @default(now()) @db.Timestamptz()
+  fecha_dictamen      DateTime?       @db.Timestamptz()
+
+  sub_actividad       SubActividad    @relation(fields: [sub_actividad_id], references: [id], onDelete: Cascade)
+  evidencias          Evidencia[]
+  observaciones       Observacion[]
+
+  @@unique([sub_actividad_id, version])
+  @@index([sub_actividad_id])
+}
+
+model Evidencia {
+  id               String                 @id @default(uuid())
+  sub_actividad_id String                 // Vincula el archivo a la subactividad desde la pre-firma
+  entrega_id       String?                // Null mientras está en PENDIENTE o BORRADOR; se llena al Enviar a Revisión
+  nombre_original  String
+  s3_key           String                 @unique
+  peso_bytes       Int
+  tipo_mime        String
+  estado           EstadoArchivoEvidencia @default(PENDIENTE)
+  fecha_creacion   DateTime               @default(now()) @db.Timestamptz() // Para Garbage Collector y fecha_subida en historial
+
+  sub_actividad    SubActividad           @relation(fields: [sub_actividad_id], references: [id], onDelete: Cascade)
+  entrega          EntregaSubActividad?   @relation(fields: [entrega_id], references: [id], onDelete: Cascade)
+
+  @@index([sub_actividad_id, estado])
+  @@index([entrega_id])
+  @@index([estado, fecha_creacion]) // Índice optimizado para el CronJob del Garbage Collector
+}
+
+model Observacion {
+  id               String              @id @default(uuid())
+  entrega_id       String
+  numero_secuencia Int                 // Ej: 1, 2, 3 ("Observación #1")
+  descripcion      String              @db.Text
+  estado_solvencia EstadoSolvencia     @default(PENDIENTE)
+
+  entrega          EntregaSubActividad @relation(fields: [entrega_id], references: [id], onDelete: Cascade)
+
+  @@index([entrega_id])
 }
