@@ -2,3 +2,5 @@
 /dist
 /build
 /tmp
+/src/prisma/generated
+prisma/migrations/**/migration_lock.toml

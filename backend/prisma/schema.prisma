@@ -1,0 +1,286 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ==========================================
+// BLOQUE 1: IDENTIDAD Y ESTRUCTURA
+// ==========================================
+
+enum RolUsuario {
+  ADMIN
+  JEFA
+  CONTRALOR
+  AUDITOR
+}
+
+model CentroUniversitario {
+  id          String      @id @default(uuid())
+  nombre      String      @unique
+  clave       String      @unique // Ej. "CUVALLES"
+  contralores Contralor[]
+  poas        Poa[]
+}
+
+model Usuario {
+  id                 String      @id @default(uuid())
+  nombre_completo    String
+  correo             String      @unique
+  password_encriptada String
+  rol                RolUsuario
+  
+  // Relaciones
+  jefa      Jefa?
+  contralor Contralor?
+  auditor   Auditor?
+}
+
+model Jefa {
+  id         String      @id @default(uuid())
+  usuario_id String      @unique
+  usuario    Usuario     @relation(fields: [usuario_id], references: [id])
+  
+  contralores Contralor[]
+}
+
+model Contralor {
+  id           String              @id @default(uuid())
+  usuario_id   String              @unique
+  usuario      Usuario             @relation(fields: [usuario_id], references: [id])
+  
+  centro_id    String
+  centro       CentroUniversitario @relation(fields: [centro_id], references: [id])
+  
+  jefa_id      String
+  jefa         Jefa                @relation(fields: [jefa_id], references: [id])
+
+  auditores    Auditor[]
+  poas         Poa[]
+}
+
+model Auditor {
+  id           String      @id @default(uuid())
+  usuario_id   String      @unique
+  usuario      Usuario     @relation(fields: [usuario_id], references: [id])
+  
+  contralor_id String
+  contralor    Contralor   @relation(fields: [contralor_id], references: [id])
+
+  actividades  ActividadAuditor[]
+}
+
+// ==========================================
+// BLOQUE 2: PLANTILLAS (BANCO)
+// ==========================================
+
+enum TipoActividad {
+  AUDITORIA
+  REVISION
+}
+
+model BancoActividad {
+  id                       String              @id @default(uuid())
+  titulo                   String
+  justificacion_plantilla  String?             @db.Text
+  objetivo_gen_plantilla   String?             @db.Text
+  objetivos_part_plantilla String?             @db.Text
+  metas_plantilla          String?             @db.Text
+  indicadores              String?             @db.Text
+  
+  sub_actividades_sugeridas BancoSubActividad[]
+  actividades_creadas       Actividad[]
+}
+
+model BancoSubActividad {
+  id                 String         @id @default(uuid())
+  descripcion        String         @db.Text
+  tipo_sugerido      TipoActividad 
+  
+  banco_actividad_id String
+  banco_actividad    BancoActividad @relation(fields: [banco_actividad_id], references: [id], onDelete: Cascade)
+
+  subactividades_creadas     SubActividad[]
+}
+
+// ==========================================
+// BLOQUE 3: OPERACIÓN (POAS Y ACTIVIDADES)
+// ==========================================
+
+
+enum EstadoPoa {
+  BORRADOR
+  EN_REVISION
+  DEVUELTA     
+  AUTORIZADO
+}
+
+enum EstadoSubActividad {
+  SIN_EMPEZAR
+  SOLICITADO
+  EN_PROGRESO
+  EN_REVISION
+  DEVUELTA
+  CONCLUIDA
+}
+
+model Poa {
+  id           String      @id @default(uuid())
+  anio_fiscal  Int         
+  estado       EstadoPoa   @default(BORRADOR)
+  fecha_aprobado DateTime?
+  fecha_devolucion DateTime?    @db.Timestamptz()
+  mensaje_resolucion   String?   @db.Text
+
+  contralor_id String
+  contralor    Contralor   @relation(fields: [contralor_id], references: [id])
+  
+  centro_id    String
+  centro       CentroUniversitario @relation(fields: [centro_id], references: [id])
+
+  actividades  Actividad[]
+  ultima_secuencia_actividad Int         @default(0) 
+
+  @@unique([contralor_id, anio_fiscal]) 
+}
+
+model Actividad {
+  id                  String        @id @default(uuid())
+  folio               String        // Ej. "055"
+  titulo              String
+  justificacion       String?       @db.Text
+  objetivo_general    String?       @db.Text
+  objetivos_part      String?       @db.Text
+  meta_proyecto       String?       @db.Text
+  indicadores         String?       @db.Text
+  fecha_inicio        DateTime?
+  fecha_termino       DateTime?
+
+  // En lugar de un string de estado fijo, usamos el float que propones.
+  // El backend lo recalcula cada vez que una sub-actividad cambia de estado.
+  porcentaje_global   Float?        @default(0.0)
+  es_rezago           Boolean       @default(false)
+  
+  poa_id              String
+  poa                 Poa           @relation(fields: [poa_id], references: [id])
+  
+  banco_actividad_id  String?
+  banco_actividad     BancoActividad? @relation(fields: [banco_actividad_id], references: [id])
+  
+  sub_actividades     SubActividad[]
+  auditores           ActividadAuditor[]
+}
+
+// Tabla Puente (N:M) entre Actividades y Auditores
+model ActividadAuditor {
+  actividad_id String
+  actividad    Actividad @relation(fields: [actividad_id], references: [id], onDelete: Cascade)
+  
+  auditor_id   String
+  auditor      Auditor   @relation(fields: [auditor_id], references: [id], onDelete: Cascade)
+
+  @@id([actividad_id, auditor_id]) // Llave primaria compuesta
+}
+
+model SubActividad {
+  id                     String              @id @default(uuid())
+  numero_orden           String
+  indice_orden           Int                 @default(0)
+  descripcion_tarea      String              @db.Text
+  estado_operativo       EstadoSubActividad  @default(SIN_EMPEZAR)
+  mensaje_observacion    String?             @db.Text // deprecado
+  fecha_inicio           DateTime
+  fecha_termino          DateTime
+  fecha_envio            DateTime?           // SE MANTIENE (Desnormalizado: fecha de última entrega para sorting en Directorio/Supervisión)
+  semanas_totales        Int
+  tipo                   TipoActividad
+  actividad_id           String
+  actividad              Actividad           @relation(fields: [actividad_id], references: [id], onDelete: Cascade)
+  banco_sub_actividad_id String?
+  banco_sub_actividad    BancoSubActividad?  @relation(fields: [banco_sub_actividad_id], references: [id])
+
+  // Nuevas relaciones para el Módulo de Ejecución e Histórico
+  entregas               EntregaSubActividad[]
+  evidencias             Evidencia[]         
+}
+
+// ==========================================
+// BLOQUE 4: Subida a S3 | Módulo del Contralor
+// ==========================================
+
+// ENUMS PARA HISTÓRICO, REVISIÓN Y S3
+
+enum EstadoDictamen {
+  EN_REVISION
+  DEVUELTA_CON_OBSERVACIONES
+  APROBADA
+}
+
+enum EstadoSolvencia {
+  PENDIENTE
+  NO_SOLVENTADA
+  PARCIALMENTE_SOLVENTADA
+  SOLVENTADA
+}
+
+enum EstadoArchivoEvidencia {
+  PENDIENTE // Pre-firma generada, esperando confirmación de subida a S3
+  BORRADOR  // Confirmado en S3, visible en el buzón antes de enviar la versión
+  ENVIADO   // Consolidado e inmutable dentro de una EntregaSubActividad
+}
+
+
+// Modificaciones a la tabla de subactividad
+
+
+model EntregaSubActividad {
+  id                  String          @id @default(uuid())
+  sub_actividad_id    String
+  version             Int             // Secuencial por subactividad (1, 2, 3...)
+  estado_dictamen     EstadoDictamen  @default(EN_REVISION)
+  comentarios_entrega String?         @db.Text
+  fecha_envio         DateTime        @default(now()) @db.Timestamptz()
+  fecha_dictamen      DateTime?       @db.Timestamptz()
+
+  sub_actividad       SubActividad    @relation(fields: [sub_actividad_id], references: [id], onDelete: Cascade)
+  evidencias          Evidencia[]
+  observaciones       Observacion[]
+
+  @@unique([sub_actividad_id, version])
+  @@index([sub_actividad_id])
+}
+
+model Evidencia {
+  id               String                 @id @default(uuid())
+  sub_actividad_id String                 // Vincula el archivo a la subactividad desde la pre-firma
+  entrega_id       String?                // Null mientras está en PENDIENTE o BORRADOR; se llena al Enviar a Revisión
+  nombre_original  String
+  s3_key           String                 @unique
+  peso_bytes       Int
+  tipo_mime        String
+  estado           EstadoArchivoEvidencia @default(PENDIENTE)
+  fecha_creacion   DateTime               @default(now()) @db.Timestamptz() // Para Garbage Collector y fecha_subida en historial
+
+  sub_actividad    SubActividad           @relation(fields: [sub_actividad_id], references: [id], onDelete: Cascade)
+  entrega          EntregaSubActividad?   @relation(fields: [entrega_id], references: [id], onDelete: Cascade)
+
+  @@index([sub_actividad_id, estado])
+  @@index([entrega_id])
+  @@index([estado, fecha_creacion]) // Índice optimizado para el CronJob del Garbage Collector
+}
+
+model Observacion {
+  id               String              @id @default(uuid())
+  entrega_id       String
+  numero_secuencia Int                 // Ej: 1, 2, 3 ("Observación #1")
+  descripcion      String              @db.Text
+  estado_solvencia EstadoSolvencia     @default(PENDIENTE)
+
+  entrega          EntregaSubActividad @relation(fields: [entrega_id], references: [id], onDelete: Cascade)
+
+  @@index([entrega_id])
+}

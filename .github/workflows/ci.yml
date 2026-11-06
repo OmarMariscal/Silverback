@@ -22,6 +22,9 @@ jobs:
       - name: Instalar dependencias del Monorepo (Clean Install)
         run: npm ci
 
+      - name: Generar cliente de Prisma (Base de datos)
+        run: npm exec --workspace=backend prisma generate
+
       - name: Build del Backend (NestJS)
         run: npm run build --workspace=backend
 
