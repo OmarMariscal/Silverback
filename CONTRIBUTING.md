@@ -1,166 +1,224 @@
+# 🏛️ Guía de Contribución para Silverback (SIMA)
 
-# 🏛️ Guía de Contribución para Silverback
-
-¡Bienvenido al repositorio oficial de Silverback! Este documento establece los lineamientos técnicos, la estructura del proyecto y el flujo de trabajo en Git que el equipo **MonkeyCode** debe seguir rigurosamente para asegurar un desarrollo limpio, colaborativo y profesional.
+¡Bienvenido al repositorio oficial de **SIMA (Sistema Integral de Monitoreo de Auditorías)**! Este documento establece los lineamientos técnicos, la arquitectura del proyecto, la integración entre **Git y Docker**, y las buenas prácticas que el equipo **MonkeyCode** debe seguir rigurosamente para asegurar un desarrollo limpio, colaborativo y profesional.
 
 ---
 
-## 1. Arquitectura del Repositorio (Monorepo)
+## 1. Arquitectura del Repositorio (Monorepo con Docker)
 
-Silverback está estructurado como un **Monorepo**. Esto significa que tanto el código del servidor como el de la interfaz de usuario viven en el mismo repositorio, pero están estrictamente separados en carpetas independientes:
+Silverback está estructurado como un **Monorepo** orquestado mediante **Docker Compose**. Los tres servicios principales (Base de Datos, Backend y Frontend) conviven en el mismo repositorio y se ejecutan en contenedores independientes y comunicados entre sí:
 
-* **`backend/`**: El motor del sistema. Desarrollado con **NestJS**, utiliza **Prisma ORM** para comunicarse con la base de datos PostgreSQL.
-* **`frontend/`**: La interfaz de usuario. Una aplicación web responsiva desarrollada con **Next.js** y estilizada con **Tailwind CSS**.
+* **`db` (PostgreSQL 15)**: Motor de base de datos relacional aislado en contenedor con volumen persistente (`pgdata_dev`), exponiendo el puerto `5432` hacia tu máquina local.
+* **`backend/` (NestJS)**: API REST central con arquitectura limpia, TypeScript, Prisma ORM y soporte para almacenamiento en **AWS S3** (módulo del contralor).
+* **`frontend/` (Next.js 16 + Tailwind CSS v4)**: Interfaz de usuario reactiva para Jefatura y Contraloría.
 
-### Inicialización del Entorno Local
+### 🔄 ¿Cómo interactúan Docker y tus archivos en Local? (Hot-Reload)
 
-Para empezar a trabajar en tu computadora, debes instalar las dependencias de cada entorno de forma aislada. **No instales paquetes globales en la raíz si no es necesario.**
-
-1. **Instalar dependencias del Backend:**
-   ```bash
-   cd backend
-   npm install
-
-
-2. **Instalar dependencias del Frontend:**
-```bash
-cd ../frontend
-npm install
-
+Gracias al montaje de volúmenes en `docker-compose.yml`:
+```yaml
+volumes:
+  - ./backend:/app
+  - ./frontend:/app
 ```
-
-*Nota: Recuerda configurar tus archivos `.env` locales dentro de las carpetas `backend/` y `frontend/` basándote en los archivos de ejemplo correspondientes (nunca subas las claves ni contraseñas reales a GitHub).*
+Tu carpeta local de código está **conectada en vivo** con el interior de los contenedores:
+* Cada vez que guardas un archivo en VS Code, el contenedor lo detecta y se actualiza de inmediato (*Hot-Reload*).
+* Cuando cambias de rama en Git (`git switch`) o traes cambios (`git pull`), los contenedores reflejan automáticamente los nuevos archivos sin necesidad de reinstalaciones manuales.
 
 ---
 
 ## 2. Flujo de Trabajo en Git (GitFlow Adaptado)
 
-Para proteger la estabilidad del proyecto, trabajaremos con un esquema de ramas protegido. **Nadie tiene permitido hacer un `push` directo a las ramas principales.**
+Para proteger la estabilidad del proyecto, operamos bajo un esquema de ramas protegidas:
 
-### Estructura de Ramas
+* **`main`**: Código estable y desplegable en producción. *(Protegida - Solo lectura directa)*.
+* **`develop`**: Rama principal de integración y pruebas grupales. *(Protegida)*.
+* **`feature/*`**: Ramas temporales para desarrollar nuevas características (ej. `feature/frontend-subactividades-poa`).
+* **`fix/*`**: Ramas temporales para corrección de bugs (ej. `fix/bff-calculo-fechas`).
 
-* **`main`**: Refleja exclusivamente el código estable en producción (entregas finales a la profesora/cliente). **[PROTEGIDA]**
-* **`develop`**: Es nuestra rama principal de integración. Todo el equipo unifica sus avances aquí para realizar pruebas grupales. **[PROTEGIDA]**
-* **`feature/*`**: Ramas temporales para desarrollar nuevas características (ej. `feature/backend-login`).
-* **`fix/*`**: Ramas temporales para corregir errores encontrados en el sistema (ej. `fix/ui-botones-dashboard`).
-
-### Reglas para Integrar Código (Pull Requests)
-
-Todo cambio o nueva funcionalidad debe solicitar su integración a la rama `develop` mediante un **Pull Request (PR)** en GitHub. El PR requiere obligatoriamente:
-
-1. Completar la plantilla explicando qué cambios introduce.
-2. La revisión y **aprobación de al menos un (1) compañero** del equipo (*Code Review*) antes de poder hacer el *Merge*.
+> ⛔ **Regla de Oro:** Nadie tiene permitido hacer `push` directo a `develop` ni a `main`. Todo cambio entra exclusivamente vía **Pull Request (PR)** revisado y aprobado por al menos un compañero.
 
 ---
 
-## 3. Acordeón de Comandos Git: Guía Paso a Paso para el Día a Día
+## 3. Acordeón del Día a Día: Git + Docker Paso a Paso
 
-Si eres nuevo con Git o quieres evitar errores, sigue esta receta de comandos en orden exacto cada vez que vayas a trabajar en una tarea.
+Sigue esta rutina diaria para trabajar sin fricciones y evitar conflictos de código o dependencias:
 
-### Paso 1: Antes de empezar a programar (Actualizar tu entorno)
+### Paso 0: Prerrequisito indispensable
+Antes de ejecutar cualquier comando de Docker, **abre la aplicación Docker Desktop en Windows** y asegúrate de que el motor esté corriendo (ícono de ballena verde con *"Engine running"* en la esquina inferior izquierda).
 
-Antes de crear una rama, asegúrate de tener lo último que hayan subido tus compañeros para evitar conflictos:
+### Paso 1: Iniciar el entorno de desarrollo
+Desde la **raíz del proyecto** (`Silverback/`), enciende todos los contenedores en segundo plano:
+```bash
+docker compose up -d
+```
+*(Opcional: Si quieres confirmar que la API compiló correctamente, corre `docker logs -f silverback_api_dev` y sal con `Ctrl + C`)*.
 
+### Paso 2: Actualizar `develop` y crear tu rama de trabajo
 ```bash
 # 1. Asegúrate de estar parado en la rama develop
 git switch develop
 
-# 2. Descarga los últimos cambios del servidor de GitHub a tu máquina
+# 2. Descarga lo último que haya subido el equipo
 git pull origin develop
 
+# 3. Crea tu rama efímera de trabajo y cámbiate a ella
+# Formato: feature/entorno-nombre-tarea o fix/entorno-nombre-tarea
+git switch -c feature/mi-nueva-funcionalidad
+
+# 4. Mantén tu rama actualizada con develop antes de empezar a trabajar
+git rebase develop
 ```
 
-### Paso 2: Crear tu rama de trabajo
+> 💡 **Nota sobre el orden:** Git y Docker son independientes. No importa si creas la rama antes o después de encender Docker.
 
-Crea una rama efímera con un nombre descriptivo según tu rol:
+### Paso 3: Desarrollar y verificar logs
+Escribe código y visualiza los cambios en tu navegador:
+* **Frontend:** [http://localhost:3001](http://localhost:3001)
+* **Backend:** [http://localhost:3000/api/v1](http://localhost:3000/api/v1)
+* **Swagger Docs:** [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
 
+Si quieres ver lo que imprimen los contenedores o diagnosticar algún error:
 ```bash
-# Crea y te cambia automáticamente a tu nueva rama
-# Formato: feature/entorno-nombre-tarea
-git switch -c feature/backend-sistema-semaforos
-# (O si usas una versión antigua de Git: git checkout -b feature/backend-sistema-semaforos)
+# Ver logs de todos los contenedores en vivo:
+docker compose logs -f
 
+# O ver únicamente los logs del backend:
+docker compose logs -f backend
 ```
+*(Presiona `Ctrl + C` en cualquier momento para salir de la vista de logs; los contenedores seguirán funcionando).*
 
-### Paso 3: Guardar tus avances en Local (Hacer Commits)
+### Paso 4: Sincronizar cambios de dependencias o base de datos de otros compañeros
+Si al hacer `git pull origin develop` notas que tus compañeros agregaron paquetes o migraciones (por ejemplo, el módulo de S3 o datos de prueba ampliados):
 
-Mientras programas, guarda tus cambios periódicamente en el historial local de tu computadora.
+* **Si cambiaron los `package.json`:**
+  ```bash
+  docker compose up -d --build
+  ```
+* **Si se modificó el esquema de Prisma o se agregaron nuevas semillas (`backend/prisma/`):**
+  Entra a la terminal del contenedor de la API y ejecuta:
+  ```bash
+  docker exec -it silverback_api_dev sh
+  
+  # Dentro de la terminal del contenedor:
+  npx prisma migrate dev
+  npx prisma generate
+  npx prisma db seed
+  exit
+  ```
+  *(Toma en cuenta que correr `npx prisma db seed` reemplazará los datos anteriores por la semilla oficial actualizada con los nuevos POAs y lógica de negocio).*
 
+* **Para visualizar los datos inyectados en Prisma Studio:**
+  Desde otra terminal local (afuera del contenedor), corre:
+  ```bash
+  npm run db:studio
+  ```
+  Y se abrirá automáticamente en tu navegador en [http://localhost:5556](http://localhost:5556).
+
+### Paso 5: Guardar tus avances (Commits Semánticos)
 ```bash
-# 1. Revisa qué archivos has modificado o agregado
+# 1. Revisa qué archivos modificaste
 git status
 
-# 2. Agrega los archivos que quieres guardar al "escenario"
-git add .   # (El punto agrega todos los archivos modificados, ten cuidado de no incluir basura)
+# 2. Prepara los archivos
+git add .
 
-# 3. Guarda los cambios con un mensaje semántico (Conventional Commits)
-git commit -m "feat(backend): implementa cálculo de días hábiles para semáforo"
-
+# 3. Guarda con un commit semántico (ver sección 5)
+git commit -m "feat(frontend): agrega acordeón de subactividades en poa"
 ```
 
-### Paso 4: Mantener tu rama al día (Evitar conflictos)
-
-Si estuviste trabajando varios días en tu rama, es muy probable que `develop` haya avanzado en GitHub. Antes de subir tu código, fusiónale lo nuevo de `develop`:
-
+### Paso 6: Subir tu rama y abrir el Pull Request
 ```bash
-# Trae lo último de develop a tu rama actual para resolver conflictos en tu máquina si los hay
-git pull origin develop
-
+git push origin feature/mi-nueva-funcionalidad
 ```
+Ve a GitHub, abre el **Pull Request hacia `develop`**, llena la plantilla explicando tus cambios y solicita la revisión de al menos un compañero.
 
-### Paso 5: Subir tus cambios y abrir el Pull Request
-
-Cuando tu tarea esté terminada y probada localmente, súbela a GitHub:
-
+### Paso 7: Al terminar tu jornada de trabajo
+Para liberar memoria RAM y recursos de tu computadora:
 ```bash
-# Sube tu rama al servidor remoto
-git push origin feature/backend-sistema-semaforos
-
+docker compose stop
 ```
-
-*Una vez hecho esto, entra a la página de GitHub de tu repositorio, haz clic en el botón verde **"Compare & pull request"** y solicita la revisión de tu equipo.*
+*(Al día siguiente, un simple `docker compose up -d` reanudará todo en segundos con tu base de datos y datos intactos).*
 
 ---
 
-## 4. Convención de Mensajes (Conventional Commits)
+## 4. Guía Rápida de Comandos de Docker (¿Cuándo usar cada uno?)
 
-Para mantener una bitácora legible y profesional, todos los mensajes de los commits deben seguir esta estructura: `tipo(entorno): descripción corta en minúsculas`.
-
-* **`feat(...)`**: Una nueva funcionalidad.
-* *Ejemplo:* `git commit -m "feat(frontend): añade panel visual de observaciones para la jefa"`
-
-
-* **`fix(...)`**: Reparación de un error/bug.
-* *Ejemplo:* `git commit -m "fix(backend): corrige bug en formato de fechas UTC-6"`
-
-
-* **`docs(...)`**: Cambios en la documentación (como este archivo o el README).
-* *Ejemplo:* `git commit -m "docs(root): actualiza instrucciones de instalación de dependencias"`
-
-
-* **`chore(...)`**: Tareas de mantenimiento, actualización de librerías o configuración del proyecto.
-* *Ejemplo:* `git commit -m "chore(backend): instala paquete de validación de esquemas"`
-
-
+| Comando | Acción | ¿Cuándo usarlo? |
+| :--- | :--- | :--- |
+| `docker compose up -d` | **Inicia** los contenedores en segundo plano. | Al comenzar a trabajar o al encender tu PC. |
+| `docker compose stop` | **Pausa / Detiene** los contenedores sin borrar nada. | Al terminar tu día de trabajo. |
+| `docker compose down` | **Apaga y elimina** los contenedores y la red virtual. | Cuando quieras reiniciar el entorno limpiamente (conserva la base de datos). |
+| `docker compose down -v` | **Elimina contenedores Y volúmenes de datos.** | ⚠️ **Cuidado:** Borra toda la base de datos local para iniciarla de cero. |
+| `docker compose up -d --build` | Reconstruye las imágenes de Docker y arranca. | Cuando se instalen nuevas librerías en `package.json`. |
+| `docker compose logs -f [servicio]` | Transmite los logs de la consola en tiempo real. | Para depurar errores o ver qué consultas SQL se están ejecutando. |
+| `docker exec -it silverback_api_dev sh` | Abre una terminal interactiva dentro de la API. | Para ejecutar comandos de Prisma (`migrate`, `generate`, `seed`). |
+| `npm run db:studio` | Abre Prisma Studio en la máquina local (puerto 5556). | Para inspeccionar tablas y registros en el navegador. |
 
 ---
 
-## 5. Directrices Técnicas Específicas de Silverback
+## 5. Convención de Commits (Conventional Commits)
 
-### Para el Backend (NestJS + Prisma)
+Todos los mensajes de confirmación deben seguir la estructura: `tipo(alcance): descripción breve en minúsculas y modo imperativo`.
 
-* **Migraciones de Base de Datos:** Si realizas un cambio en el archivo `schema.prisma`, debes crear y aplicar la migración local correspondiente antes de hacer commit:
+* **`feat(...)`**: Una nueva funcionalidad para el usuario.  
+  *Ejemplo:* `git commit -m "feat(backend): agrega módulo para subida de archivos s3"`
+* **`fix(...)`**: Corrección de un error o comportamiento inesperado.  
+  *Ejemplo:* `git commit -m "fix(backend): visualización de base de datos vía prisma studio"`
+* **`docs(...)`**: Cambios exclusivos en documentación (`README.md`, `CONTRIBUTING.md`, etc.).  
+  *Ejemplo:* `git commit -m "docs(contributing): documenta nuevo script db:studio y seed ampliado"`
+* **`chore(...)`**: Tareas de configuración, dependencias o tooling.  
+  *Ejemplo:* `git commit -m "chore(docker): ajusta puertos de api y configuración de base de datos"`
+* **`refactor(...)`**: Refactorización de código que no altera el comportamiento funcional.  
+  *Ejemplo:* `git commit -m "refactor(frontend): desacopla adaptador de datos del dashboard"`
+
+---
+
+## 6. Base de Datos y Prisma
+
+### Inicialización Local y Actualizaciones de Semilla
+Cada vez que el equipo de backend actualice el modelo de datos o la semilla (por ejemplo, con nuevos POAs y soporte para S3), aplica los cambios con:
 ```bash
-npx prisma migrate dev --name descripcion_del_cambio
-
+docker exec -it silverback_api_dev sh
+# Dentro del contenedor:
+npx prisma migrate dev
+npx prisma generate
+npx prisma db seed
+exit
 ```
 
+### 🗄️ Visualización de la Base de Datos Local
+Para visualizar las tablas y registros en tu navegador:
+1. Con los contenedores corriendo, abre una terminal en la raíz (afuera del contenedor).
+2. Ejecuta:
+   ```bash
+   npm run db:studio
+   ```
+3. Se abrirá automáticamente [http://localhost:5556](http://localhost:5556) con Prisma Studio conectado a la base de datos local de Docker.
 
-* **Validación de Datos:** Utiliza siempre los DTOs (Data Transfer Objects) para asegurar que el Frontend mande la información con el formato y las reglas de negocio correctas.
+También puedes usar extensiones en VS Code (Database Client / PostgreSQL) o clientes de escritorio (DBeaver, TablePlus) apuntando a `localhost:5432` con usuario `postgres`, contraseña la configurada en tu `.env` (ej. `tu_password_local` o `root`) y base de datos `TestingSilverBack` (o `silverback` según tu .env).
 
-### Para el Frontend (NextJS + Tailwind)
+### 🌐 Alternativa Opcional: Conectar a Base de Datos en Neon
+Si necesitas temporalmente una base de datos en la nube (Neon):
+1. En `docker-compose.yml`, cambia la variable `DATABASE_URL` del `backend`:
+   ```yaml
+   environment:
+     DATABASE_URL: ${DATABASE_URL}
+   ```
+2. En tu archivo `.env` en la raíz, coloca tu URL de Neon:
+   ```env
+   DATABASE_URL="postgresql://neondb_owner:password@ep-ejemplo.us-east-2.aws.neon.tech/neondb?sslmode=require"
+   ```
+3. Reinicia los contenedores: `docker compose down && docker compose up -d`.
 
-* **Diseño Responsivo:** Diseña siempre pensando primero en pantallas de escritorio (que es donde la Jefa y los Contralores usarán el sistema de forma exhaustiva), pero utilizando las utilidades de Tailwind (`md:`, `lg:`) para asegurar que la UI no se rompa en pantallas más compactas.
-* **Rutas Protegidas:** Toda vista que requiera un rol específico (como la pantalla de visualización masiva de la Jefa) debe estar protegida lógicamente mediante los mecanismos de autenticación cliente.
+---
 
-```
+## 7. Requisitos para el Pull Request (PR)
+
+Antes de solicitar la integración de tu código a `develop`:
+1. **Verificación de Tipos y Compilación:** Asegúrate de que no existan errores de TypeScript ni de compilación:
+   ```bash
+   # Frontend:
+   npm --prefix frontend run build
+   ```
+2. **Sin claves en código:** Verifica que no hayas commiteado archivos `.env` reales con contraseñas o tokens.
+3. **Descripción clara:** Completa todos los apartados de la plantilla del Pull Request describiendo qué hace tu cambio, cómo probarlo y qué partes del Monorepo afecta.
