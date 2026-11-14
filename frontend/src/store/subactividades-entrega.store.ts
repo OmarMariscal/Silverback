@@ -108,6 +108,7 @@ export const useSubActividadEntregaStore = create<SubActividadesEntregaState>((s
       estaCargando: true,
       mensajeError: null,
       mensajeExito: null,
+      errorEnvioGeneral: null,
       esModoHistorico: false,
       versionHistoricaActivaId: null,
       versionHistoricaDetalle: null,

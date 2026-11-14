@@ -6,6 +6,7 @@ import { TarjetaActividadPOAProps } from '@/types/poa-contratos';
 interface Props extends TarjetaActividadPOAProps {
   consecutivoIndex: number;
   onAbrirModalSubactividades?: (idActividad: string, tituloActividad: string) => void;
+  onAbrirSubactividad?: (subActividadId: string) => void;
 }
 
 export function TarjetaActividadPOA({
@@ -23,6 +24,7 @@ export function TarjetaActividadPOA({
   puedeEditar,
   ocultarBotonBorrar,
   onAbrirModalSubactividades,
+  onAbrirSubactividad,
   onBorrarActividad,
   onConfigurarFichaTecnica,
   onExpandirTarjeta
@@ -248,8 +250,25 @@ export function TarjetaActividadPOA({
                                 {sub.folioSecuencial}
                               </span>
                             </td>
-                            <td className="px-6 py-5 text-slate-700 font-medium leading-relaxed pr-8">
-                              {sub.descripcion}
+                            <td className="px-6 py-5 font-medium leading-relaxed pr-8">
+                              {onAbrirSubactividad ? (
+                                <button
+                                  type="button"
+                                  onClick={() => onAbrirSubactividad(sub.id)}
+                                  className="group/link inline-flex w-full items-center justify-between gap-3 text-left text-slate-700 transition-colors hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+                                  aria-label={`Abrir entrega de la subactividad ${sub.folioSecuencial}: ${sub.descripcion}`}
+                                >
+                                  <span>{sub.descripcion}</span>
+                                  <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-indigo-600 opacity-0 transition-opacity group-hover/link:opacity-100 group-focus-visible/link:opacity-100">
+                                    Abrir entrega
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                  </span>
+                                </button>
+                              ) : (
+                                sub.descripcion
+                              )}
                             </td>
                             <td className="px-6 py-5">
                               <span className="text-slate-600 font-medium flex items-center bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 whitespace-nowrap">

@@ -56,13 +56,13 @@ const MOCK_VISTA_ENTREGA: VistaEntregaSubActividadResponse = {
       fin: '2026-02-15T00:00:00Z',
     },
     duracion_estimada_semanas: 4,
-    cierre_global_poa: '2026-12-31T00:00:00Z',
+    cierre_global_poa: '2026-11-12T00:00:00Z',
   },
   buzon_borrador: {
     evidencias: [
       {
         id: 'archivo-uuid-1',
-        nombre_archivo: 'firmas_computacionales_corregido.pdf',
+        nombre_archivo: 'firmas_computacionales_corregidora.pdf',
         peso_mb: 2.4,
         url_descarga: '#',
       },
