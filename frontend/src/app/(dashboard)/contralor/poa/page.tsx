@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { usePoaStore } from '@/store/poa.store';
 import { TarjetaActividadPOA } from '@/components/ui/TarjetaActividadPrinsipal';
 import { ModalSubactividades } from '@/components/ui/ModalSubactividades';
@@ -21,6 +22,7 @@ function propsAFilaForm(sub: SubactividadFilaProps): SubactividadFilaForm {
 }
 
 export default function ContralorPoaPage() {
+  const router = useRouter();
   const cabecera = usePoaStore((state) => state.cabecera);
   const poaMensajeError = usePoaStore((state) => state.mensajeError);
   const actividades = usePoaStore((state) => state.actividades);
@@ -348,6 +350,9 @@ export default function ContralorPoaPage() {
               puedeEditar={cabecera.puedeEditar}
               consecutivoIndex={index}
               onAbrirModalSubactividades={handleAbrirModalSubactividades}
+              onAbrirSubactividad={(subActividadId) =>
+                router.push(`/contralor/poa/subactividades/${encodeURIComponent(subActividadId)}`)
+              }
               onConfigurarFichaTecnica={() => handleAbrirModalFichaTecnica(actividad.idActividad)}
               onExpandirTarjeta={() => expandirTarjeta(actividad.idActividad)}
               onBorrarActividad={() => borrarActividad(actividad.idActividad)}
