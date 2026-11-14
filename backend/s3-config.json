@@ -1,0 +1,20 @@
+{
+  "identities": [
+    {
+      "name": "silverback_admin",
+      "credentials": [
+        {
+          "accessKey": "s3_dev_user",
+          "secretKey": "s3_dev_password"
+        }
+      ],
+      "actions": [
+        "Admin",
+        "Read",
+        "List",
+        "Tagging",
+        "Write"
+      ]
+    }
+  ]
+}
