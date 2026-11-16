@@ -19,6 +19,7 @@
         "@database/*": ["./src/prisma/*"],
         "@core/*": ["./src/core/*"],
         "@modules/*": ["./src/modules/*"],
+        "@storage/*": ["./src/storage/*"],
     },
     "incremental": true,
     "skipLibCheck": true,
