@@ -1,10 +1,16 @@
+import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
 import { PaginacionMapper } from '@core/common/mappers/paginacion.mapper';
+import type { IStoragePort } from '@core/interfaces/storage/storage-port.interface';
+import { STORAGE_PORT_TOKEN } from '@core/interfaces/storage/storage-port.interface';
 import type { IUnitOfWork } from '@core/interfaces/unit-of-work.interface';
 import { UNIT_OF_WORK_TOKEN } from '@core/interfaces/unit-of-work.interface';
 import type { IActividadRepository } from '@domain/actividad/actividad.repository.interface';
 import { ACTIVIDAD_REPOSITORY_TOKEN } from '@domain/actividad/actividad.repository.interface';
 import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
+import { EstadosArchivoEvidencia } from '@domain/actividad/estados-archivo-evidencia.enum';
 import { SubactividadEntity } from '@domain/actividad/subactividad.entity';
+import type { ISubactividadRepository } from '@domain/actividad/subactividad.repository.interface';
+import { SUBACTIVIDAD_REPOSITORY_TOKEN } from '@domain/actividad/subactividad.repository.interface';
 import { CodigoDeViolacion } from '@domain/codigos/codigo-violado.enum';
 import { RecursoNoEncontradoException } from '@domain/excepciones/recurso-no-encontrado.exception';
 import { ReglaNegocioException } from '@domain/excepciones/regla-negocio.exception';
@@ -13,6 +19,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import { SubActividadesDirectorioResponse } from '../dto/response/actividades-directorio.response.dto';
 import { SubActividadesGetResponse } from '../dto/response/actividades-get.response.dto';
 import { SubActividadesSupervicionGetResponse } from '../dto/response/actividades-supervision-get.response.dto';
+import { ConfirmarArchivoResponseDto } from '../dto/response/confirmar-archivo.response.dto';
+import { EnviarSubActividadRevisionResponseDto } from '../dto/response/enviar-subactividad-revision.response.dto';
+import { GenerarPreFirmaResponseDto } from '../dto/response/generar-pre-firma.response.dto';
 import { SubActividadesBulkResponse } from '../dto/response/sub-actividades-bulk.response.dto';
 import { SubActividadesPoaResponse } from '../dto/response/sub-actividades-poa.response.dto';
 import { SubActividadesProximasVencerResponse } from '../dto/response/sub-actividades-proximas-a-vencer-get.response.dto';
@@ -20,6 +29,10 @@ import { SubActividadesSelectResponse } from '../dto/response/sub-actividades-se
 import { SubActividadesSyncResponse } from '../dto/response/sub-actividades-sync.response.dto';
 import { SubActividadResponseMapper } from '../infrastructure/mappers/subactividad-response.mapper';
 import { SubActividadBulkQuery } from './ports/commands/subactividad-bulk.command';
+import { SubActividadConfirmarArchivoCommand } from './ports/commands/subactividad-confirmar-archivo.command';
+import { SubActividadEliminarArchivoCommand } from './ports/commands/subactividad-eliminar-archivo.command';
+import { SubActividadEnviarRevisionCommand } from './ports/commands/subactividad-enviar-revision.command';
+import { SubActividadGenerarPreFirmaCommand } from './ports/commands/subactividad-generar-prefirma.command';
 import { SubActividadSyncQuery } from './ports/commands/subactividad-sync.command';
 import { PaginacionParams } from './ports/filtros/paginacion-params.filtro.interface';
 import { FiltrosSupervision } from './ports/filtros/subactividad-supervision.filtro.interface';
@@ -40,8 +53,12 @@ export class SubactividadesService {
     private readonly actividadesRepository: IActividadRepository,
     @Inject(SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN)
     private readonly subActividadQueryRepository: ISubactividadesQueryRepository,
+    @Inject(SUBACTIVIDAD_REPOSITORY_TOKEN)
+    private readonly subActividadRepository: ISubactividadRepository,
     @Inject(UNIT_OF_WORK_TOKEN)
     private readonly unitOfWork: IUnitOfWork,
+    @Inject(STORAGE_PORT_TOKEN)
+    private readonly storagePort: IStoragePort,
   ) {}
 
   async getSubActividadesSupervision(
@@ -382,5 +399,248 @@ export class SubactividadesService {
     }
 
     return SubActividadResponseMapper.toProximasAVencer(rawSubActividadesList);
+  }
+
+  async generarPreFirmaEvidencia(
+    command: SubActividadGenerarPreFirmaCommand,
+  ): Promise<GenerarPreFirmaResponseDto> {
+    const { usuarioActual, subActividadId, dto } = command;
+
+    return this.unitOfWork.ejecutarTransaccion(
+      async (tx: TransactionHandle): Promise<GenerarPreFirmaResponseDto> => {
+        const subActividad =
+          await this.subActividadRepository.obtenerPorIdConContexto(
+            subActividadId,
+            tx,
+          );
+        if (!subActividad) {
+          throw new RecursoNoEncontradoException(
+            'SubActividad',
+            subActividadId,
+            usuarioActual.usuario_id,
+          );
+        }
+
+        const archivoId: string = crypto.randomUUID();
+
+        const evidencia = subActividad.registrarIntencionCargaEvidencia(
+          usuarioActual.actor,
+          usuarioActual.usuario_id,
+          {
+            archivoId,
+            nombreOriginal: dto.nombre_archivo,
+            mimeType: dto.mime_type,
+            pesoBytes: dto.peso_bytes,
+          },
+        );
+
+        await this.subActividadRepository.guardarEvidencia(evidencia, tx);
+
+        const { uploadUrl } = await this.storagePort.generarUrlPreFirmadaSubida(
+          {
+            objectKey: evidencia.getObjectKey(),
+            mimeType: evidencia.getTipoMime(),
+            pesoBytes: evidencia.getPesoBytes(),
+          },
+        );
+
+        return SubActividadResponseMapper.toGenerarPreFirmaResponse(
+          archivoId,
+          uploadUrl,
+          evidencia.getTipoMime(),
+        );
+      },
+    );
+  }
+
+  async confirmarEvidenciaSubida(
+    command: SubActividadConfirmarArchivoCommand,
+  ): Promise<ConfirmarArchivoResponseDto> {
+    const { usuarioActual, subActividadId, archivoId } = command;
+
+    return this.unitOfWork.ejecutarTransaccion(
+      async (tx: TransactionHandle): Promise<ConfirmarArchivoResponseDto> => {
+        const subActividad =
+          await this.subActividadRepository.obtenerPorIdConContexto(
+            subActividadId,
+            tx,
+          );
+        if (!subActividad) {
+          throw new RecursoNoEncontradoException(
+            'SubActividad',
+            subActividadId,
+            usuarioActual.usuario_id,
+          );
+        }
+
+        const evidencia =
+          await this.subActividadRepository.obtenerEvidenciaPorId(
+            archivoId,
+            tx,
+          );
+        if (!evidencia) {
+          throw new RecursoNoEncontradoException(
+            'Evidencia',
+            archivoId,
+            usuarioActual.usuario_id,
+          );
+        }
+
+        const metadataStorage =
+          await this.storagePort.verificarExistenciaObjeto(
+            evidencia.getObjectKey(),
+          );
+        if (!metadataStorage.existe) {
+          throw new ReglaNegocioException(
+            'El archivo no ha sido encontrado en el servidor de almacenamiento. Asegúrate de completar la subida PUT antes de confirmar.',
+            CodigoDeViolacion.ARCHIVO_NO_SUBIDO,
+          );
+        }
+
+        subActividad.confirmarEvidenciaSubida(
+          usuarioActual.actor,
+          usuarioActual.usuario_id,
+          evidencia,
+          metadataStorage.pesoBytes,
+        );
+
+        await this.subActividadRepository.guardarEvidencia(evidencia, tx);
+
+        const urlDescarga: string =
+          await this.storagePort.generarUrlPreFirmadaDescarga({
+            objectKey: evidencia.getObjectKey(),
+            nombreDescarga: evidencia.getNombreOriginal(),
+          });
+
+        return SubActividadResponseMapper.toConfirmarArchivoResponse(
+          evidencia,
+          urlDescarga,
+        );
+      },
+    );
+  }
+
+  async eliminarEvidencia(
+    command: SubActividadEliminarArchivoCommand,
+  ): Promise<EliminacionCorrecta> {
+    const { usuarioActual, subActividadId, archivoId } = command;
+
+    return this.unitOfWork.ejecutarTransaccion(
+      async (tx: TransactionHandle): Promise<EliminacionCorrecta> => {
+        const subActividad =
+          await this.subActividadRepository.obtenerPorIdConContexto(
+            subActividadId,
+            tx,
+          );
+        if (!subActividad) {
+          throw new RecursoNoEncontradoException(
+            'SubActividad',
+            subActividadId,
+            usuarioActual.usuario_id,
+          );
+        }
+
+        const evidencia =
+          await this.subActividadRepository.obtenerEvidenciaPorId(
+            archivoId,
+            tx,
+          );
+        if (!evidencia) {
+          throw new RecursoNoEncontradoException(
+            'Evidencia',
+            archivoId,
+            usuarioActual.usuario_id,
+          );
+        }
+
+        subActividad.validarEliminacionEvidencia(
+          usuarioActual.actor,
+          usuarioActual.usuario_id,
+          evidencia,
+        );
+
+        await this.subActividadRepository.eliminarEvidencia(archivoId, tx);
+        await this.storagePort.eliminarObjeto(evidencia.getObjectKey());
+
+        return SubActividadResponseMapper.toEliminarArchivoResponse();
+      },
+    );
+  }
+
+  async enviarSubActividadARevision(
+    command: SubActividadEnviarRevisionCommand,
+  ): Promise<EnviarSubActividadRevisionResponseDto> {
+    const { usuarioActual, subActividadId, dto } = command;
+
+    return this.unitOfWork.ejecutarTransaccion(
+      async (
+        tx: TransactionHandle,
+      ): Promise<EnviarSubActividadRevisionResponseDto> => {
+        const subActividad =
+          await this.subActividadRepository.obtenerPorIdConContexto(
+            subActividadId,
+            tx,
+          );
+        if (!subActividad) {
+          throw new RecursoNoEncontradoException(
+            'SubActividad',
+            subActividadId,
+            usuarioActual.usuario_id,
+          );
+        }
+
+        const estadoAnterior: EstadosActividades = subActividad.getEstado();
+
+        const evidenciasEnBorrador =
+          await this.subActividadRepository.obtenerEvidenciasPorEstado(
+            subActividadId,
+            EstadosArchivoEvidencia.BORRADOR,
+            tx,
+          );
+
+        const entregaId: string = crypto.randomUUID();
+
+        const { entrega, evidenciasConsolidadas, evidenciasDescartadas } =
+          subActividad.consolidarEntregaARevision(
+            usuarioActual.actor,
+            usuarioActual.usuario_id,
+            {
+              entregaId,
+              comentariosEntrega: dto.comentarios_entrega,
+              evidenciasEnBorrador,
+              evidenciasIdsSeleccionados: dto.evidencias_ids,
+            },
+          );
+
+        await this.subActividadRepository.registrarEntregaYActualizarSubActividad(
+          subActividad,
+          entrega,
+          evidenciasConsolidadas,
+          tx,
+        );
+
+        if (evidenciasDescartadas.length > 0) {
+          const idsDescartados: string[] = evidenciasDescartadas.map((e) =>
+            e.getId(),
+          );
+          const keysDescartadas: string[] = evidenciasDescartadas.map((e) =>
+            e.getObjectKey(),
+          );
+          await this.subActividadRepository.eliminarEvidenciasPorIds(
+            idsDescartados,
+            tx,
+          );
+          await this.storagePort.eliminarObjetosEnLote(keysDescartadas);
+        }
+
+        return SubActividadResponseMapper.toEnviarRevisionResponse(
+          subActividadId,
+          estadoAnterior,
+          subActividad.getEstado(),
+          entrega.getVersion(),
+          entrega.getFechaEnvio(),
+        );
+      },
+    );
   }
 }

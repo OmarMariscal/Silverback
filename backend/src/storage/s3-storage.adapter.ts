@@ -26,7 +26,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-Injectable();
+@Injectable()
 export class S3StorageAdapter
   implements IStoragePort, OnModuleInit, OnModuleDestroy
 {

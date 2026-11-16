@@ -3,6 +3,7 @@ import { ActividadesService } from './application/actividades.service';
 import { SubactividadesService } from './application/subactividades.service';
 import { ActividadesController } from './infrastructure/http/actividades.controller';
 import { SubactividadesController } from './infrastructure/http/subactividades.controller';
+import { SubactividadesEjecucionController } from './infrastructure/http/subactividades-ejecucion.controller';
 import { PrismaModule } from '@database/prisma.module';
 import { ActividadMapper } from './infrastructure/mappers/actividad.mapper';
 import { SubActividadMapper } from './infrastructure/mappers/subactividad.mapper';
@@ -19,17 +20,18 @@ import { PrismaActividadQueryRepository } from './infrastructure/repositories/pr
 
 @Module({
   imports: [PrismaModule],
-  controllers: [ActividadesController, SubactividadesController],
+  controllers: [
+    ActividadesController,
+    SubactividadesController,
+    SubactividadesEjecucionController,
+  ],
   providers: [
-    // 1. Mappers (Dependencias sin Interfaz)
     ActividadMapper,
     SubActividadMapper,
     EvidenciaMapper,
     EntregaSubActividadMapper,
-    // 2. Services
     ActividadesService,
     SubactividadesService,
-    // 3. Repositorios (Bindeados a sus tokens)
     {
       provide: ACTIVIDAD_REPOSITORY_TOKEN,
       useClass: PrismaActividadRepository,
