@@ -1,3 +1,4 @@
+import { CodigoDeViolacion } from '@domain/codigos/codigo-violado.enum';
 import { RecursoNoEncontradoException } from '@domain/excepciones/recurso-no-encontrado.exception';
 import { ReglaNegocioException } from '@domain/excepciones/regla-negocio.exception';
 import { ValidacionIntegridadException } from '@domain/excepciones/validacion-integridad.exception';
@@ -25,7 +26,7 @@ export class DominioExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
 
-    //Manejo del caso específico del 404 antes del 400
+    // Manejo del caso específico del 404 antes del 400
     if (exception instanceof RecursoNoEncontradoException) {
       const status = HttpStatus.NOT_FOUND;
       return response.status(status).json({
@@ -35,19 +36,27 @@ export class DominioExceptionFilter implements ExceptionFilter {
       });
     }
 
-    const status = HttpStatus.BAD_REQUEST;
-    const message = exception.message;
-
     if (exception instanceof ValidacionIntegridadException) {
-      response.status(status).json({
+      const status = HttpStatus.BAD_REQUEST;
+      return response.status(status).json({
         statusCode: status,
-        message: message,
+        message: exception.message,
         errores: exception.Errores,
       });
-    } else if (exception instanceof ReglaNegocioException) {
-      response.status(status).json({
+    }
+
+    if (exception instanceof ReglaNegocioException) {
+      const esViolacionAutorizacion =
+        exception.codigoViolado === CodigoDeViolacion.ROL_INVALIDO ||
+        exception.codigoViolado === CodigoDeViolacion.ACCESO_DENEGADO;
+
+      const status = esViolacionAutorizacion
+        ? HttpStatus.FORBIDDEN
+        : HttpStatus.BAD_REQUEST;
+
+      return response.status(status).json({
         statusCode: status,
-        message: message,
+        message: exception.message,
         violationCode: exception.codigoViolado,
       });
     }
