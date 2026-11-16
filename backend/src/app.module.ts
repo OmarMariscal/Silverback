@@ -9,6 +9,7 @@ import { CatalogoModule } from './modules/catalogo/catalogo.module';
 import { AuditoresModule } from './modules/auditores/auditores.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { CentrosModule } from './modules/centros/centros.module';
+import { StorageModule } from '@storage/storage.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CentrosModule } from './modules/centros/centros.module';
       isGlobal: true,
       envFilePath: ['.env', 'backend/.env'],
     }),
+    StorageModule,
     AuthModule,
     ActividadesModule,
     PoasModule,
