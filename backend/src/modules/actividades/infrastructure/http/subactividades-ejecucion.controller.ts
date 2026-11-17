@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpStatus,
   Param,
   ParseUUIDPipe,
@@ -29,6 +30,14 @@ import { ConfirmarArchivoResponseDto } from '../../dto/response/confirmar-archiv
 import { EnviarSubActividadRevisionResponseDto } from '../../dto/response/enviar-subactividad-revision.response.dto';
 import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
 import { HttpErrorDto } from '@core/common/dto/response/http-error.dto';
+// [TASK-04] DTO para Vista de Entrega
+import { VistaEntregaResponseDto } from '../../dto/response/vista-entrega.response.dto';
+// [TASK-06] DTOs para Historial de Versiones y Descarga
+import {
+  HistorialIndexResponseDto,
+  VersionDetalleResponseDto,
+  LinkDescargaResponseDto,
+} from '../../dto/response/historial-versiones.response.dto';
 
 @ApiTags('Subactividades (Ejecución y Evidencias)')
 @ApiBearerAuth()
@@ -198,6 +207,176 @@ export class SubactividadesEjecucionController {
       usuarioActual,
       subActividadId,
       dto,
+    });
+  }
+
+  // ─── [TASK-04] Vista de Entrega ───────────────────────────────────────────
+
+  @ApiOperation({
+    summary: 'Obtener vista de entrega de la sub-actividad',
+    description:
+      'Devuelve el estado operativo actual, metadatos de cabecera, observaciones activas no solventadas, buzón de borradores con pre-firmas de descarga y el historial de versiones.',
+  })
+  @ApiParam({
+    name: 'subActividadId',
+    description: 'Identificador único (UUID) de la sub-actividad',
+    example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Estructura base de la vista de entrega generada exitosamente',
+    type: VistaEntregaResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Sub-actividad no encontrada',
+    type: HttpErrorDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Acceso denegado o rol no autorizado (validación IDOR)',
+    type: HttpErrorDto,
+  })
+  @RequirePermissions(Permisos.GESTIONAR_TRABAJO_SUBACTIVIDADES)
+  @Get(':subActividadId/vista-entrega')
+  async getVistaEntrega(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('subActividadId', ParseUUIDPipe) subActividadId: string,
+  ): Promise<VistaEntregaResponseDto> {
+    return await this.subactividadesService.getVistaEntrega({
+      usuarioActual,
+      subActividadId,
+    });
+  }
+
+  // ─── [TASK-06] Historial de Versiones y Descarga de Archivos ─────────────
+
+  @ApiOperation({
+    summary: 'Historial ligero de versiones de la sub-actividad',
+    description:
+      'Provee la lista secuencial de versiones con su fecha de evento, estado y dictamen.',
+  })
+  @ApiParam({
+    name: 'subActividadId',
+    description: 'Identificador único (UUID) de la sub-actividad',
+    example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista histórica de versiones obtenida con éxito',
+    type: HistorialIndexResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Sub-actividad no encontrada',
+    type: HttpErrorDto,
+  })
+  @RequirePermissions(Permisos.GESTIONAR_TRABAJO_SUBACTIVIDADES)
+  @Get(':subActividadId/historial')
+  async getHistorial(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('subActividadId', ParseUUIDPipe) subActividadId: string,
+  ): Promise<HistorialIndexResponseDto> {
+    return await this.subactividadesService.getHistorial({
+      usuarioActual,
+      subActividadId,
+    });
+  }
+
+  @ApiOperation({
+    summary: 'Detalle pesado de una versión histórica',
+    description:
+      'Obtiene las observaciones emitidas y las evidencias inmutables de una versión histórica en modo solo lectura.',
+  })
+  @ApiParam({
+    name: 'subActividadId',
+    description: 'Identificador único (UUID) de la sub-actividad',
+    example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    format: 'uuid',
+  })
+  @ApiParam({
+    name: 'versionId',
+    description: 'Identificador único (UUID) de la versión/entrega',
+    example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Detalle de la versión histórica obtenido con éxito',
+    type: VersionDetalleResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Sub-actividad o versión no encontrada',
+    type: HttpErrorDto,
+  })
+  @RequirePermissions(Permisos.GESTIONAR_TRABAJO_SUBACTIVIDADES)
+  @Get(':subActividadId/versiones/:versionId')
+  async getVersionDetalle(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('subActividadId', ParseUUIDPipe) subActividadId: string,
+    @Param('versionId', ParseUUIDPipe) versionId: string,
+  ): Promise<VersionDetalleResponseDto> {
+    return await this.subactividadesService.getVersionDetalle({
+      usuarioActual,
+      subActividadId,
+      versionId,
+    });
+  }
+
+  @ApiOperation({
+    summary: 'Generar firma de descarga para evidencia histórica (con validación IDOR)',
+    description:
+      'Genera una URL pre-firmada temporal (GET) para descargar el archivo original desde S3/MinIO/SeaweedFS, validando que el usuario tenga acceso y el archivo pertenezca a la versión y sub-actividad indicadas.',
+  })
+  @ApiParam({
+    name: 'subActividadId',
+    description: 'Identificador único (UUID) de la sub-actividad',
+    example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    format: 'uuid',
+  })
+  @ApiParam({
+    name: 'versionId',
+    description: 'Identificador único (UUID) de la versión/entrega',
+    example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    format: 'uuid',
+  })
+  @ApiParam({
+    name: 'archivoId',
+    description: 'Identificador único (UUID) de la evidencia a descargar',
+    example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'URL pre-firmada efímera generada con éxito',
+    type: LinkDescargaResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Sub-actividad, versión o archivo no encontrado',
+    type: HttpErrorDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Acceso denegado (violación IDOR)',
+    type: HttpErrorDto,
+  })
+  @RequirePermissions(Permisos.GESTIONAR_TRABAJO_SUBACTIVIDADES)
+  @Get(':subActividadId/versiones/:versionId/evidencias/:archivoId/link-descarga')
+  async getLinkDescarga(
+    @UsuarioActual() usuarioActual: SesionUsuario,
+    @Param('subActividadId', ParseUUIDPipe) subActividadId: string,
+    @Param('versionId', ParseUUIDPipe) versionId: string,
+    @Param('archivoId', ParseUUIDPipe) archivoId: string,
+  ): Promise<LinkDescargaResponseDto> {
+    return await this.subactividadesService.getLinkDescarga({
+      usuarioActual,
+      subActividadId,
+      versionId,
+      archivoId,
     });
   }
 }

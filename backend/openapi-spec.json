@@ -1108,6 +1108,259 @@
         ]
       }
     },
+    "/api/v1/sub-actividades/{subActividadId}/vista-entrega": {
+      "get": {
+        "description": "Devuelve el estado operativo actual, metadatos de cabecera, observaciones activas no solventadas, buzón de borradores con pre-firmas de descarga y el historial de versiones.",
+        "operationId": "SubactividadesEjecucionController_getVistaEntrega",
+        "parameters": [
+          {
+            "name": "subActividadId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la sub-actividad",
+            "schema": {
+              "format": "uuid",
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estructura base de la vista de entrega generada exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VistaEntregaResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acceso denegado o rol no autorizado (validación IDOR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Sub-actividad no encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtener vista de entrega de la sub-actividad",
+        "tags": [
+          "Subactividades (Ejecución y Evidencias)"
+        ]
+      }
+    },
+    "/api/v1/sub-actividades/{subActividadId}/historial": {
+      "get": {
+        "description": "Provee la lista secuencial de versiones con su fecha de evento, estado y dictamen.",
+        "operationId": "SubactividadesEjecucionController_getHistorial",
+        "parameters": [
+          {
+            "name": "subActividadId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la sub-actividad",
+            "schema": {
+              "format": "uuid",
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista histórica de versiones obtenida con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistorialIndexResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Sub-actividad no encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Historial ligero de versiones de la sub-actividad",
+        "tags": [
+          "Subactividades (Ejecución y Evidencias)"
+        ]
+      }
+    },
+    "/api/v1/sub-actividades/{subActividadId}/versiones/{versionId}": {
+      "get": {
+        "description": "Obtiene las observaciones emitidas y las evidencias inmutables de una versión histórica en modo solo lectura.",
+        "operationId": "SubactividadesEjecucionController_getVersionDetalle",
+        "parameters": [
+          {
+            "name": "subActividadId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la sub-actividad",
+            "schema": {
+              "format": "uuid",
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "type": "string"
+            }
+          },
+          {
+            "name": "versionId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la versión/entrega",
+            "schema": {
+              "format": "uuid",
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalle de la versión histórica obtenido con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionDetalleResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Sub-actividad o versión no encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Detalle pesado de una versión histórica",
+        "tags": [
+          "Subactividades (Ejecución y Evidencias)"
+        ]
+      }
+    },
+    "/api/v1/sub-actividades/{subActividadId}/versiones/{versionId}/evidencias/{archivoId}/link-descarga": {
+      "get": {
+        "description": "Genera una URL pre-firmada temporal (GET) para descargar el archivo original desde S3/MinIO/SeaweedFS, validando que el usuario tenga acceso y el archivo pertenezca a la versión y sub-actividad indicadas.",
+        "operationId": "SubactividadesEjecucionController_getLinkDescarga",
+        "parameters": [
+          {
+            "name": "subActividadId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la sub-actividad",
+            "schema": {
+              "format": "uuid",
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "type": "string"
+            }
+          },
+          {
+            "name": "versionId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la versión/entrega",
+            "schema": {
+              "format": "uuid",
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "type": "string"
+            }
+          },
+          {
+            "name": "archivoId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la evidencia a descargar",
+            "schema": {
+              "format": "uuid",
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "URL pre-firmada efímera generada con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkDescargaResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acceso denegado (violación IDOR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Sub-actividad, versión o archivo no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Generar firma de descarga para evidencia histórica (con validación IDOR)",
+        "tags": [
+          "Subactividades (Ejecución y Evidencias)"
+        ]
+      }
+    },
     "/api/v1/poas/mi-poa-actual": {
       "get": {
         "description": "Entrega los datos necesarios para armar la POA vigente del anio fiscal",
@@ -3050,6 +3303,367 @@
           "nueva_version",
           "fecha_envio",
           "mensaje"
+        ]
+      },
+      "MetaCabeceraDto": {
+        "type": "object",
+        "properties": {
+          "folio": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "centro_clave": {
+            "type": "string"
+          },
+          "version_actual": {
+            "type": "number"
+          },
+          "etiqueta_semaforo": {
+            "type": "string"
+          },
+          "permite_entrega": {
+            "type": "boolean"
+          },
+          "permite_carga_evidencias": {
+            "type": "boolean",
+            "description": "Indica si se permite carga de evidencias en este estado y año fiscal"
+          }
+        },
+        "required": [
+          "folio",
+          "titulo",
+          "centro_clave",
+          "version_actual",
+          "etiqueta_semaforo",
+          "permite_entrega",
+          "permite_carga_evidencias"
+        ]
+      },
+      "ObservacionActivaDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "correlativo": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "correlativo",
+          "estado",
+          "descripcion"
+        ]
+      },
+      "PeriodoEjecucionDto": {
+        "type": "object",
+        "properties": {
+          "inicio": {
+            "type": "string"
+          },
+          "fin": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "inicio",
+          "fin"
+        ]
+      },
+      "DetallesOperacionDto": {
+        "type": "object",
+        "properties": {
+          "estado_actual": {
+            "type": "string"
+          },
+          "periodo_ejecucion": {
+            "$ref": "#/components/schemas/PeriodoEjecucionDto"
+          },
+          "duracion_estimada_semanas": {
+            "type": "number"
+          },
+          "cierre_global_poa": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "estado_actual",
+          "periodo_ejecucion",
+          "duracion_estimada_semanas",
+          "cierre_global_poa"
+        ]
+      },
+      "EvidenciaBorradorDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nombre_archivo": {
+            "type": "string"
+          },
+          "peso_mb": {
+            "type": "number"
+          },
+          "url_descarga": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "nombre_archivo",
+          "peso_mb",
+          "url_descarga"
+        ]
+      },
+      "BuzonBorradorDto": {
+        "type": "object",
+        "properties": {
+          "evidencias": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenciaBorradorDto"
+            }
+          },
+          "comentarios_entrega": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "evidencias",
+          "comentarios_entrega"
+        ]
+      },
+      "HistorialVersionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "estado_operativo": {
+            "type": "string"
+          },
+          "etiqueta": {
+            "type": "string"
+          },
+          "fecha": {
+            "type": "string"
+          },
+          "es_version_actual": {
+            "type": "boolean"
+          },
+          "tiene_observaciones": {
+            "type": "boolean"
+          },
+          "tiene_archivos_subidos": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "estado_operativo",
+          "etiqueta",
+          "fecha",
+          "es_version_actual",
+          "tiene_observaciones"
+        ]
+      },
+      "VistaEntregaResponseDto": {
+        "type": "object",
+        "properties": {
+          "meta_cabecera": {
+            "$ref": "#/components/schemas/MetaCabeceraDto"
+          },
+          "observaciones_activas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObservacionActivaDto"
+            }
+          },
+          "detalles_operacion": {
+            "$ref": "#/components/schemas/DetallesOperacionDto"
+          },
+          "buzon_borrador": {
+            "$ref": "#/components/schemas/BuzonBorradorDto"
+          },
+          "historial_versiones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistorialVersionDto"
+            }
+          }
+        },
+        "required": [
+          "meta_cabecera",
+          "observaciones_activas",
+          "detalles_operacion",
+          "buzon_borrador",
+          "historial_versiones"
+        ]
+      },
+      "HistorialIndexItemDto": {
+        "type": "object",
+        "properties": {
+          "id_version": {
+            "type": "string"
+          },
+          "numero_version": {
+            "type": "number"
+          },
+          "titulo_evento": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "fecha_evento": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id_version",
+          "numero_version",
+          "titulo_evento",
+          "estado",
+          "fecha_evento"
+        ]
+      },
+      "HistorialIndexResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistorialIndexItemDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "EvidenciaVersionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "peso_formateado": {
+            "type": "string"
+          },
+          "fecha_subida": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "peso_formateado",
+          "fecha_subida"
+        ]
+      },
+      "ObservacionVersionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "numero": {
+            "type": "number"
+          },
+          "texto": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "numero",
+          "texto"
+        ]
+      },
+      "VersionDetalleResponseDto": {
+        "type": "object",
+        "properties": {
+          "folio": {
+            "type": "string"
+          },
+          "centro_clave": {
+            "type": "string"
+          },
+          "titulo_subactividad": {
+            "type": "string"
+          },
+          "version_visualizada": {
+            "type": "number"
+          },
+          "es_version_actual": {
+            "type": "boolean"
+          },
+          "fecha_envio_contralor": {
+            "type": "string"
+          },
+          "mensaje_envio": {
+            "type": "object",
+            "nullable": true
+          },
+          "evidencias": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenciaVersionDto"
+            }
+          },
+          "resolucion_estado": {
+            "type": "object",
+            "nullable": true
+          },
+          "fecha_dictamen": {
+            "type": "object",
+            "nullable": true
+          },
+          "observaciones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObservacionVersionDto"
+            }
+          }
+        },
+        "required": [
+          "folio",
+          "centro_clave",
+          "titulo_subactividad",
+          "version_visualizada",
+          "es_version_actual",
+          "fecha_envio_contralor",
+          "mensaje_envio",
+          "evidencias",
+          "resolucion_estado",
+          "fecha_dictamen",
+          "observaciones"
+        ]
+      },
+      "LinkDescargaResponseDto": {
+        "type": "object",
+        "properties": {
+          "url_descarga_efimera": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url_descarga_efimera"
         ]
       },
       "ActividadesResumenDto": {

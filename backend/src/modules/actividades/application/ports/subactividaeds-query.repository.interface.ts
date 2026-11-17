@@ -79,4 +79,98 @@ export interface ISubactividadesQueryRepository {
   obtenerPorActividadIdParaPoaSeleccionadas(
     filtro: FiltroSeleccionadas,
   ): Promise<SubActividadSelectResult[]>;
+
+  // [TASK-04] Vista de entrega (pantalla principal del módulo del Contralor)
+  obtenerVistaEntrega(subActividadId: string): Promise<VistaEntregaRaw | null>;
+
+  // [TASK-06] Historial de versiones (índice ligero)
+  obtenerHistorialVersiones(subActividadId: string): Promise<HistorialVersionRaw[]>;
+
+  // [TASK-06] Detalle pesado de una versión específica
+  obtenerVersionDetalle(
+    subActividadId: string,
+    versionId: string,
+  ): Promise<VersionDetalleRaw | null>;
+
+  // [TASK-06] Archivo de una versión para validación IDOR
+  obtenerArchivoDeVersion(
+    subActividadId: string,
+    versionId: string,
+    archivoId: string,
+  ): Promise<ArchivoVersionRaw | null>;
+}
+
+// ─── Raw shapes retornados por el repositorio ──────────────────────────────
+
+/** [TASK-04] Payload completo para armar la vista de entrega */
+export interface VistaEntregaRaw {
+  folio: string;
+  titulo: string;
+  centroClave: string;
+  fechaInicio: Date;
+  fechaTermino: Date;
+  poaEstado: string;
+  poaAnioFiscal: number;
+  poaCierreGlobal: Date | null;
+  ultimoComentarioEntrega: string | null;
+  evidenciasBorrador: {
+    id: string;
+    nombre_original: string;
+    s3_key: string;
+    peso_bytes: number;
+  }[];
+  observacionesActivas: {
+    id: string;
+    numero_secuencia: number;
+    descripcion: string;
+    estado_solvencia: string;
+  }[];
+  historialVersiones: {
+    id: string;
+    version: number;
+    estado_dictamen: string;
+    fecha_envio: Date;
+    fecha_dictamen: Date | null;
+    total_observaciones: number;
+    total_evidencias: number;
+  }[];
+}
+
+/** [TASK-06] Item del índice de historial */
+export interface HistorialVersionRaw {
+  id: string;
+  version: number;
+  estado_dictamen: string;
+  fecha_envio: Date;
+  fecha_dictamen: Date | null;
+}
+
+/** [TASK-06] Detalle pesado de una versión */
+export interface VersionDetalleRaw {
+  folio: string;
+  titulo: string;
+  centroClave: string;
+  version: number;
+  estado_dictamen: string;
+  comentarios_entrega: string | null;
+  fecha_envio: Date;
+  fecha_dictamen: Date | null;
+  evidencias: {
+    id: string;
+    nombre_original: string;
+    peso_bytes: number;
+    fecha_creacion: Date;
+  }[];
+  observaciones: {
+    id: string;
+    numero_secuencia: number;
+    descripcion: string;
+  }[];
+}
+
+/** [TASK-06] Archivo para validación IDOR */
+export interface ArchivoVersionRaw {
+  id: string;
+  nombre_original: string;
+  s3_key: string;
 }

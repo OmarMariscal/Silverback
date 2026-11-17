@@ -21,9 +21,15 @@ import { SubActividadSelectResult } from '@modules/actividades/application/ports
 import { SubActividadSupervisionResult } from '@modules/actividades/application/ports/results/subactividad-supervision.result';
 import { SubActividadesDirectorioResult } from '@modules/actividades/application/ports/results/subactividades-directorio.result';
 import { ISubactividadesQueryRepository } from '@modules/actividades/application/ports/subactividaeds-query.repository.interface';
+import type {
+  VistaEntregaRaw,
+  HistorialVersionRaw,
+  VersionDetalleRaw,
+  ArchivoVersionRaw,
+} from '@modules/actividades/application/ports/subactividaeds-query.repository.interface';
 import { ActividadesSortColumn } from '@modules/actividades/enums/actividades-sort-column.enum';
 import { Injectable, NotImplementedException } from '@nestjs/common';
-import { EstadoSubActividad, Prisma } from '@prisma/client';
+import { EstadoArchivoEvidencia, EstadoDictamen, EstadoSubActividad, Prisma } from '@prisma/client';
 
 @Injectable()
 export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRepository {
@@ -351,7 +357,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
     orderByPrisma.push({ id: 'asc' });
 
     // Definimos los selectores de forma explícita para que Prisma e inferencia trabajen perfecto
-    const selectArgs = {
+    const selectArgs = Prisma.validator<Prisma.SubActividadSelect>()({
       id: true,
       numero_orden: true,
       tipo: true,
@@ -379,11 +385,10 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
           },
         },
       },
-    } as const;
+    });
 
     // 3. EJECUCIÓN PARALELA DE ALTO RENDIMIENTO
-    // Forzamos el tipado correcto de la tupla devuelta mediante ascriptores
-    const [totalItems, rawList] = (await this.prisma.$transaction([
+    const [totalItems, rawList] = await this.prisma.$transaction([
       this.prisma.subActividad.count({ where: wherePrisma }),
       this.prisma.subActividad.findMany({
         where: wherePrisma,
@@ -393,10 +398,7 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
         orderBy: orderByPrisma,
         select: selectArgs,
       }),
-    ])) as [
-      number,
-      Array<Prisma.SubActividadGetPayload<{ select: typeof selectArgs }>>,
-    ];
+    ]);
 
     // 4. MAPEO (FLATTENING) AL CONTRATO DEL FRONTEND
     const data: SubActividadesDirectorioResult[] = rawList.map((raw) => {
@@ -578,5 +580,230 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
 
     // 6. MERGE FINAL
     return [...seleccionadas, ...sugeridas];
+  }
+
+  // ─── [TASK-04] Vista de Entrega ───────────────────────────────────────────
+
+  async obtenerVistaEntrega(subActividadId: string): Promise<VistaEntregaRaw | null> {
+    const raw = await this.prisma.subActividad.findUnique({
+      where: { id: subActividadId },
+      select: {
+        fecha_inicio: true,
+        fecha_termino: true,
+        actividad: {
+          select: {
+            folio: true,
+            titulo: true,
+            fecha_termino: true,
+            poa: {
+              select: {
+                estado: true,
+                anio_fiscal: true,
+                centro: { select: { clave: true } },
+              },
+            },
+          },
+        },
+        // Evidencias en BORRADOR (buzón)
+        evidencias: {
+          where: { estado: EstadoArchivoEvidencia.BORRADOR },
+          orderBy: { fecha_creacion: 'asc' },
+          select: {
+            id: true,
+            nombre_original: true,
+            s3_key: true,
+            peso_bytes: true,
+          },
+        },
+        // Todas las entregas (historial), ordenadas DESC para obtener la última
+        entregas: {
+          orderBy: { version: 'desc' },
+          select: {
+            id: true,
+            version: true,
+            estado_dictamen: true,
+            comentarios_entrega: true,
+            fecha_envio: true,
+            fecha_dictamen: true,
+            evidencias: {
+              select: { id: true },
+            },
+            observaciones: {
+              select: {
+                id: true,
+                numero_secuencia: true,
+                descripcion: true,
+                estado_solvencia: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!raw) return null;
+
+    // Observaciones activas: sólo de la última entrega DEVUELTA_CON_OBSERVACIONES,
+    // excluyendo las ya SOLVENTADAS.
+    const ultimaEntregaDevuelta = raw.entregas.find(
+      (e) => e.estado_dictamen === EstadoDictamen.DEVUELTA_CON_OBSERVACIONES,
+    );
+    const observacionesActivas = ultimaEntregaDevuelta
+      ? ultimaEntregaDevuelta.observaciones.filter(
+          (o) => o.estado_solvencia !== 'SOLVENTADA',
+        )
+      : [];
+
+    // Comentario de la entrega más reciente
+    const ultimoComentario = raw.entregas[0]?.comentarios_entrega ?? null;
+
+    // Cierre global del POA = fecha_termino de la actividad padre (proxy razonable)
+    const poaCierreGlobal = raw.actividad.fecha_termino ?? null;
+
+    return {
+      folio: raw.actividad.folio,
+      titulo: raw.actividad.titulo,
+      centroClave: raw.actividad.poa.centro.clave,
+      fechaInicio: raw.fecha_inicio,
+      fechaTermino: raw.fecha_termino,
+      poaEstado: raw.actividad.poa.estado,
+      poaAnioFiscal: raw.actividad.poa.anio_fiscal,
+      poaCierreGlobal,
+      ultimoComentarioEntrega: ultimoComentario,
+      evidenciasBorrador: raw.evidencias,
+      observacionesActivas: observacionesActivas.map((o) => ({
+        id: o.id,
+        numero_secuencia: o.numero_secuencia,
+        descripcion: o.descripcion,
+        estado_solvencia: o.estado_solvencia,
+      })),
+      historialVersiones: raw.entregas.map((e) => ({
+        id: e.id,
+        version: e.version,
+        estado_dictamen: e.estado_dictamen,
+        fecha_envio: e.fecha_envio,
+        fecha_dictamen: e.fecha_dictamen,
+        total_observaciones: e.observaciones.length,
+        total_evidencias: e.evidencias.length,
+      })),
+    };
+  }
+
+  // ─── [TASK-06] Historial de Versiones ────────────────────────────────────
+
+  async obtenerHistorialVersiones(subActividadId: string): Promise<HistorialVersionRaw[]> {
+    const entregas = await this.prisma.entregaSubActividad.findMany({
+      where: { sub_actividad_id: subActividadId },
+      orderBy: { version: 'desc' },
+      select: {
+        id: true,
+        version: true,
+        estado_dictamen: true,
+        fecha_envio: true,
+        fecha_dictamen: true,
+      },
+    });
+
+    return entregas.map((e) => ({
+      id: e.id,
+      version: e.version,
+      estado_dictamen: e.estado_dictamen,
+      fecha_envio: e.fecha_envio,
+      fecha_dictamen: e.fecha_dictamen,
+    }));
+  }
+
+  async obtenerVersionDetalle(
+    subActividadId: string,
+    versionId: string,
+  ): Promise<VersionDetalleRaw | null> {
+    const entrega = await this.prisma.entregaSubActividad.findFirst({
+      where: {
+        id: versionId,
+        sub_actividad_id: subActividadId,
+      },
+      select: {
+        version: true,
+        estado_dictamen: true,
+        comentarios_entrega: true,
+        fecha_envio: true,
+        fecha_dictamen: true,
+        sub_actividad: {
+          select: {
+            actividad: {
+              select: {
+                folio: true,
+                titulo: true,
+                poa: {
+                  select: {
+                    centro: { select: { clave: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+        evidencias: {
+          select: {
+            id: true,
+            nombre_original: true,
+            peso_bytes: true,
+            fecha_creacion: true,
+          },
+        },
+        observaciones: {
+          orderBy: { numero_secuencia: 'asc' },
+          select: {
+            id: true,
+            numero_secuencia: true,
+            descripcion: true,
+          },
+        },
+      },
+    });
+
+    if (!entrega) return null;
+
+    return {
+      folio: entrega.sub_actividad.actividad.folio,
+      titulo: entrega.sub_actividad.actividad.titulo,
+      centroClave: entrega.sub_actividad.actividad.poa.centro.clave,
+      version: entrega.version,
+      estado_dictamen: entrega.estado_dictamen,
+      comentarios_entrega: entrega.comentarios_entrega,
+      fecha_envio: entrega.fecha_envio,
+      fecha_dictamen: entrega.fecha_dictamen,
+      evidencias: entrega.evidencias,
+      observaciones: entrega.observaciones,
+    };
+  }
+
+  async obtenerArchivoDeVersion(
+    subActividadId: string,
+    versionId: string,
+    archivoId: string,
+  ): Promise<ArchivoVersionRaw | null> {
+    // [TASK-06] Validación IDOR: el archivo debe pertenecer a la versión,
+    // la versión debe pertenecer a la sub-actividad indicada.
+    const archivo = await this.prisma.evidencia.findFirst({
+      where: {
+        id: archivoId,
+        entrega_id: versionId,
+        sub_actividad_id: subActividadId,
+      },
+      select: {
+        id: true,
+        nombre_original: true,
+        s3_key: true,
+      },
+    });
+
+    if (!archivo) return null;
+
+    return {
+      id: archivo.id,
+      nombre_original: archivo.nombre_original,
+      s3_key: archivo.s3_key,
+    };
   }
 }
