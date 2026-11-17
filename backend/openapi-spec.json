@@ -846,6 +846,268 @@
         ]
       }
     },
+    "/api/v1/sub-actividades/{subActividadId}/archivos/pre-firma": {
+      "post": {
+        "description": "Solicita al backend una URL firmada (PUT) para transmitir el archivo directamente al almacenamiento S3/SeaweedFS, validando el límite estricto de 50MB y la lista blanca de MIME types.",
+        "operationId": "SubactividadesEjecucionController_generarPreFirma",
+        "parameters": [
+          {
+            "name": "subActividadId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la sub-actividad",
+            "schema": {
+              "format": "uuid",
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerarPreFirmaRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "URL pre-firmada generada con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerarPreFirmaResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación en metadatos o peso excedido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acceso denegado o rol no autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Generar URL pre-firmada para subida de evidencia",
+        "tags": [
+          "Subactividades (Ejecución y Evidencias)"
+        ]
+      }
+    },
+    "/api/v1/sub-actividades/{subActividadId}/archivos/{archivoId}/confirmar": {
+      "post": {
+        "description": "Notifica a NestJS que el archivo terminó de subirse al almacenamiento. Verifica físicamente la existencia del objeto y cambia el estado del registro de PENDIENTE a BORRADOR.",
+        "operationId": "SubactividadesEjecucionController_confirmarArchivo",
+        "parameters": [
+          {
+            "name": "subActividadId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la sub-actividad",
+            "schema": {
+              "format": "uuid",
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "type": "string"
+            }
+          },
+          {
+            "name": "archivoId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la evidencia",
+            "schema": {
+              "format": "uuid",
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Archivo consolidado correctamente en el buzón",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmarArchivoResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El archivo no ha sido encontrado en el almacenamiento (subida incompleta o fallida)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Sub-actividad o evidencia no encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Confirmar subida de archivo de evidencia",
+        "tags": [
+          "Subactividades (Ejecución y Evidencias)"
+        ]
+      }
+    },
+    "/api/v1/sub-actividades/{subActividadId}/archivos/{archivoId}": {
+      "delete": {
+        "description": "Elimina un archivo en estado PENDIENTE o BORRADOR tanto de la base de datos como del almacenamiento S3.",
+        "operationId": "SubactividadesEjecucionController_eliminarArchivo",
+        "parameters": [
+          {
+            "name": "subActividadId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la sub-actividad",
+            "schema": {
+              "format": "uuid",
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "type": "string"
+            }
+          },
+          {
+            "name": "archivoId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la evidencia a eliminar",
+            "schema": {
+              "format": "uuid",
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El archivo de evidencia fue eliminado correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EliminacionCorrecta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Evidencia no encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Eliminar archivo del buzón de evidencias",
+        "tags": [
+          "Subactividades (Ejecución y Evidencias)"
+        ]
+      }
+    },
+    "/api/v1/sub-actividades/{subActividadId}/enviar-revision": {
+      "post": {
+        "description": "Consolida el buzón de evidencias, incrementa el número de versión, y cambia el estado operativo de la sub-actividad a EN_REVISION.",
+        "operationId": "SubactividadesEjecucionController_enviarRevision",
+        "parameters": [
+          {
+            "name": "subActividadId",
+            "required": true,
+            "in": "path",
+            "description": "Identificador único (UUID) de la sub-actividad",
+            "schema": {
+              "format": "uuid",
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnviarSubActividadRevisionRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "La sub-actividad ha sido enviada exitosamente a la Jefatura",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnviarSubActividadRevisionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación (buzón vacío o sub-actividad en estado incorrecto)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Enviar sub-actividad a revisión de Jefatura",
+        "tags": [
+          "Subactividades (Ejecución y Evidencias)"
+        ]
+      }
+    },
     "/api/v1/poas/mi-poa-actual": {
       "get": {
         "description": "Entrega los datos necesarios para armar la POA vigente del anio fiscal",
@@ -2581,6 +2843,213 @@
         "required": [
           "mensaje",
           "resumen"
+        ]
+      },
+      "GenerarPreFirmaRequestDto": {
+        "type": "object",
+        "properties": {
+          "nombre_archivo": {
+            "type": "string",
+            "description": "Nombre original del archivo con extensión",
+            "example": "reporte_asistencia_marzo.pdf"
+          },
+          "mime_type": {
+            "type": "string",
+            "description": "MIME type del archivo para asegurar la validación en S3/SeaweedFS",
+            "example": "application/pdf"
+          },
+          "peso_bytes": {
+            "type": "number",
+            "description": "Peso del archivo en bytes (Máximo 50MB / 52,428,800 bytes",
+            "example": 2500000
+          }
+        },
+        "required": [
+          "nombre_archivo",
+          "mime_type",
+          "peso_bytes"
+        ]
+      },
+      "HeadersRequeridosDto": {
+        "type": "object",
+        "properties": {
+          "Content-Type": {
+            "type": "string",
+            "description": "El valor exacto del mime_type declarado (ej. application/pdf). No usar multipart/form-data.",
+            "example": "application/pdf"
+          }
+        },
+        "required": [
+          "Content-Type"
+        ]
+      },
+      "GenerarPreFirmaResponseDto": {
+        "type": "object",
+        "properties": {
+          "archivo_id": {
+            "type": "string",
+            "description": "UUID único generado para el registro de la evidencia en estado PENDIENTE",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          },
+          "upload_url": {
+            "type": "string",
+            "description": "URL pre-firmada PUT para la transmisión directa del binario crudo hacia el almacenamiento S3/SeaweedFS",
+            "example": "https://midominio-storage.s3.amazonaws.com/poa/subactividades/sub-act-uuid/uuid-generado.pdf?X-Amz-Algorithm=..."
+          },
+          "metodo_http": {
+            "type": "string",
+            "description": "Método HTTP estricto que debe emplear el cliente en el PUT",
+            "example": "PUT"
+          },
+          "expira_en_segundos": {
+            "type": "number",
+            "description": "Tiempo de vida de la firma temporal en segundos",
+            "example": 300
+          },
+          "headers_requeridos": {
+            "description": "Cabeceras HTTP obligatorias que debe configurar el cliente HTTP (Axios/Fetch)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HeadersRequeridosDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "archivo_id",
+          "upload_url",
+          "metodo_http",
+          "expira_en_segundos",
+          "headers_requeridos"
+        ]
+      },
+      "ConfirmarArchivoResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUID único de la evidencia confirmada",
+            "example": "uuid-generado-por-el-backend"
+          },
+          "nombre_original": {
+            "type": "string",
+            "description": "Nombre original sanitizado del archivo",
+            "example": "reporte_asistencia_marzo.pdf"
+          },
+          "peso_mb": {
+            "type": "number",
+            "description": "Peso formateado del archivo en megabytes",
+            "example": 2.38
+          },
+          "url_descarga": {
+            "type": "string",
+            "description": "URL efímero o de descarga segura para visualizar el documento desde el buzón",
+            "example": "https://storage.midominio.com/poa/subactividades/sub-act-uuid/uuid-generado-por-tu-backend.pdf"
+          },
+          "estado_archivo": {
+            "type": "string",
+            "enum": [
+              "PENDIENTE",
+              "BORRADOR",
+              "ENVIADO"
+            ],
+            "example": "BORRADOR"
+          },
+          "mensaje": {
+            "type": "string",
+            "description": "Mensaje descriptivo del éxito de la consolidación",
+            "example": "Archivo xonsolidado correctamente en el buzón de evidencias"
+          }
+        },
+        "required": [
+          "id",
+          "nombre_original",
+          "peso_mb",
+          "url_descarga",
+          "estado_archivo",
+          "mensaje"
+        ]
+      },
+      "EnviarSubActividadRevisionRequestDto": {
+        "type": "object",
+        "properties": {
+          "evidencias_ids": {
+            "description": "UUIDs de archivos en buzón. Si se envían, se valida y actualiza el borrador antes de cambiar de estado",
+            "example": [
+              "archivo-uuid-1"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "comentarios_entrega": {
+            "type": "string",
+            "description": "Comentarios opcionales de la entrega dirigidos a la Jefatura",
+            "example": "Se adjuntan las firmas solicitadas en la observación 2..."
+          }
+        },
+        "required": [
+          "evidencias_ids"
+        ]
+      },
+      "EnviarSubActividadRevisionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUID de la sub-actividad procesada",
+            "example": "sub-act-uuid"
+          },
+          "estado_anterior": {
+            "type": "string",
+            "enum": [
+              "SIN_EMPEZAR",
+              "SOLICITADO",
+              "EN_PROGRESO",
+              "EN_REVISION",
+              "DEVUELTA",
+              "CONCLUIDA"
+            ],
+            "example": "DEVUELTA",
+            "description": "Estado operativo anterior antes de la transición"
+          },
+          "estado_nuevo": {
+            "type": "string",
+            "enum": [
+              "SIN_EMPEZAR",
+              "SOLICITADO",
+              "EN_PROGRESO",
+              "EN_REVISION",
+              "DEVUELTA",
+              "CONCLUIDA"
+            ],
+            "example": "EN_REVISION",
+            "description": "Nuevo estado operativo alcanzado"
+          },
+          "nueva_version": {
+            "type": "number",
+            "description": "Número de versión secuencial incrementado",
+            "example": 4
+          },
+          "fecha_envio": {
+            "type": "string",
+            "description": "Fecha y hora ISO 8601 en que se registró formalmente la entrega",
+            "example": "2026-10-30T19:54:00Z"
+          },
+          "mensaje": {
+            "type": "string",
+            "description": "Mensaje descriptivo de confirmación",
+            "example": "La sub-actividad ha sido enviada exitosamente a la Jefatura para su revisión."
+          }
+        },
+        "required": [
+          "id",
+          "estado_anterior",
+          "estado_nuevo",
+          "nueva_version",
+          "fecha_envio",
+          "mensaje"
         ]
       },
       "ActividadesResumenDto": {

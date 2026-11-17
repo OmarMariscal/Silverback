@@ -8,14 +8,18 @@ import {
   traducirTipoSubActividadADominio,
   traducirTipoSubActividadAPrisma,
 } from '@core/utils/estados-sub-actividades.traslator';
+import { traducirEstadoPoaADominio } from '@core/utils/estados-poa.traslator';
+import { PrismaSubActividadEjecucionPayload } from '../types/subactividad-ejecucion-payload.type';
 
 @Injectable()
 export class SubActividadMapper implements Mapper<
   SubactividadEntity,
   PrismaSubActividad
 > {
-  public toDomain(raw: PrismaSubActividad): SubactividadEntity {
-    return new SubactividadEntity(
+  public toDomain(
+    raw: PrismaSubActividad | PrismaSubActividadEjecucionPayload,
+  ): SubactividadEntity {
+    const subActividad = new SubactividadEntity(
       raw.id,
       raw.numero_orden,
       raw.descripcion_tarea,
@@ -27,6 +31,33 @@ export class SubActividadMapper implements Mapper<
       raw.mensaje_observacion,
       raw.banco_sub_actividad_id,
     );
+
+    // Hidratación defensiva del contexto de seguridad y ejecución (CQRS / DDD)
+    if ('actividad' in raw && raw.actividad?.poa) {
+      const poa = raw.actividad.poa;
+      const ultimaVersion =
+        'entregas' in raw && raw.entregas && raw.entregas.length > 0
+          ? raw.entregas[0].version
+          : 0;
+
+      const auditoresUsuariosIds = raw.actividad.auditores
+        ? raw.actividad.auditores
+            .map((rel) => rel.auditor?.usuario_id)
+            .filter((uid): uid is string => typeof uid === 'string')
+        : [];
+
+      subActividad.inyectarContextoEjecucion({
+        poaEstado: traducirEstadoPoaADominio(poa.estado),
+        idUsuarioContralor: poa.contralor?.usuario_id ?? null,
+        idUsuarioJefa: poa.contralor?.jefa?.usuario_id ?? null,
+        auditoresUsuariosIds,
+        centroClave: poa.centro?.clave ?? 'GENERAL',
+        anioFiscal: poa.anio_fiscal,
+        ultimaVersionEntrega: ultimaVersion,
+      });
+    }
+
+    return subActividad;
   }
 
   public toPersistence(

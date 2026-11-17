@@ -1,7 +1,13 @@
-import { EstadoSubActividad } from '@prisma/client';
+import {
+  EstadoArchivoEvidencia,
+  EstadoDictamen,
+  EstadoSubActividad,
+  TipoActividad,
+} from '@prisma/client';
 import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
-import { TipoActividad } from '@prisma/client';
 import { TipoSubActividad } from '@domain/actividad/tipos-de-actividades.enum';
+import { EstadosArchivoEvidencia } from '@domain/actividad/estados-archivo-evidencia.enum';
+import { EstadosDictamen } from '@domain/actividad/estados-dictamen.enum';
 
 export const MAPA_ESTADOS_SUBACTIVIDADES_A_DOMINIO: Record<
   EstadoSubActividad,
@@ -43,6 +49,44 @@ export const MAPA_TIPOS_SUBACTIVIDADES_A_PRISMA: Record<
   [TipoSubActividad.REVISION]: TipoActividad.REVISION,
 };
 
+export const MAPA_ESTADO_ARCHIVO_A_DOMINIO: Record<
+  EstadoArchivoEvidencia,
+  EstadosArchivoEvidencia
+> = {
+  [EstadoArchivoEvidencia.PENDIENTE]: EstadosArchivoEvidencia.PENDIENTE,
+  [EstadoArchivoEvidencia.BORRADOR]: EstadosArchivoEvidencia.BORRADOR,
+  [EstadoArchivoEvidencia.ENVIADO]: EstadosArchivoEvidencia.ENVIADO,
+};
+
+export const MAPA_ESTADO_ARCHIVO_A_PRISMA: Record<
+  EstadosArchivoEvidencia,
+  EstadoArchivoEvidencia
+> = {
+  [EstadosArchivoEvidencia.PENDIENTE]: EstadoArchivoEvidencia.PENDIENTE,
+  [EstadosArchivoEvidencia.BORRADOR]: EstadoArchivoEvidencia.BORRADOR,
+  [EstadosArchivoEvidencia.ENVIADO]: EstadoArchivoEvidencia.ENVIADO,
+};
+
+export const MAPA_ESTADO_DICTAMEN_A_DOMINIO: Record<
+  EstadoDictamen,
+  EstadosDictamen
+> = {
+  [EstadoDictamen.EN_REVISION]: EstadosDictamen.EN_REVISION,
+  [EstadoDictamen.DEVUELTA_CON_OBSERVACIONES]:
+    EstadosDictamen.DEVUELTA_CON_OBSERVACIONES,
+  [EstadoDictamen.APROBADA]: EstadosDictamen.APROBADA,
+};
+
+export const MAPA_ESTADO_DICTAMEN_A_PRISMA: Record<
+  EstadosDictamen,
+  EstadoDictamen
+> = {
+  [EstadosDictamen.EN_REVISION]: EstadoDictamen.EN_REVISION,
+  [EstadosDictamen.DEVUELTA_CON_OBSERVACIONES]:
+    EstadoDictamen.DEVUELTA_CON_OBSERVACIONES,
+  [EstadosDictamen.APROBADA]: EstadoDictamen.APROBADA,
+};
+
 export const traducirEstadoSubActividadADominio = (
   estadoPrisma: EstadoSubActividad,
 ): EstadosActividades => {
@@ -63,4 +107,28 @@ export const traducirTipoSubActividadAPrisma = (
   tipoDominio: TipoSubActividad,
 ) => {
   return MAPA_TIPOS_SUBACTIVIDADES_A_PRISMA[tipoDominio];
+};
+
+export const traducirEstadoArchivoADominio = (
+  estadoPrisma: EstadoArchivoEvidencia,
+): EstadosArchivoEvidencia => {
+  return MAPA_ESTADO_ARCHIVO_A_DOMINIO[estadoPrisma];
+};
+
+export const traducirEstadoArchivoAPrisma = (
+  estadoDominio: EstadosArchivoEvidencia,
+): EstadoArchivoEvidencia => {
+  return MAPA_ESTADO_ARCHIVO_A_PRISMA[estadoDominio];
+};
+
+export const traducirEstadoDictamenADominio = (
+  estadoPrisma: EstadoDictamen,
+): EstadosDictamen => {
+  return MAPA_ESTADO_DICTAMEN_A_DOMINIO[estadoPrisma];
+};
+
+export const traducirEstadoDictamenAPrisma = (
+  estadoDominio: EstadosDictamen,
+): EstadoDictamen => {
+  return MAPA_ESTADO_DICTAMEN_A_PRISMA[estadoDominio];
 };

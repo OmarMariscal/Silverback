@@ -1,7 +1,9 @@
+import { EliminacionCorrecta } from '@core/common/dto/response/deleted.response.dto';
 import { PaginacionMetadata } from '@core/common/dto/response/paginacion-metadata';
 import { DateFormatterUtil } from '@core/utils/date-formater.utils';
 import { TiempoFormatoUtil } from '@core/utils/tiempo-formato.utils';
 import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
+import { EvidenciaEntity } from '@domain/actividad/evidencia.entity';
 import { SubactividadEntity } from '@domain/actividad/subactividad.entity';
 import { Roles } from '@domain/roles/roles.enum';
 import { SemaforoService } from '@domain/semaforo/semaforo-service';
@@ -13,6 +15,9 @@ import { SubActividadesDirectorioResult } from '@modules/actividades/application
 import { ActividadesDirectorioAsignacionContralor } from '@modules/actividades/dto/response/actividades-directorio-asignacion-contralor.dto';
 import { ActividadesDirectorioAsignacionJefa } from '@modules/actividades/dto/response/actividades-directorio-asignacion-jefa.dto';
 import { SubActividadesSupervicionGetResponse } from '@modules/actividades/dto/response/actividades-supervision-get.response.dto';
+import { ConfirmarArchivoResponseDto } from '@modules/actividades/dto/response/confirmar-archivo.response.dto';
+import { EnviarSubActividadRevisionResponseDto } from '@modules/actividades/dto/response/enviar-subactividad-revision.response.dto';
+import { GenerarPreFirmaResponseDto } from '@modules/actividades/dto/response/generar-pre-firma.response.dto';
 import { SubActividadesBulkResponse } from '@modules/actividades/dto/response/sub-actividades-bulk.response.dto';
 import { SubActividadesPoaResponse } from '@modules/actividades/dto/response/sub-actividades-poa.response.dto';
 import { SubActividadesProximasVencerResponse } from '@modules/actividades/dto/response/sub-actividades-proximas-a-vencer-get.response.dto';
@@ -223,9 +228,7 @@ export class SubActividadResponseMapper {
 
         // Blindaje contra zonas horarias
         fecha_termino: DateFormatterUtil.toAnioMesDia(raw.fecha_termino),
-        fecha_envio: raw.fecha_envio
-          ? raw.fecha_envio.toISOString()
-          : '',
+        fecha_envio: raw.fecha_envio ? raw.fecha_envio.toISOString() : '',
         // Nota Angel: Se decidió no formatear la fecha de envío para que el frontend pueda mostrar el tiempo transcurrido desde el envío y poder mostrar "Enviado hace 3 días/horas/min" o "Enviado: Hace un momento" según corresponda.
 
         // Inyección del polimorfismo
@@ -244,6 +247,60 @@ export class SubActividadResponseMapper {
           raw.fecha_termino,
         ),
       })),
+    };
+  }
+  static toGenerarPreFirmaResponse(
+    archivoId: string,
+    uploadUrl: string,
+    mimeType: string,
+  ): GenerarPreFirmaResponseDto {
+    return {
+      archivo_id: archivoId,
+      upload_url: uploadUrl,
+      metodo_http: 'PUT',
+      expira_en_segundos: 300,
+      headers_requeridos: {
+        'Content-Type': mimeType,
+      },
+    };
+  }
+
+  static toConfirmarArchivoResponse(
+    evidencia: EvidenciaEntity,
+    urlDescarga: string,
+  ): ConfirmarArchivoResponseDto {
+    return {
+      id: evidencia.getId(),
+      nombre_original: evidencia.getNombreOriginal(),
+      peso_mb: evidencia.getPesoMb(),
+      url_descarga: urlDescarga,
+      estado_archivo: evidencia.getEstado(),
+      mensaje: 'Archivo consolidado correctamente en el buzón de evidencias.',
+    };
+  }
+
+  static toEliminarArchivoResponse(): EliminacionCorrecta {
+    return {
+      status: true,
+      mensaje: 'El archivo de evidencia fue eliminado correctamente del buzón.',
+    };
+  }
+
+  static toEnviarRevisionResponse(
+    subActividadId: string,
+    estadoAnterior: EstadosActividades,
+    estadoNuevo: EstadosActividades,
+    nuevaVersion: number,
+    fechaEnvio: Date,
+  ): EnviarSubActividadRevisionResponseDto {
+    return {
+      id: subActividadId,
+      estado_anterior: estadoAnterior,
+      estado_nuevo: estadoNuevo,
+      nueva_version: nuevaVersion,
+      fecha_envio: fechaEnvio.toISOString(),
+      mensaje:
+        'La sub-actividad ha sido enviada exitosamente a la Jefatura para su revisión.',
     };
   }
 }
