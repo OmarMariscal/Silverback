@@ -8,13 +8,21 @@ import HistorialTimeline from './HistorialTimeline';
 import type { SubActividadEntregaViewModel } from '@/types/subactividades-contratos';
 import PanelDetallesOperacion from './PanelDetallesOperacion';
 
-const RUTA_POA = '/contralor/poa';
-
 interface ContenedorSubactividadProps {
   vista: SubActividadEntregaViewModel;
+  rutaVolver?: string;
+  textoVolver?: string;
+  moduloVolver?: string;
 }
 
-export default function ContenedorSubactividad({ vista }: ContenedorSubactividadProps) {
+export default function ContenedorSubactividad({
+  vista,
+  rutaVolver = '/contralor/poa',
+  textoVolver = 'Volver al POA',
+  moduloVolver,
+}: ContenedorSubactividadProps) {
+  const moduloEtiqueta = moduloVolver || (rutaVolver.includes('actividades') ? 'Actividades' : 'POA');
+  const folioTexto = vista.cabecera.folio.replace(/^Folio\s*/i, '');
   return (
     <div className="space-y-6">
       {vista.esModoHistorico && vista.versionHistoricaDetalle && (
@@ -38,14 +46,14 @@ export default function ContenedorSubactividad({ vista }: ContenedorSubactividad
       )}
 
       <nav aria-label="Ruta de navegación" className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-500">
-        <Link href={RUTA_POA} className="transition-colors hover:text-indigo-700">
-          POA
+        <Link href={rutaVolver} className="transition-colors hover:text-indigo-700">
+          {moduloEtiqueta}
         </Link>
         <span aria-hidden="true">/</span>
         <span className="text-slate-700">{vista.cabecera.breadcrumbs[1]?.etiqueta || 'Actividad'}</span>
         <span aria-hidden="true">/</span>
         <span aria-current="page" className="rounded-md bg-slate-100 px-2 py-1 text-slate-800">
-          Subactividad {vista.cabecera.folio}
+          Subactividad {folioTexto}
         </span>
       </nav>
 
@@ -75,13 +83,13 @@ export default function ContenedorSubactividad({ vista }: ContenedorSubactividad
           </div>
 
           <Link
-            href={RUTA_POA}
+            href={rutaVolver}
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
-            Volver al POA
+            {textoVolver}
           </Link>
         </div>
       </header>

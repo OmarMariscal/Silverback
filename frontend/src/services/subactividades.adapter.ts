@@ -8,7 +8,6 @@ import type {
   VistaEntregaSubActividadResponse,
   DetalleVersionHistoricaResponse,
   ObservacionActivaDto,
-  EstadoSolvenciaAPI,
   EstadoSubActividadAPI,
 } from '@/types/subactividades-api';
 import {

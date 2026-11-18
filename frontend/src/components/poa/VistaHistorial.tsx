@@ -39,7 +39,7 @@ export default function VistaHistorial({ detalle }: VistaHistorialProps) {
         <div className="p-6">
           {detalle.comentarioEnvioContralor && (
             <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm italic text-slate-700">
-              "{detalle.comentarioEnvioContralor}"
+              &ldquo;{detalle.comentarioEnvioContralor}&rdquo;
             </div>
           )}
 
