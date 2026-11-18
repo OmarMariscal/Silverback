@@ -4,28 +4,47 @@ import { EstadosActividades } from '@domain/actividad/estados-actividades.enum';
 import { ReglaNegocioException } from '@domain/excepciones/regla-negocio.exception';
 import { CodigoDeViolacion } from '@domain/codigos/codigo-violado.enum';
 import { Permisos } from '@domain/roles/permisos.enum';
+import { Roles } from '@domain/roles/roles.enum';
+import { EstadosPoa } from '@domain/poa/estados-poa.enum';
 import { validarPermisoDeDominio } from '@domain/shared/utils/autorizacion.utils';
+import { EvidenciaEntity } from './evidencia.entity';
+import { EntregaSubActividadEntity } from './entrega-subactividad.entity';
+import { EstadosArchivoEvidencia } from './estados-archivo-evidencia.enum';
+import { EstadosDictamen } from './estados-dictamen.enum';
+import {
+  sanitizarNombreArchivo,
+  validarMetadatosArchivo,
+} from './utils/reglas-archivo.util';
+import { ContextoEjecucionSubActividad } from './interfaces/contexto-ejecucion-subactividad.interface';
+import { RegistrarIntencionEvidenciaParams } from './interfaces/registrar-intencion-evidencia-params.interface';
+import { ConsolidarEntregaParams } from './interfaces/consolidar-entrega-params.interface';
+import { ConsolidarEntregaResult } from './interfaces/consolidar-entrega-result.interface';
 
 export class SubactividadEntity {
   private indiceOrden: number;
+
+  // Contexto de seguridad y ejecución (hidratado cuando opera como Agregado Raíz)
+  private poaEstado?: EstadosPoa;
+  private idUsuarioDuenoPoa?: string;
+  private idUsuarioJefaAsignada?: string;
+  private auditoresUsuariosIds: string[] = [];
+  private centroClave?: string;
+  private ultimaVersionEntrega: number = 0;
+  private contextoEjecucionCargado: boolean = false;
 
   constructor(
     private readonly id: string,
     private numeroOrden: string,
     private descripcion: string,
-
     // Estado y Tipo
     private estado: EstadosActividades,
     private tipo: TipoSubActividad,
-
     // Fechas planeadas (Fijas desde la creación)
     private fechaInicio: Date,
     private fechaTermino: Date,
-
     // Mutables (Cambian con las transiciones)
     private fechaEnvio: Date | null = null,
     private mensajeResolucion: string | null = null,
-
     private bancoSubActividadId: string | null = null,
     private anioFiscal?: number,
   ) {
@@ -65,57 +84,123 @@ export class SubactividadEntity {
     }
   }
 
-  // Getter's
+  /**
+   * Valida que el POA sea Ley Operativa (AUTORIZADA) y que el actor tenga jurisdicción
+   * sobre el centro universitario / actividad (Protección IDOR).
+   */
+  private validarTenenciaEjecucion(
+    actorActual: Actor,
+    idUsuarioActual: string,
+  ): void {
+    if (!this.contextoEjecucionCargado) {
+      throw new Error(
+        'Se intentó evaluar autorización en SubactividadEntity sin haber inyectado primero el contexto de ejecución.',
+      );
+    }
+
+    if (this.poaEstado !== EstadosPoa.AUTORIZADA) {
+      throw new ReglaNegocioException(
+        `No es posible operar sobre la sub-actividad porque el POA al que pertenece no está AUTORIZADO (estado actual: ${this.poaEstado}).`,
+        CodigoDeViolacion.ESTADO_INVALIDO,
+      );
+    }
+
+    if (actorActual.rol === Roles.CONTRALOR) {
+      if (this.idUsuarioDuenoPoa !== idUsuarioActual) {
+        throw new ReglaNegocioException(
+          'Acceso denegado: La sub-actividad pertenece a otro Centro Universitario.',
+          CodigoDeViolacion.ACCESO_DENEGADO,
+        );
+      }
+      return;
+    }
+
+    // Soporte para delegación futura de permisos a Auditores asignados a la actividad padre
+    if (actorActual.rol === Roles.AUDITOR) {
+      if (!this.auditoresUsuariosIds.includes(idUsuarioActual)) {
+        throw new ReglaNegocioException(
+          'Acceso denegado: El auditor no está asignado a la actividad de esta sub-actividad.',
+          CodigoDeViolacion.ACCESO_DENEGADO,
+        );
+      }
+      return;
+    }
+
+    if (actorActual.rol === Roles.JEFA) {
+      if (this.idUsuarioJefaAsignada !== idUsuarioActual) {
+        throw new ReglaNegocioException(
+          'Acceso denegado: La Jefatura no tiene jurisdicción sobre el Centro Universitario de esta sub-actividad.',
+          CodigoDeViolacion.ACCESO_DENEGADO,
+        );
+      }
+      return;
+    }
+
+    throw new ReglaNegocioException(
+      `El rol ${String(actorActual.rol)} no tiene autorización operativa sobre esta sub-actividad.`,
+      CodigoDeViolacion.ROL_INVALIDO,
+    );
+  }
+
+  // Getters
   public getId(): string {
     return this.id;
   }
-
   public getNumeroOrden(): string {
     return this.numeroOrden;
   }
-
   public getIndiceOrden(): number {
     return this.indiceOrden;
   }
-
   public getDescripcion(): string {
     return this.descripcion;
   }
-
   public getEstado(): EstadosActividades {
     return this.estado;
   }
-
   public getTipo(): TipoSubActividad {
     return this.tipo;
   }
-
   public getFechaInicio(): Date {
     return this.fechaInicio;
   }
-
   public getFechaConclusionEstimada(): Date {
     return this.fechaTermino;
   }
-
   public getFechaEnvio(): Date | null {
     return this.fechaEnvio;
   }
-
   public getObservaciones(): string | null {
     return this.mensajeResolucion;
   }
-
   public getBancoSubActividadId(): string | null {
     return this.bancoSubActividadId;
   }
-
   public getAnioFiscal(): number | undefined {
     return this.anioFiscal;
+  }
+  public getCentroClave(): string | undefined {
+    return this.centroClave;
+  }
+  public getUltimaVersionEntrega(): number {
+    return this.ultimaVersionEntrega;
   }
 
   public inyectarAnioFiscal(anioFiscal: number): void {
     this.anioFiscal = anioFiscal;
+  }
+
+  public inyectarContextoEjecucion(
+    contexto: ContextoEjecucionSubActividad,
+  ): void {
+    this.poaEstado = contexto.poaEstado;
+    this.idUsuarioDuenoPoa = contexto.idUsuarioContralor ?? undefined;
+    this.idUsuarioJefaAsignada = contexto.idUsuarioJefa ?? undefined;
+    this.auditoresUsuariosIds = [...contexto.auditoresUsuariosIds];
+    this.centroClave = contexto.centroClave;
+    this.anioFiscal = contexto.anioFiscal;
+    this.ultimaVersionEntrega = contexto.ultimaVersionEntrega;
+    this.contextoEjecucionCargado = true;
   }
 
   public calcularSemanasTotales(): number {
@@ -127,13 +212,212 @@ export class SubactividadEntity {
     return semanas > 0 ? semanas : 1;
   }
 
+  // FLUJO TRANSACCIONAL DE EVIDENCIAS Y ENVÍO A REVISIÓN (US_02)
+
   /**
-   * El permiso necesario para hacer las transiciones de estados en las subactividades es el siguiente:
-   * Permisos.GESTIONAR_SUBACTIVIDADES
+   * 1. Valida e instancia una intención de subida de archivo (Pre-firma) en estado PENDIENTE.
    */
+  public registrarIntencionCargaEvidencia(
+    actorActual: Actor,
+    idUsuarioActual: string,
+    params: RegistrarIntencionEvidenciaParams,
+  ): EvidenciaEntity {
+    validarPermisoDeDominio(
+      actorActual,
+      Permisos.GESTIONAR_TRABAJO_SUBACTIVIDADES,
+      'solicitar pre-firma de carga de evidencia',
+    );
+    this.validarTenenciaEjecucion(actorActual, idUsuarioActual);
+    this.validarEstadoInicial([
+      EstadosActividades.EN_PROGRESO,
+      EstadosActividades.DEVUELTA,
+    ]);
+
+    validarMetadatosArchivo(
+      params.nombreOriginal,
+      params.mimeType,
+      params.pesoBytes,
+    );
+
+    const nombreSanitizado = sanitizarNombreArchivo(params.nombreOriginal);
+    const claveCentro = (this.centroClave ?? 'general').toLowerCase();
+    const anio = this.anioFiscal ?? new Date().getFullYear();
+
+    // Estructura jerárquica limpia en el almacenamiento de objetos
+    const objectKey = `${claveCentro}/${anio}/subactividades/${this.id}/${params.archivoId}-${nombreSanitizado}`;
+
+    return new EvidenciaEntity(
+      params.archivoId,
+      this.id,
+      null,
+      nombreSanitizado,
+      objectKey,
+      params.pesoBytes,
+      params.mimeType.trim().toLowerCase(),
+      EstadosArchivoEvidencia.PENDIENTE,
+      new Date(),
+    );
+  }
+
+  /**
+   * 2. Confirma que una evidencia subida al almacenamiento pase a estado BORRADOR en el buzón.
+   */
+  public confirmarEvidenciaSubida(
+    actorActual: Actor,
+    idUsuarioActual: string,
+    evidencia: EvidenciaEntity,
+    pesoFisicoBytes?: number,
+  ): void {
+    validarPermisoDeDominio(
+      actorActual,
+      Permisos.GESTIONAR_TRABAJO_SUBACTIVIDADES,
+      'confirmar subida de archivo de evidencia',
+    );
+    this.validarTenenciaEjecucion(actorActual, idUsuarioActual);
+    this.validarEstadoInicial([
+      EstadosActividades.EN_PROGRESO,
+      EstadosActividades.DEVUELTA,
+    ]);
+
+    if (evidencia.getSubActividadId() !== this.id) {
+      throw new ReglaNegocioException(
+        `El archivo de evidencia ${evidencia.getId()} no pertenece a la sub-actividad ${this.id}.`,
+        CodigoDeViolacion.ACCESO_DENEGADO,
+      );
+    }
+
+    evidencia.confirmarCarga(pesoFisicoBytes);
+  }
+
+  /**
+   * 3. Valida que un archivo pueda ser eliminado del buzón de evidencias.
+   */
+  public validarEliminacionEvidencia(
+    actorActual: Actor,
+    idUsuarioActual: string,
+    evidencia: EvidenciaEntity,
+  ): void {
+    validarPermisoDeDominio(
+      actorActual,
+      Permisos.GESTIONAR_TRABAJO_SUBACTIVIDADES,
+      'eliminar archivo del buzón de evidencias',
+    );
+    this.validarTenenciaEjecucion(actorActual, idUsuarioActual);
+    this.validarEstadoInicial([
+      EstadosActividades.EN_PROGRESO,
+      EstadosActividades.DEVUELTA,
+    ]);
+
+    if (evidencia.getSubActividadId() !== this.id) {
+      throw new ReglaNegocioException(
+        `El archivo de evidencia ${evidencia.getId()} no pertenece a la sub-actividad ${this.id}.`,
+        CodigoDeViolacion.ACCESO_DENEGADO,
+      );
+    }
+
+    evidencia.validarEliminacion();
+  }
+
+  /**
+   * 4. Empaqueta las evidencias en BORRADOR dentro de una nueva EntregaSubActividad,
+   * incrementa la versión y cambia el estado de la SubActividad a EN_REVISION.
+   */
+  public consolidarEntregaARevision(
+    actorActual: Actor,
+    idUsuarioActual: string,
+    params: ConsolidarEntregaParams,
+  ): ConsolidarEntregaResult {
+    validarPermisoDeDominio(
+      actorActual,
+      Permisos.GESTIONAR_TRABAJO_SUBACTIVIDADES,
+      'enviar sub-actividad a revisión de Jefatura',
+    );
+    this.validarTenenciaEjecucion(actorActual, idUsuarioActual);
+    this.validarEstadoInicial([
+      EstadosActividades.EN_PROGRESO,
+      EstadosActividades.DEVUELTA,
+    ]);
+
+    const mapaBorradores = new Map(
+      params.evidenciasEnBorrador.map((ev) => [ev.getId(), ev]),
+    );
+
+    let evidenciasAConsolidar: EvidenciaEntity[] = [];
+    let evidenciasDescartadas: EvidenciaEntity[] = [];
+
+    if (
+      params.evidenciasIdsSeleccionados &&
+      params.evidenciasIdsSeleccionados.length > 0
+    ) {
+      const idsUnicos = Array.from(new Set(params.evidenciasIdsSeleccionados));
+
+      for (const idSolicitado of idsUnicos) {
+        const encontrada = mapaBorradores.get(idSolicitado);
+        if (!encontrada) {
+          throw new ReglaNegocioException(
+            `El archivo con ID '${idSolicitado}' no existe en el buzón de borradores confirmados de esta sub-actividad.`,
+            CodigoDeViolacion.DATOS_INSUFICIENTES,
+          );
+        }
+        evidenciasAConsolidar.push(encontrada);
+      }
+
+      const setSeleccionados = new Set(idsUnicos);
+      evidenciasDescartadas = params.evidenciasEnBorrador.filter(
+        (ev) => !setSeleccionados.has(ev.getId()),
+      );
+    } else {
+      evidenciasAConsolidar = [...params.evidenciasEnBorrador];
+    }
+
+    if (evidenciasAConsolidar.length === 0) {
+      throw new ReglaNegocioException(
+        'Debe adjuntar y confirmar al menos 1 archivo de evidencia en el buzón antes de enviar la sub-actividad a revisión.',
+        CodigoDeViolacion.DATOS_INSUFICIENTES,
+      );
+    }
+
+    const fechaRealEnvio = params.fechaEnvio ?? new Date();
+    const nuevaVersion = this.ultimaVersionEntrega + 1;
+
+    for (const evidencia of evidenciasAConsolidar) {
+      evidencia.consolidarEnEntrega(params.entregaId);
+    }
+
+    const nuevaEntrega = new EntregaSubActividadEntity(
+      params.entregaId,
+      this.id,
+      nuevaVersion,
+      EstadosDictamen.EN_REVISION,
+      params.comentariosEntrega?.trim() || null,
+      fechaRealEnvio,
+      null,
+    );
+
+    this.ultimaVersionEntrega = nuevaVersion;
+    this.estado = EstadosActividades.EN_REVISION;
+    this.fechaEnvio = fechaRealEnvio;
+
+    return {
+      entrega: nuevaEntrega,
+      evidenciasConsolidadas: evidenciasAConsolidar,
+      evidenciasDescartadas,
+    };
+  }
+
+  /**
+   * 5. Valida permisos de lectura/descarga de evidencias (Para Contralor, Auditor y Jefatura).
+   */
+  public validarAccesoLecturaEvidencia(
+    actorActual: Actor,
+    idUsuarioActual: string,
+  ): void {
+    this.validarTenenciaEjecucion(actorActual, idUsuarioActual);
+  }
+
+  // MÉTODOS DE MÁQUINA DE ESTADOS EXISTENTES
 
   public solicitarArranque(actorActual: Actor, fechaInicio: Date): void {
-    //Se tiene que tener el esatado SIN_EMPEZAR para pasar a SOLICITADO
     this.validarEstadoInicial([EstadosActividades.SIN_EMPEZAR]);
 
     const logAccion = `Pasar de ${this.estado} a ${EstadosActividades.SOLICITADO}`;
@@ -143,59 +427,41 @@ export class SubactividadEntity {
       logAccion,
     );
 
-    // Actualizar el estado
     this.estado = EstadosActividades.SOLICITADO;
     this.fechaEnvio = fechaInicio;
   }
 
-  /**
-   * Permiso Necesario: Permisos.GESTIONAR_SUPERVISION_SUBACTIVIDADES
-   */
   public habilitarProgreso(actorActual: Actor): void {
-    //Se tiene que tener el estado SOLICITADO para pasar a EN_PROGRESO
     this.validarEstadoInicial([EstadosActividades.SOLICITADO]);
 
     const logAccion = `Pasar de ${this.estado} a ${EstadosActividades.EN_PROGRESO}`;
-
     validarPermisoDeDominio(
       actorActual,
       Permisos.GESTIONAR_SUPERVISION_SUBACTIVIDADES,
       logAccion,
     );
 
-    // Actualizar el estado
     this.estado = EstadosActividades.EN_PROGRESO;
   }
 
-  /**
-   * Permiso Necesario: Permisos.GESTIONAR_TRABAJO_SUBACTIVIDADES
-   */
-
   public enviarARevision(actorActual: Actor, fechaReal: Date): void {
-    // Se tiene que tener el estado EN_PROGRESO o DEVUELTA para pasar a EN_REVISION
     this.validarEstadoInicial([
       EstadosActividades.EN_PROGRESO,
       EstadosActividades.DEVUELTA,
     ]);
 
     const logAccion = `Pasar de ${this.estado} a ${EstadosActividades.EN_REVISION}`;
-
     validarPermisoDeDominio(
       actorActual,
       Permisos.GESTIONAR_TRABAJO_SUBACTIVIDADES,
       logAccion,
     );
-    // Actualizar el estado
+
     this.estado = EstadosActividades.EN_REVISION;
     this.fechaEnvio = fechaReal;
   }
 
-  /**
-   *
-   * Permiso Necesario: Permisos.GESTIONAR_SUPERVISION_SUBACTIVIDADES
-   */
   public devolver(actorActual: Actor, retroalimentacion: string | null): void {
-    // Se tiene que tener el estado EN_REVISION para poner a DEVUELTO
     this.validarEstadoInicial([EstadosActividades.EN_REVISION]);
 
     const logAccion = `Pasar de ${this.estado} a ${EstadosActividades.DEVUELTA}`;
@@ -205,7 +471,6 @@ export class SubactividadEntity {
       logAccion,
     );
 
-    // Se tiene que tener algo en la observación
     if (retroalimentacion === null || retroalimentacion.length === 0) {
       throw new ReglaNegocioException(
         `La justificación de la devolución no debe estar vacía`,
@@ -213,16 +478,11 @@ export class SubactividadEntity {
       );
     }
 
-    //actualizar el estado
     this.estado = EstadosActividades.DEVUELTA;
     this.mensajeResolucion = retroalimentacion;
   }
 
-  /**
-   * Permiso Necesario: Permisos.GESTIONAR_SUPERVISION_SUBACTIVIDADES
-   */
   public concluir(actorActual: Actor): void {
-    //Se tiene que ponerH
     this.validarEstadoInicial([EstadosActividades.EN_REVISION]);
 
     const logAccion = `Pasar de ${this.estado} a ${EstadosActividades.CONCLUIDA}`;
@@ -232,11 +492,9 @@ export class SubactividadEntity {
       logAccion,
     );
 
-    // Actualizar el estado
     this.estado = EstadosActividades.CONCLUIDA;
   }
 
-  // src/domain/actividad/subactividad.entity.ts
   public actualizarDatosBase(
     numeroOrden: string,
     descripcion: string,
@@ -245,7 +503,6 @@ export class SubactividadEntity {
     tipo: TipoSubActividad,
     bancoActividadId: string | null,
   ): void {
-    // Validar que las fechas estén dentro del año fiscal operativo
     this.validarAnioFiscal(fechaInicio, fechaTermino);
 
     this.numeroOrden = numeroOrden;

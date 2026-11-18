@@ -7,6 +7,7 @@ import { Injectable } from '@nestjs/common';
 import { FiltrosSupervisionCentros } from '@modules/poas/application/ports/filtros/supervision-centros.filter';
 import { SupervisionCentroResult } from '@modules/poas/application/ports/results/supervision-centro.result';
 import { FiltrosPoaDeCentro } from '@modules/centros/application/ports/filtros/poa-de-centro.filter';
+import { EstadoPoa } from '@prisma/client';
 
 @Injectable()
 export class PoaQueryRepository implements IPoaQueryRepository {
@@ -133,12 +134,17 @@ export class PoaQueryRepository implements IPoaQueryRepository {
     });
 
     // 2. POA vigente de cada centro (la del año fiscal pedido).
+    // [TAREA REZAGADA] Pantalla de JEFA:
+    // - Año actual | Estado Borrador: Es invisible (No se envía al frontend)
+    // - Año Actual | Devuelta: Muestra la última POA devuelta (no los cambios en tiempo real)
     const poaVigentePorCentro = new Map<
       string,
       (typeof centros)[number]['poas'][number]
     >();
     for (const centro of centros) {
-      const vigente = centro.poas.find((p) => p.anio_fiscal === anioFiscal);
+      const vigente = centro.poas.find(
+        (p) => p.anio_fiscal === anioFiscal && p.estado !== EstadoPoa.BORRADOR,
+      );
       if (vigente) poaVigentePorCentro.set(centro.id, vigente);
     }
 
