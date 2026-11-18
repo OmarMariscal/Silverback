@@ -16,7 +16,7 @@ const colorBadgeObs: Record<string, string> = {
   slate: 'bg-slate-100 text-slate-700',
 };
 
-export default function VistaActual({ observaciones, buzon , detallesOperacion}: VistaActualProps) {
+export default function VistaActual({ observaciones, buzon }: VistaActualProps) {
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
