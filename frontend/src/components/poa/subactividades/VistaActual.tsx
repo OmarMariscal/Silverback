@@ -1,6 +1,6 @@
 'use client';
 
-import BuzonArchivosEvidencia from '@/components/ui/BuzonArchivosEvidencia';
+import BuzonArchivosEvidencia from '@/components/poa/subactividades/BuzonArchivosEvidencia';
 import type { ObservacionActivaUI, BuzonEvidenciasProps, DetallesOperacionUI} from '@/types/subactividades-contratos';
 
 interface VistaActualProps {
