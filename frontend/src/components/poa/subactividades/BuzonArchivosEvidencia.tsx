@@ -1,6 +1,7 @@
+// src/components/poa/subactividades/BuzonArchivosEvidencia.tsx
 'use client';
 
-import { useRef, useState, type ChangeEvent, type DragEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
 import {
   EXTENSIONES_PERMITIDAS_LABEL,
   type BuzonEvidenciasProps,
@@ -37,7 +38,19 @@ export default function BuzonArchivosEvidencia({
   onConfirmarEnvioRevision,
 }: BuzonEvidenciasProps) {
   const [estaArrastrando, setEstaArrastrando] = useState(false);
+  const [envioSolicitado, setEnvioSolicitado] = useState(false);
   const inputArchivoRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!envioSolicitado || estaEnviandoRevision) return;
+
+    if (errorEnvioGeneral) {
+      setEnvioSolicitado(false);
+      return;
+    }
+
+    window.location.reload();
+  }, [envioSolicitado, estaEnviandoRevision, errorEnvioGeneral]);
 
   if (modo === 'OCULTO') return null;
 
@@ -55,6 +68,11 @@ export default function BuzonArchivosEvidencia({
     event.preventDefault();
     setEstaArrastrando(false);
     procesarArchivos(event.dataTransfer.files);
+  };
+
+  const manejarConfirmarEnvio = async () => {
+    setEnvioSolicitado(true);
+    await onConfirmarEnvioRevision();
   };
 
   const haySubidasEnCurso = archivos.some(
@@ -171,8 +189,8 @@ export default function BuzonArchivosEvidencia({
                       className="self-end rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50 sm:self-center disabled:cursor-not-allowed"
                       title="Eliminar evidencia"
                     >
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M6 7h12m-10 0l.7 13h6.6L16 7m-6 3v6m4-6v6M9 7V4h6v3 " />
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>
                   )}
@@ -228,7 +246,7 @@ export default function BuzonArchivosEvidencia({
             <button
               type="button"
               disabled={estaEnviandoRevision || haySubidasEnCurso}
-              onClick={() => void onConfirmarEnvioRevision()}
+              onClick={() => void manejarConfirmarEnvio()}
               className="inline-flex items-center gap-2 rounded-lg bg-indigo-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {estaEnviandoRevision
