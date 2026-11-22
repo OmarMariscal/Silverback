@@ -85,7 +85,7 @@ export const roleModuleMap: Record<RolUsuario, Record<ModuloUsuario, string>> = 
 
 export const moduleApiSupport: Record<RolUsuario, Record<ModuloUsuario, boolean>> = {
   ADMIN: { dashboard: false, actividades: false, poa: false },
-  JEFA: { dashboard: true, actividades: true, poa: false },
+  JEFA: { dashboard: true, actividades: true, poa: true },
   CONTRALOR_GENERAL: { dashboard: false, actividades: false, poa: false },
   CONTRALOR: { dashboard: true, actividades: true, poa: true },
   AUDITOR: { dashboard: false, actividades: false, poa: false },
