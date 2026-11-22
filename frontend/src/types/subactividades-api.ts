@@ -27,10 +27,14 @@ export type EstadoSolvenciaAPI =
   | 'PARCIALMENTE_SOLVENTADA'
   | 'SOLVENTADA';
 
+export type TipoSubActividadAPI = 'AUDITORIA' | 'REVISION';
+
 /**
  * Estado operativo global de la subactividad (controla el ciclo general y dashboard).
  */
 export type EstadoSubActividadAPI =
+  | 'SIN_EMPEZAR'
+  | 'SOLICITADO'
   | 'EN_PROGRESO'
   | 'EN_REVISION'
   | 'DEVUELTA'
@@ -53,6 +57,16 @@ export interface MetaCabeceraSubActividadDto {
   version_actual: number; // Ej: 3
   etiqueta_semaforo: string; // Ej: "Próximo a Vencer", "A tiempo", etc.
   permite_entrega: boolean; // True si el estado permite subir y enviar (EN_PROGRESO o DEVUELTA)
+  tipo: TipoSubActividadAPI;
+  permite_carga_evidencias?: boolean;
+}
+
+export interface SolicitarOficioResponse {
+  id: string;
+  estado_anterior: string;
+  estado_nuevo: string;
+  fecha_solicitud: string;
+  mensaje: string;
 }
 
 export interface ObservacionActivaDto {

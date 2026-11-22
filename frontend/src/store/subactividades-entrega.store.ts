@@ -59,6 +59,7 @@ interface SubActividadesEntregaState {
   estaCargando: boolean;
   cargandoVersionHistorica: boolean;
   estaEnviandoRevision: boolean;
+  estaSolicitandoOficio: boolean;
   mensajeError: string | null;
   mensajeExito: string | null;
   errorEnvioGeneral: string | null;
@@ -72,6 +73,7 @@ interface SubActividadesEntregaState {
   seleccionarVersionHistorica: (versionId: string) => Promise<void>;
   volverAVersionActual: () => void;
   descargarEvidencia: (archivoId: string) => Promise<void>;
+  solicitarOficioInicio: () => Promise<boolean>;
 
   // --- E. GETTER COMPUTADO INTEGRAL (VIEWMODEL) ---
   obtenerViewModelUI: () => SubActividadEntregaViewModel | null;
@@ -98,6 +100,7 @@ export const useSubActividadEntregaStore = create<SubActividadesEntregaState>((s
   estaCargando: false,
   cargandoVersionHistorica: false,
   estaEnviandoRevision: false,
+  estaSolicitandoOficio: false,
   mensajeError: null,
   mensajeExito: null,
   errorEnvioGeneral: null,
@@ -110,6 +113,7 @@ export const useSubActividadEntregaStore = create<SubActividadesEntregaState>((s
       mensajeError: null,
       mensajeExito: null,
       errorEnvioGeneral: null,
+      estaSolicitandoOficio: false,
       esModoHistorico: false,
       versionHistoricaActivaId: null,
       versionHistoricaDetalle: null,
@@ -127,11 +131,12 @@ export const useSubActividadEntregaStore = create<SubActividadesEntregaState>((s
       ]);
 
       // 2. Adaptadores: transformación pura DTO (snake_case) -> Contrato UI (camelCase)
+      const tipo = data.meta_cabecera.tipo;
       const cabecera = adaptarCabeceraSubActividadUI(data.meta_cabecera, data.detalles_operacion);
-      const detallesOperacion = adaptarDetallesOperacionUI(data.detalles_operacion);
+      const detallesOperacion = adaptarDetallesOperacionUI(data.detalles_operacion, tipo);
       const observacionesActivas = adaptarObservacionesActivasUI(data.observaciones_activas);
       const archivosEnBuzon = adaptarEvidenciasBorradorUI(data.buzon_borrador?.evidencias || []);
-      const modoBuzon = determinarModoBuzonUI(data.detalles_operacion.estado_actual);
+      const modoBuzon = determinarModoBuzonUI(data.detalles_operacion.estado_actual, tipo);
       
       // Si el endpoint /historial devolvió datos específicos, los usamos; si no, los de la vista entrega
       const listaHistorial = historialData?.data
@@ -178,6 +183,13 @@ export const useSubActividadEntregaStore = create<SubActividadesEntregaState>((s
 
   // 3. Orquestador de subida directa a S3 (US_02)
   agregarArchivosDropzone: async (archivosNuevos: File[]) => {
+    if (get().modoBuzon !== 'CARGA') {
+      set({
+        mensajeError: 'La subactividad no está habilitada para carga de archivos.',
+      });
+      return;
+    }
+
     const { subActividadId } = get();
     if (!subActividadId) return;
 
@@ -344,12 +356,16 @@ export const useSubActividadEntregaStore = create<SubActividadesEntregaState>((s
           },
         };
 
+        const tipo = rawActualizado.meta_cabecera.tipo;
         const cabeceraActualizada = adaptarCabeceraSubActividadUI(
           rawActualizado.meta_cabecera,
           rawActualizado.detalles_operacion,
         );
-        const detallesActualizados = adaptarDetallesOperacionUI(rawActualizado.detalles_operacion);
-        const modoBuzonActualizado = determinarModoBuzonUI('EN_REVISION');
+        const detallesActualizados = adaptarDetallesOperacionUI(
+          rawActualizado.detalles_operacion,
+          tipo,
+        );
+        const modoBuzonActualizado = determinarModoBuzonUI('EN_REVISION', tipo);
 
         set({
           vistaRaw: rawActualizado,
@@ -439,6 +455,7 @@ export const useSubActividadEntregaStore = create<SubActividadesEntregaState>((s
     const { vistaRaw, historialNodos } = get();
     if (!vistaRaw) return;
 
+    const tipo = vistaRaw.meta_cabecera.tipo;
     const cabeceraNormal = adaptarCabeceraSubActividadUI(
       vistaRaw.meta_cabecera,
       vistaRaw.detalles_operacion,
@@ -457,7 +474,7 @@ export const useSubActividadEntregaStore = create<SubActividadesEntregaState>((s
       versionHistoricaDetalleRaw: null,
       cabecera: cabeceraNormal,
       historialNodos: nodosActualizados,
-      modoBuzon: determinarModoBuzonUI(vistaRaw.detalles_operacion.estado_actual),
+      modoBuzon: determinarModoBuzonUI(vistaRaw.detalles_operacion.estado_actual, tipo),
     });
   },
 
@@ -525,6 +542,54 @@ export const useSubActividadEntregaStore = create<SubActividadesEntregaState>((s
     }
   },
 
+  // 8.5 Solicitar Oficio de Inicio (Auditorías en estado SIN_EMPEZAR)
+  solicitarOficioInicio: async () => {
+    const { subActividadId, vistaRaw } = get();
+    if (!subActividadId || !vistaRaw) return false;
+
+    set({ estaSolicitandoOficio: true, mensajeError: null });
+
+    try {
+      const resp = await subactividadesService.solicitarOficio(subActividadId);
+      const tipo = vistaRaw.meta_cabecera.tipo;
+
+      const rawActualizado: VistaEntregaSubActividadResponse = {
+        ...vistaRaw,
+        detalles_operacion: {
+          ...vistaRaw.detalles_operacion,
+          estado_actual: 'SOLICITADO',
+        },
+      };
+
+      const cabeceraActualizada = adaptarCabeceraSubActividadUI(
+        rawActualizado.meta_cabecera,
+        rawActualizado.detalles_operacion,
+      );
+      const detallesActualizados = adaptarDetallesOperacionUI(
+        rawActualizado.detalles_operacion,
+        tipo,
+      );
+      const modoBuzonActualizado = determinarModoBuzonUI('SOLICITADO', tipo);
+
+      set({
+        vistaRaw: rawActualizado,
+        cabecera: cabeceraActualizada,
+        detallesOperacion: detallesActualizados,
+        modoBuzon: modoBuzonActualizado,
+        estaSolicitandoOficio: false,
+        mensajeExito: resp.mensaje || '¡Oficio de inicio solicitado exitosamente!',
+      });
+      return true;
+    } catch (error) {
+      console.error('Error al solicitar oficio de inicio:', error);
+      set({
+        estaSolicitandoOficio: false,
+        mensajeError: 'Ocurrió un error al solicitar el oficio de inicio.',
+      });
+      return false;
+    }
+  },
+
   // 9. Getter computado para conectar directamente a los componentes React
   obtenerViewModelUI: (): SubActividadEntregaViewModel | null => {
     const state = get();
@@ -543,6 +608,7 @@ export const useSubActividadEntregaStore = create<SubActividadesEntregaState>((s
       estaCargando,
       cargandoVersionHistorica,
       estaEnviandoRevision,
+      estaSolicitandoOficio,
       errorEnvioGeneral,
       mensajeError,
     } = state;
@@ -566,6 +632,8 @@ export const useSubActividadEntregaStore = create<SubActividadesEntregaState>((s
         comentariosEntrega,
         estaEnviandoRevision,
         errorEnvioGeneral,
+        estaSolicitandoOficio,
+        onSolicitarOficio: () => state.solicitarOficioInicio(),
         onArchivosSeleccionados: (files) => void state.agregarArchivosDropzone(files),
         onEliminarArchivo: (id) => void state.eliminarArchivoBuzon(id),
         onChangeComentarios: (c) => state.setComentariosEntrega(c),

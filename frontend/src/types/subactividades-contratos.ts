@@ -8,6 +8,7 @@ import type {
   EstadoSubActividadAPI,
   EstadoDictamenAPI,
   EstadoSolvenciaAPI,
+  TipoSubActividadAPI,
 } from './subactividades-api';
 
 // ==========================================
@@ -58,6 +59,8 @@ export interface CabeceraSubActividadProps {
   esModoHistorico: boolean;
   semaforo?: SemáforoSubActividadUI;
   breadcrumbs: BreadcrumbItem[];
+  tipoActividad: TipoSubActividadAPI;
+  tipoEtiqueta: string;
 }
 
 // --- B. Banner de Advertencia de Registro Histórico (US_03) ---
@@ -105,14 +108,21 @@ export interface ArchivoEvidenciaUI {
   fileObject?: File; // Objeto File nativo para el PUT a S3
 }
 
-export type ModoBuzonEvidencias = 'CARGA' | 'BLOQUEADO' | 'OCULTO';
+export type ModoBuzonEvidencias =
+  | 'REQUIERE_OFICIO'
+  | 'ESPERANDO_OFICIO'
+  | 'CARGA'
+  | 'BLOQUEADO'
+  | 'OCULTO';
 
 export interface BuzonEvidenciasProps {
-  modo: ModoBuzonEvidencias; // "CARGA" (en progreso/devuelta), "BLOQUEADO" (en revisión), "OCULTO" (autorizada/histórico)
+  modo: ModoBuzonEvidencias; // "CARGA" (en progreso/devuelta), "BLOQUEADO" (en revisión), "OCULTO" (autorizada/histórico), "REQUIERE_OFICIO", "ESPERANDO_OFICIO"
   archivos: ArchivoEvidenciaUI[];
   comentariosEntrega: string;
   estaEnviandoRevision: boolean;
   errorEnvioGeneral?: string | null;
+  estaSolicitandoOficio?: boolean;
+  onSolicitarOficio?: () => void | Promise<boolean>;
 
   // Handlers para eventos de usuario
   onArchivosSeleccionados: (archivos: File[]) => void;

@@ -9,7 +9,8 @@
 Silverback está estructurado como un **Monorepo** orquestado mediante **Docker Compose**. Los tres servicios principales (Base de Datos, Backend y Frontend) conviven en el mismo repositorio y se ejecutan en contenedores independientes y comunicados entre sí:
 
 * **`db` (PostgreSQL 15)**: Motor de base de datos relacional aislado en contenedor con volumen persistente (`pgdata_dev`), exponiendo el puerto `5432` hacia tu máquina local.
-* **`backend/` (NestJS)**: API REST central con arquitectura limpia, TypeScript, Prisma ORM y soporte para almacenamiento en **AWS S3** (módulo del contralor).
+* **`s3_storage` (SeaweedFS)**: Servidor de almacenamiento de objetos compatible con AWS S3 para desarrollo local. Se encarga de recibir y servir las evidencias de auditoría mediante URLs prefirmadas. Expone el puerto `9000` (API S3) y el puerto `9001` (Visor Web Filer), con volumen persistente (`s3_data_dev`).
+* **`backend/` (NestJS)**: API REST central con arquitectura limpia, TypeScript, Prisma ORM y adaptador de almacenamiento para **SeaweedFS / AWS S3** (módulo del contralor).
 * **`frontend/` (Next.js 16 + Tailwind CSS v4)**: Interfaz de usuario reactiva para Jefatura y Contraloría.
 
 ### 🔄 ¿Cómo interactúan Docker y tus archivos en Local? (Hot-Reload)
@@ -76,6 +77,8 @@ Escribe código y visualiza los cambios en tu navegador:
 * **Frontend:** [http://localhost:3001](http://localhost:3001)
 * **Backend:** [http://localhost:3000/api/v1](http://localhost:3000/api/v1)
 * **Swagger Docs:** [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
+* **Visor de Archivos S3 (SeaweedFS Filer):** [http://localhost:9001](http://localhost:9001)
+* **API S3 Local (SeaweedFS):** `http://localhost:9000`
 
 Si quieres ver lo que imprimen los contenedores o diagnosticar algún error:
 ```bash
@@ -84,6 +87,9 @@ docker compose logs -f
 
 # O ver únicamente los logs del backend:
 docker compose logs -f backend
+
+# O ver los logs de almacenamiento S3 (SeaweedFS):
+docker compose logs -f s3_storage
 ```
 *(Presiona `Ctrl + C` en cualquier momento para salir de la vista de logs; los contenedores seguirán funcionando).*
 
@@ -151,6 +157,7 @@ docker compose stop
 | `docker compose down -v` | **Elimina contenedores Y volúmenes de datos.** | ⚠️ **Cuidado:** Borra toda la base de datos local para iniciarla de cero. |
 | `docker compose up -d --build` | Reconstruye las imágenes de Docker y arranca. | Cuando se instalen nuevas librerías en `package.json`. |
 | `docker compose logs -f [servicio]` | Transmite los logs de la consola en tiempo real. | Para depurar errores o ver qué consultas SQL se están ejecutando. |
+| `docker compose logs -f s3_storage` | Transmite los logs del emulador S3 (SeaweedFS). | Para verificar solicitudes de subida/descarga de evidencias. |
 | `docker exec -it silverback_api_dev sh` | Abre una terminal interactiva dentro de la API. | Para ejecutar comandos de Prisma (`migrate`, `generate`, `seed`). |
 | `npm run db:studio` | Abre Prisma Studio en la máquina local (puerto 5556). | Para inspeccionar tablas y registros en el navegador. |
 
