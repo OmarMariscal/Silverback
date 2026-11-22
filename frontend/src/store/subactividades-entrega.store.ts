@@ -22,6 +22,7 @@ import {
 import type {
   VistaEntregaSubActividadResponse,
   DetalleVersionHistoricaResponse,
+  ItemHistorialResumenDto,
 } from '@/types/subactividades-api';
 import type {
   CabeceraSubActividadProps,
@@ -136,7 +137,7 @@ export const useSubActividadEntregaStore = create<SubActividadesEntregaState>((s
       const listaHistorial = historialData?.data
         ? historialData.data.map((h) => ({
             id: h.id_version,
-            estado_operativo: h.estado as any,
+            estado_operativo: h.estado as ItemHistorialResumenDto['estado_operativo'],
             etiqueta: h.titulo_evento,
             fecha: h.fecha_evento,
             es_version_actual: h.numero_version === data.meta_cabecera.version_actual,
@@ -495,10 +496,14 @@ export const useSubActividadEntregaStore = create<SubActividadesEntregaState>((s
         elementoA.click();
         document.body.removeChild(elementoA);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error al descargar evidencia histórica:', error);
       // 4. Manejo graceful de error 403 (autorización) u otros
-      const es403 = error?.response?.status === 403;
+      const es403 =
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        (error as { response?: { status?: number } }).response?.status === 403;
       set({
         mensajeError: es403
           ? 'Acceso denegado (403): Solo puedes descargar evidencias pertenecientes a tu centro universitario.'

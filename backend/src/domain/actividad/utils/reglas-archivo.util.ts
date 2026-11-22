@@ -1,7 +1,9 @@
 import { CodigoDeViolacion } from '@domain/codigos/codigo-violado.enum';
 import { ReglaNegocioException } from '@domain/excepciones/regla-negocio.exception';
+import { ConstruirObjectKeyEvidenciaParams } from '../interfaces/construir-object-key-evidencia-params.interface';
 
 export const MAX_PESO_ARCHIVO_BYTES = 52428800; // 50 MB (50 * 1024 * 1024)
+const LONGITUD_PREFIJO_VERSION = 2;
 
 export const MIME_TYPES_PERMITIDOS: ReadonlyMap<string, string[]> = new Map([
   ['application/pdf', ['.pdf']],
@@ -105,4 +107,70 @@ export function validarMetadatosArchivo(
       CodigoDeViolacion.ARCHIVO_INVALIDO,
     );
   }
+}
+
+/**
+ * Sanitiza un segmento de ruta S3 (ej. clave de centro universitario) evitando
+ * separadores de carpeta ('/'), tildes o caracteres inválidos.
+ */
+export function sanitizarSegmentoRuta(
+  segmento: string,
+  fallback: string,
+): string {
+  const limpio = segmento
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  return limpio.length > 0 ? limpio : fallback;
+}
+
+/**
+ * Formatea el número de versión con zero-padding (v01, v02, ..., v10) para
+ * mantener orden lexicográfico consistente en consolas S3 y SeaweedFS.
+ */
+export function formatearPrefijoVersion(version: number): string {
+  if (!Number.isInteger(version) || version < 1) {
+    throw new ReglaNegocioException(
+      `El número de versión de entrega debe ser un entero positivo (recibido: ${version}).`,
+      CodigoDeViolacion.DATOS_INSUFICIENTES,
+    );
+  }
+
+  return `v${String(version).padStart(LONGITUD_PREFIJO_VERSION, '0')}`;
+}
+
+/**
+ * Construye de forma determinista e inmutable la llave de almacenamiento (objectKey)
+ * pre-asignada a la versión destino de la entrega.
+ */
+export function construirObjectKeyEvidencia(
+  params: ConstruirObjectKeyEvidenciaParams,
+): string {
+  if (!Number.isInteger(params.anioFiscal) || params.anioFiscal < 2000) {
+    throw new ReglaNegocioException(
+      `El año fiscal para la ruta de almacenamiento es inválido (${params.anioFiscal}).`,
+      CodigoDeViolacion.FECHA_INVALIDA,
+    );
+  }
+
+  const subActividadId = params.subActividadId.trim();
+  const archivoId = params.archivoId.trim();
+  const nombreSanitizado = params.nombreSanitizado.trim();
+
+  if (!subActividadId || !archivoId || !nombreSanitizado) {
+    throw new ReglaNegocioException(
+      'Faltan identificadores obligatorios para construir la ruta del archivo en el almacenamiento.',
+      CodigoDeViolacion.DATOS_INSUFICIENTES,
+    );
+  }
+
+  const claveCentro = sanitizarSegmentoRuta(params.centroClave, 'general');
+  const prefijoVersion = formatearPrefijoVersion(params.versionDestino);
+
+  return `${claveCentro}/${params.anioFiscal}/subactividades/${subActividadId}/${prefijoVersion}/${archivoId}-${nombreSanitizado}`;
 }

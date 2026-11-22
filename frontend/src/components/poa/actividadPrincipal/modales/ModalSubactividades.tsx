@@ -7,19 +7,10 @@ import {
   SubactividadFilaForm,
 } from '@/types/poa-contratos';
 
-// Este modal implementa EXACTAMENTE el contrato "PantallaSubactividadesProps"
-// definido en poa-contratos.ts (nada de props nuevas del lado de datos).
-// La única prop que se agrega aquí es "isOpen", que es puramente de UI
-// (mostrar/ocultar el modal) y no forma parte del contrato de datos.
 interface ModalSubactividadesProps extends PantallaSubactividadesProps {
   isOpen: boolean;
 }
 
-// Estructura interna para poder pintar en UNA sola lista tanto las
-// sugerencias que vienen del banco, como las sub-actividades que la
-// actividad principal YA tenía guardadas. Así, si una sub-actividad ya
-// agregada no existe en el catálogo del banco (ej. fue creada a mano),
-// de todos modos aparece en el checklist con su casilla activa.
 interface OpcionVisible {
   idSugerencia: string;
   descripcion: string;
@@ -60,8 +51,6 @@ export function ModalSubactividades({
   const [expandidaId, setExpandidaId] = useState<string | null>(null);
   const [errorValidacion, setErrorValidacion] = useState('');
 
-  // idClave -> dato original. Sirve para "restaurar" fechas/tipo si el
-  // usuario desmarca y vuelve a marcar la misma sub-actividad.
   const originalesPorId = useMemo(() => {
     const mapa: Record<string, SubactividadFilaForm> = {};
     subactividadesIniciales.forEach((sub) => {
@@ -71,9 +60,6 @@ export function ModalSubactividades({
     return mapa;
   }, [subactividadesIniciales]);
 
-  // Unimos: (1) todo lo que ofrece el banco de sugerencias, y (2) las
-  // sub-actividades que la actividad ya tenía y que NO están en el banco
-  // (personalizadas). El resultado es "esto es lo que tienes" + catálogo.
   const opcionesVisibles = useMemo<OpcionVisible[]>(() => {
     const delBanco: OpcionVisible[] = sugerenciasBanco.map((o) => ({
       idSugerencia: o.idSugerencia,
@@ -85,8 +71,6 @@ export function ModalSubactividades({
     return delBanco;
   }, [sugerenciasBanco]);
 
-  // Al abrir el modal, todo lo que ya tenía la actividad principal se
-  // precarga como "seleccionado" -> su checkbox nace activo.
   if (!isOpen) return null;
 
   const opcionesFiltradas = opcionesVisibles.filter((opcion) =>

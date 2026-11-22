@@ -43,8 +43,8 @@ import { SubActividadGetSelectQuery } from './ports/queries/subactividad-get-sel
 import { SubActividadGetSupervisionQuery } from './ports/queries/subactividad-get-supervision.query';
 import { SubActividadGetQuery } from './ports/queries/subactividad-get.query';
 import { SubActividadProximasAVencerQuery } from './ports/queries/subactividad-proximas-a-vencer.query';
-import type { ISubactividadesQueryRepository } from './ports/subactividaeds-query.repository.interface';
-import { SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN } from './ports/subactividaeds-query.repository.interface';
+import type { ISubactividadesQueryRepository } from './ports/subactividades-query.repository.interface';
+import { SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN } from './ports/subactividades-query.repository.interface';
 // [TASK-04] Imports para vista de entrega
 import { SubActividadVistaEntregaQuery } from './ports/queries/subactividad-vista-entrega.query';
 import { VistaEntregaResponseDto } from '../dto/response/vista-entrega.response.dto';

@@ -24,7 +24,7 @@ import type { SesionUsuario } from '@core/interfaces/sesion-usuario.interface';
 import { Permisos } from '@domain/roles/permisos.enum';
 import { SubactividadesService } from '../../application/subactividades.service';
 import { GenerarPreFirmaRequestDto } from '../../dto/request/generar-pre-firma.request.dto';
-import { EnviarSubActividadRevisionRequestDto } from '@modules/actividades/dto/request/enviar-subactividad-revision..request.dto';
+import { EnviarSubActividadRevisionRequestDto } from '@modules/actividades/dto/request/enviar-subactividad-revision.request.dto';
 import { GenerarPreFirmaResponseDto } from '../../dto/response/generar-pre-firma.response.dto';
 import { ConfirmarArchivoResponseDto } from '../../dto/response/confirmar-archivo.response.dto';
 import { EnviarSubActividadRevisionResponseDto } from '../../dto/response/enviar-subactividad-revision.response.dto';
