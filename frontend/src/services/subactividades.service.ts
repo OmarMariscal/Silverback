@@ -18,6 +18,7 @@ import type {
   HistorialVersionesResponse,
   DetalleVersionHistoricaResponse,
   LinkDescargaEvidenciaResponse,
+  SolicitarOficioResponse,
 } from '@/types/subactividades-api';
 
 // =========================================================================
@@ -32,6 +33,8 @@ const MOCK_VISTA_ENTREGA: VistaEntregaSubActividadResponse = {
     version_actual: 3,
     etiqueta_semaforo: 'Próximo a Vencer',
     permite_entrega: true,
+    tipo: 'AUDITORIA',
+    permite_carga_evidencias: true,
   },
   observaciones_activas: [
     {
@@ -403,6 +406,33 @@ export const subactividadesService = {
       );
       return {
         url_descarga_efimera: '#descarga-mock',
+      };
+    }
+  },
+
+  /**
+   * 10. POST /api/v1/sub-actividades/:subActividadId/solicitar-oficio
+   * Solicita el oficio de inicio para una subactividad de tipo AUDITORIA en estado SIN_EMPEZAR.
+   */
+  solicitarOficio: async (
+    subActividadId: string,
+  ): Promise<SolicitarOficioResponse> => {
+    try {
+      const response = await api.post<SolicitarOficioResponse>(
+        `/sub-actividades/${subActividadId}/solicitar-oficio`,
+      );
+      return response.data;
+    } catch (error) {
+      console.warn(
+        `[subactividadesService] API no disponible para /solicitar-oficio. Retornando respuesta mock.`,
+        error,
+      );
+      return {
+        id: subActividadId,
+        estado_anterior: 'SIN_EMPEZAR',
+        estado_nuevo: 'SOLICITADO',
+        fecha_solicitud: new Date().toISOString(),
+        mensaje: 'Oficio de inicio solicitado exitosamente.',
       };
     }
   },

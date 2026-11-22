@@ -11,7 +11,7 @@ Esta plataforma centraliza la planeación estratégica y la ejecución de audito
 El ciclo de vida del sistema abarca:
 1. **Planeación:** Creación, revisión y autorización de POAs anuales.
 2. **Ejecución:** Asignación de cargas de trabajo basadas en el Catálogo de Actividades institucional.
-3. **Gestión Documental:** Almacenamiento seguro, versionado de archivos y resguardo de evidencias de auditoría mediante infraestructura en la nube (AWS S3) para el módulo del contralor.
+3. **Gestión Documental:** Almacenamiento seguro, versionado de archivos y resguardo de evidencias de auditoría mediante almacenamiento de objetos compatible con S3 (**SeaweedFS** en desarrollo local y **AWS S3** en producción) para el módulo del contralor.
 
 ---
 
@@ -24,8 +24,8 @@ El proyecto está estructurado bajo un enfoque de **Monorepo**, garantizando la 
 * **Frontend:** [Next.js](https://nextjs.org/) (React 19) con [Tailwind CSS v4](https://tailwindcss.com/) para una interfaz de usuario reactiva y accesible.
 * **Base de Datos:** Relacional, utilizando **PostgreSQL 15**.
 * **ORM:** [Prisma](https://www.prisma.io/) para modelado de datos, tipado estricto y migraciones seguras.
-* **Contenedores:** [Docker](https://www.docker.com/) y **Docker Compose** para estandarizar el ambiente completo de desarrollo (Frontend + Backend + Base de Datos).
-* **Almacenamiento:** Integración con **AWS S3** para el resguardo de anexos, evidencias y gestión documental del contralor.
+* **Contenedores:** [Docker](https://www.docker.com/) y **Docker Compose** para estandarizar el ambiente completo de desarrollo (Frontend + Backend + Base de Datos + Almacenamiento S3).
+* **Almacenamiento de Objetos (S3):** Emulador local con **[SeaweedFS](https://github.com/seaweedfs/seaweedfs)** (compatible con la API de AWS S3) para desarrollo sin costo en la nube, y **AWS S3** para producción, con soporte para URLs prefirmadas dinámicas (carga y descarga segura).
 
 ---
 
@@ -39,15 +39,15 @@ El sistema implementa una arquitectura de aislamiento de datos por contexto (*Da
 
 ## 🚀 Entorno de Desarrollo Local con Docker
 
-El proyecto está completamente dockerizado. Ya no es necesario instalar ni configurar PostgreSQL localmente en tu sistema operativo: Docker levanta y conecta el frontend, el backend y la base de datos automáticamente.
+El proyecto está completamente dockerizado. Ya no es necesario instalar ni configurar PostgreSQL o servicios S3 localmente en tu sistema operativo: Docker levanta y conecta el frontend, el backend, la base de datos y el almacenamiento de evidencias (SeaweedFS) automáticamente.
 
 ### 📂 Estructura del Proyecto
 
 ```text
 📦 Silverback
- ┣ 📂 backend           # API central y contratos de datos (NestJS + Prisma)
+ ┣ 📂 backend           # API central, contratos de datos (NestJS + Prisma) y config S3
  ┣ 📂 frontend          # Aplicación web interactiva (Next.js + Tailwind CSS)
- ┣ 📜 docker-compose.yml# Orquestación de contenedores en desarrollo
+ ┣ 📜 docker-compose.yml# Orquestación de contenedores (BD, S3, API, Web)
  ┣ 📜 package.json      # Orquestación de workspaces y scripts globales
  ┗ 📜 package-lock.json # Congelación exacta de versiones para todo el equipo
 ```
@@ -83,6 +83,15 @@ DB_NAME="TestingSilverBack"
 
 DATABASE_URL="postgresql://postgres:tu_password_local@db:5432/TestingSilverBack?schema=public"
 NODE_ENV="development"
+
+# Almacenamiento de Objetos (SeaweedFS en desarrollo local)
+S3_REGION="us-east-1"
+S3_ACCESS_KEY="s3_dev_user"
+S3_SECRET_KEY="s3_dev_password"
+S3_BUCKET_NAME="silverback-evidencias"
+S3_ENDPOINT="http://s3_storage:8333"
+S3_PUBLIC_ENDPOINT="http://localhost:9000"
+S3_FORCE_PATH_STYLE="true"
 ```
 
 > ⚠️ **Importante:** Docker Compose lee el archivo `.env` ubicado en la **raíz** para configurar las credenciales de PostgreSQL. Asegúrate de tenerlo presente en esa ubicación.
@@ -132,6 +141,8 @@ NODE_ENV="development"
 | **Backend API** | [http://localhost:3000/api/v1](http://localhost:3000/api/v1) | Servidor NestJS REST API |
 | **Swagger Docs** | [http://localhost:3000/api/docs](http://localhost:3000/api/docs) | Documentación interactiva de endpoints (OpenAPI) |
 | **Prisma Studio** | [http://localhost:5556](http://localhost:5556) | Visor gráfico de tablas y datos (vía `npm run db:studio`) |
+| **SeaweedFS S3 API** | `http://localhost:9000` | API compatible con AWS S3 (Presigned URLs para subida/descarga) |
+| **SeaweedFS Web Filer** | [http://localhost:9001](http://localhost:9001) | Visor Web interactivo para explorar archivos y buckets |
 | **PostgreSQL** | `localhost:5432` | Servidor de base de datos local en contenedor |
 
 ---
@@ -181,6 +192,7 @@ NODE_ENV="development"
 | `docker compose up -d --build` | Reconstruye las imágenes e inicia contenedores. | Si se instalaron nuevas dependencias en `package.json`. |
 | `docker compose logs -f` | Muestra los logs en vivo de todos los servicios. | Para depurar errores (salir con `Ctrl + C`). |
 | `docker compose logs -f backend` | Muestra los logs en vivo exclusivamente del backend. | Para depurar endpoints y consultas SQL. |
+| `docker compose logs -f s3_storage` | Muestra los logs en vivo del emulador S3 (SeaweedFS). | Para verificar solicitudes de subida/descarga de evidencias. |
 | `npm run db:studio` | Levanta Prisma Studio en el puerto 5556. | Para visualizar y explorar los registros de la base de datos. |
 
 ---

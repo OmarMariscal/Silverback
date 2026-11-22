@@ -9,6 +9,7 @@ import type {
   DetalleVersionHistoricaResponse,
   ObservacionActivaDto,
   EstadoSubActividadAPI,
+  TipoSubActividadAPI,
 } from '@/types/subactividades-api';
 import {
   LIMITE_MAXIMO_PESO_BYTES,
@@ -20,6 +21,7 @@ import {
   type PanelVersionHistoricaDetalleProps,
   type EvidenciaHistoricaItemUI,
   type SemáforoSubActividadUI,
+  type ModoBuzonEvidencias,
 } from '@/types/subactividades-contratos';
 
 // ==========================================
@@ -154,15 +156,44 @@ export const obtenerTipoIconoArchivo = (
 // ==========================================
 
 /**
- * Determina el modo en que se debe renderizar el buzón de evidencias según el estado de la BD (US_01)
- * - EN_PROGRESO o DEVUELTA: 'CARGA' (Permite arrastrar y subir)
- * - EN_REVISION: 'BLOQUEADO' (Modo lectura/espera de dictamen)
- * - AUTORIZADA o CONCLUIDA: 'OCULTO' (Finalizado)
+ * Determina el modo en que se debe renderizar el buzón de evidencias según el estado y tipo de actividad
+ * Si es AUDITORIA:
+ * - SIN_EMPEZAR: 'REQUIERE_OFICIO'
+ * - SOLICITADO: 'ESPERANDO_OFICIO'
+ * - EN_PROGRESO / DEVUELTA: 'CARGA'
+ * - EN_REVISION: 'BLOQUEADO'
+ * - AUTORIZADA / CONCLUIDA: 'OCULTO'
+ * Si es REVISION:
+ * - SIN_EMPEZAR / SOLICITADO / EN_PROGRESO / DEVUELTA: 'CARGA'
+ * - EN_REVISION: 'BLOQUEADO'
+ * - AUTORIZADA / CONCLUIDA: 'OCULTO'
  */
 export const determinarModoBuzonUI = (
   estado: EstadoSubActividadAPI,
-): 'CARGA' | 'BLOQUEADO' | 'OCULTO' => {
+  tipo: TipoSubActividadAPI = 'AUDITORIA',
+): ModoBuzonEvidencias => {
+  if (tipo === 'AUDITORIA') {
+    switch (estado) {
+      case 'SIN_EMPEZAR':
+        return 'REQUIERE_OFICIO';
+      case 'SOLICITADO':
+        return 'ESPERANDO_OFICIO';
+      case 'EN_PROGRESO':
+      case 'DEVUELTA':
+        return 'CARGA';
+      case 'EN_REVISION':
+        return 'BLOQUEADO';
+      case 'AUTORIZADA':
+      case 'CONCLUIDA':
+      default:
+        return 'OCULTO';
+    }
+  }
+
+  // REVISION
   switch (estado) {
+    case 'SIN_EMPEZAR':
+    case 'SOLICITADO':
     case 'EN_PROGRESO':
     case 'DEVUELTA':
       return 'CARGA';
@@ -188,11 +219,13 @@ export const adaptarCabeceraSubActividadUI = (
   const cierre = new Date(detallesOperacion.cierre_global_poa);
   const diffTiempo = cierre.getTime() - hoy.getTime();
   const diasRestantes = Math.ceil(diffTiempo / (1000 * 60 * 60 * 24));
+  const tipo = metaCabecera.tipo || 'AUDITORIA';
 
   const semaforo = adaptarSemaforoUI(
     metaCabecera.etiqueta_semaforo,
     diasRestantes,
     detallesOperacion.estado_actual,
+    tipo,
   );
 
   const folioNumero = metaCabecera.folio.split('.')[0] || '05';
@@ -206,6 +239,8 @@ export const adaptarCabeceraSubActividadUI = (
       : `Versión ${metaCabecera.version_actual}`,
     esModoHistorico,
     semaforo,
+    tipoActividad: tipo,
+    tipoEtiqueta: tipo === 'REVISION' ? 'Revisión' : 'Auditoría',
     breadcrumbs: [
       { etiqueta: 'Actividades Programadas', href: '/contralor/actividades' },
       { etiqueta: `Actividad ${folioNumero}` },
@@ -236,12 +271,23 @@ export const adaptarEvidenciasBorradorUI = (
 /**
  * Adapta el semáforo y la advertencia de vencimiento (US_01)
  * Regla: Si faltan menos de 7 días naturales para el cierre global del POA y la subactividad está en curso.
+ * Si es REVISION, se asigna una etiqueta neutra preventiva sin alertas críticas.
  */
 export const adaptarSemaforoUI = (
   etiquetaApi: string,
   diasParaCierre: number,
   estadoSubactividad: EstadoSubActividadAPI,
+  tipo?: TipoSubActividadAPI,
 ): SemáforoSubActividadUI => {
+  if (tipo === 'REVISION') {
+    return {
+      etiqueta: 'Revisión Preventiva',
+      esAlerta: false,
+      claseBadge:
+        'bg-slate-100 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2',
+    };
+  }
+
   const esProximoAVencer =
     diasParaCierre <= 7 &&
     diasParaCierre >= 0 &&
@@ -310,6 +356,7 @@ export const adaptarObservacionesActivasUI = (
  */
 export const adaptarDetallesOperacionUI = (
   dto: VistaEntregaSubActividadResponse['detalles_operacion'],
+  tipo: TipoSubActividadAPI = 'AUDITORIA',
 ): DetallesOperacionUI => {
   const hoy = new Date();
   const cierre = new Date(dto.cierre_global_poa);
@@ -320,6 +367,19 @@ export const adaptarDetallesOperacionUI = (
   let color: DetallesOperacionUI['estadoColor'] = 'slate';
 
   switch (dto.estado_actual) {
+    case 'SIN_EMPEZAR':
+      if (tipo === 'AUDITORIA') {
+        estadoTexto = 'Requiere Oficio de Inicio';
+        color = 'amber';
+      } else {
+        estadoTexto = 'Lista para Iniciar (En Progreso)';
+        color = 'amber';
+      }
+      break;
+    case 'SOLICITADO':
+      estadoTexto = 'Oficio Solicitado (En Espera)';
+      color = 'amber';
+      break;
     case 'DEVUELTA':
       estadoTexto = 'Devuelta por Jefatura';
       color = 'red';
