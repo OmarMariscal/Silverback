@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { SubActividadesSelectData } from './sub--actividades-select-data.dto';
+import { SubActividadesSelectData } from './sub-actividades-select-data.dto';
 
 export class SubActividadesSelectResponse {
   @ApiProperty({

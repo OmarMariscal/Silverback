@@ -30,7 +30,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { SubactividadesService } from '../../application/subactividades.service';
-import { SubActividadesBulkRequest } from '../../dto/request/sub-actividadedes-bulk.request.dto';
+import { SubActividadesBulkRequest } from '../../dto/request/sub-actividades-bulk.request.dto';
 import { SubActividadesProximasAVencerQueryDto } from '../../dto/request/sub-actividades-proximas-a-vencer.query.dto';
 import { SubActividadesSyncRequest } from '../../dto/request/sub-actividades-sync.request.dto';
 import { SubActividadesBulkResponse } from '../../dto/response/sub-actividades-bulk.response.dto';

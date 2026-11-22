@@ -14,7 +14,7 @@ import { PrismaActividadRepository } from './infrastructure/repositories/prisma-
 import { PrismaSubActividadRepository } from './infrastructure/repositories/prisma-subactividad.repository';
 import { ACTIVIDAD_REPOSITORY_TOKEN } from '@domain/actividad/actividad.repository.interface';
 import { SUBACTIVIDAD_REPOSITORY_TOKEN } from '@domain/actividad/subactividad.repository.interface';
-import { SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN } from './application/ports/subactividaeds-query.repository.interface';
+import { SUBACTIVIDADES_QUERY_REPOSITORY_TOKEN } from './application/ports/subactividades-query.repository.interface';
 import { ACTIVIDADES_QUERY_REPOSITORY_TOKEN } from './application/ports/actividades-query.repository.interface';
 import { PrismaActividadQueryRepository } from './infrastructure/repositories/prisma-actividad-query.repository';
 

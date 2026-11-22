@@ -20,13 +20,13 @@ import { SubActividadProximaVencerResult } from '@modules/actividades/applicatio
 import { SubActividadSelectResult } from '@modules/actividades/application/ports/results/subactividad-select.result';
 import { SubActividadSupervisionResult } from '@modules/actividades/application/ports/results/subactividad-supervision.result';
 import { SubActividadesDirectorioResult } from '@modules/actividades/application/ports/results/subactividades-directorio.result';
-import { ISubactividadesQueryRepository } from '@modules/actividades/application/ports/subactividaeds-query.repository.interface';
+import { ISubactividadesQueryRepository } from '@modules/actividades/application/ports/subactividades-query.repository.interface';
 import type {
   VistaEntregaRaw,
   HistorialVersionRaw,
   VersionDetalleRaw,
   ArchivoVersionRaw,
-} from '@modules/actividades/application/ports/subactividaeds-query.repository.interface';
+} from '@modules/actividades/application/ports/subactividades-query.repository.interface';
 import { ActividadesSortColumn } from '@modules/actividades/enums/actividades-sort-column.enum';
 import { Injectable, NotImplementedException } from '@nestjs/common';
 import { EstadoArchivoEvidencia, EstadoDictamen, EstadoSubActividad, Prisma } from '@prisma/client';
