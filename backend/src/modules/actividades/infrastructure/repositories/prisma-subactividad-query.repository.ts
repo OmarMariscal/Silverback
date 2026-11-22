@@ -1,3 +1,4 @@
+import { traducirEstadoPoaADominio } from '@core/utils/estados-poa.traslator';
 import { PaginacionMetadata } from '@core/common/dto/response/paginacion-metadata';
 import {
   traducirEstadoSubActividadADominio,
@@ -33,7 +34,7 @@ import { EstadoArchivoEvidencia, EstadoDictamen, EstadoSubActividad, Prisma } fr
 
 @Injectable()
 export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   private construirFiltroAcceso(
     usuarioUuid: string,
@@ -434,10 +435,10 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
 
     const dataFiltrada = filtros.semaforo
       ? data.filter(
-          (item) =>
-            SemaforoService.calcularSemaforoVencimiento(item.fecha_termino) ===
-            filtros.semaforo,
-        )
+        (item) =>
+          SemaforoService.calcularSemaforoVencimiento(item.fecha_termino) ===
+          filtros.semaforo,
+      )
       : data;
     const datosPaginados = filtros.semaforo
       ? dataFiltrada.slice(skip, skip + limite)
@@ -588,12 +589,12 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
     const raw = await this.prisma.subActividad.findUnique({
       where: { id: subActividadId },
       select: {
+        descripcion_tarea: true,
         fecha_inicio: true,
         fecha_termino: true,
         actividad: {
           select: {
             folio: true,
-            titulo: true,
             fecha_termino: true,
             poa: {
               select: {
@@ -650,8 +651,8 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
     );
     const observacionesActivas = ultimaEntregaDevuelta
       ? ultimaEntregaDevuelta.observaciones.filter(
-          (o) => o.estado_solvencia !== 'SOLVENTADA',
-        )
+        (o) => o.estado_solvencia !== 'SOLVENTADA',
+      )
       : [];
 
     // Comentario de la entrega más reciente
@@ -662,11 +663,11 @@ export class PrismaSubActividadQueryRepository implements ISubactividadesQueryRe
 
     return {
       folio: raw.actividad.folio,
-      titulo: raw.actividad.titulo,
+      titulo: raw.descripcion_tarea,
       centroClave: raw.actividad.poa.centro.clave,
       fechaInicio: raw.fecha_inicio,
       fechaTermino: raw.fecha_termino,
-      poaEstado: raw.actividad.poa.estado,
+      poaEstado: traducirEstadoPoaADominio(raw.actividad.poa.estado),
       poaAnioFiscal: raw.actividad.poa.anio_fiscal,
       poaCierreGlobal,
       ultimoComentarioEntrega: ultimoComentario,
