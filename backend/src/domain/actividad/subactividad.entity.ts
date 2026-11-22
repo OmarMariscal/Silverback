@@ -12,6 +12,7 @@ import { EntregaSubActividadEntity } from './entrega-subactividad.entity';
 import { EstadosArchivoEvidencia } from './estados-archivo-evidencia.enum';
 import { EstadosDictamen } from './estados-dictamen.enum';
 import {
+  construirObjectKeyEvidencia,
   sanitizarNombreArchivo,
   validarMetadatosArchivo,
 } from './utils/reglas-archivo.util';
@@ -190,6 +191,14 @@ export class SubactividadEntity {
     this.anioFiscal = anioFiscal;
   }
 
+  /**
+   * Calcula de forma determinista el número de versión de la próxima entrega.
+   * Garantiza consistencia entre la pre-asignación del prefijo S3 y la consolidación de la entrega.
+   */
+  public calcularProximaVersionEntrega(): number {
+    return this.ultimaVersionEntrega + 1;
+  }
+
   public inyectarContextoEjecucion(
     contexto: ContextoEjecucionSubActividad,
   ): void {
@@ -240,12 +249,17 @@ export class SubactividadEntity {
     );
 
     const nombreSanitizado = sanitizarNombreArchivo(params.nombreOriginal);
-    const claveCentro = (this.centroClave ?? 'general').toLowerCase();
-    const anio = this.anioFiscal ?? new Date().getFullYear();
+    const versionDestino = this.calcularProximaVersionEntrega();
 
     // Estructura jerárquica limpia en el almacenamiento de objetos
-    const objectKey = `${claveCentro}/${anio}/subactividades/${this.id}/${params.archivoId}-${nombreSanitizado}`;
-
+    const objectKey = construirObjectKeyEvidencia({
+      centroClave: this.centroClave ?? 'general',
+      anioFiscal: this.anioFiscal ?? new Date().getFullYear(),
+      subActividadId: this.id,
+      versionDestino,
+      archivoId: params.archivoId,
+      nombreSanitizado,
+    });
     return new EvidenciaEntity(
       params.archivoId,
       this.id,
@@ -378,7 +392,7 @@ export class SubactividadEntity {
     }
 
     const fechaRealEnvio = params.fechaEnvio ?? new Date();
-    const nuevaVersion = this.ultimaVersionEntrega + 1;
+    const nuevaVersion = this.calcularProximaVersionEntrega();
 
     for (const evidencia of evidenciasAConsolidar) {
       evidencia.consolidarEnEntrega(params.entregaId);
